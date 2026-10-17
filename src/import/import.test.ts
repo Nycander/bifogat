@@ -103,3 +103,57 @@ Detta är en notering utan datum som bör hamna i oklassificerade.
   assert.equal(result.unclassifiedEntries.length, 1);
   assert.ok(result.unclassifiedEntries[0].rawText.includes("utan datum"));
 });
+
+test("parseHistoricalNotes correctly identifies multiple hives (3 hives)", () => {
+  const notesWithThreeHives = `
+# Kupa 1
+- 2026-05-01: Inspekterad, allt bra.
+
+# Kupa 2
+- 2026-05-02: Svag utveckling.
+
+# Kupa 3
+- 2026-05-03: Starkt samhälle.
+`;
+
+  const result = parseHistoricalNotes(notesWithThreeHives);
+  assert.equal(result.detectedHives.length, 3);
+  const hiveNames = result.detectedHives.map((h) => h.name);
+  assert.ok(hiveNames.includes("Kupa 1"));
+  assert.ok(hiveNames.includes("Kupa 2"));
+  assert.ok(hiveNames.includes("Kupa 3"));
+});
+
+test("parseHistoricalNotes correctly identifies exact hives (Kupa A, B, C, Avläggare 2026) and ignores generic sections", () => {
+  const notes = `
+# Köpa
+- Socker
+
+# Skörd
+- 2026-08-01: 20 kg
+
+# Kupa A
+- 2026-05-01: Ok
+
+# Kupa B
+- 2026-05-02: Ok
+
+# Kupa C
+- 2026-05-03: Ok
+
+# Avläggare 2026
+- 2026-06-01: Ny
+`;
+
+  const result = parseHistoricalNotes(notes);
+  assert.equal(result.detectedHives.length, 4);
+  const hiveNames = result.detectedHives.map((h) => h.name);
+  assert.ok(hiveNames.includes("Kupa A"));
+  assert.ok(hiveNames.includes("Kupa B"));
+  assert.ok(hiveNames.includes("Kupa C"));
+  assert.ok(hiveNames.includes("Avläggare 2026"));
+  assert.equal(hiveNames.includes("Köpa"), false);
+  assert.equal(hiveNames.includes("Skörd"), false);
+});
+
+
