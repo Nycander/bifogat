@@ -1,11 +1,11 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import { parseSwedishFinancialCsv } from './csvParser.ts';
-import { parseHistoricalNotes } from './notesParser.ts';
-import { Transaction } from '../domain/types.ts';
-import { generateUUID } from '../domain/validation.ts';
+import test from "node:test";
+import assert from "node:assert/strict";
+import { parseSwedishFinancialCsv } from "./csvParser.ts";
+import { parseHistoricalNotes } from "./notesParser.ts";
+import { Transaction } from "../domain/types.ts";
+import { generateUUID } from "../domain/validation.ts";
 
-test('parseSwedishFinancialCsv handles headers with trailing spaces and semicolon delimiter', () => {
+test("parseSwedishFinancialCsv handles headers with trailing spaces and semicolon delimiter", () => {
   const sampleCsv = `Datum;Beskrivning ;Förändring;Ackumulerat;Motpart;Övrigt
 2026-04-10;Socker till invintring;-245,50;1 754,50;Lantmännen;
 2026-05-15;Honungsförsäljning 10 burkar;800,00;2 554,50;Grannen Sven;
@@ -30,14 +30,14 @@ test('parseSwedishFinancialCsv handles headers with trailing spaces and semicolo
   assert.equal(result.lastImportedBalanceOre, 240450);
 });
 
-test('parseSwedishFinancialCsv detects duplicate transactions against existing ones', () => {
+test("parseSwedishFinancialCsv detects duplicate transactions against existing ones", () => {
   const existing: Transaction[] = [
     {
       id: generateUUID(),
-      date: '2026-05-15',
-      description: 'Honungsförsäljning 10 burkar',
+      date: "2026-05-15",
+      description: "Honungsförsäljning 10 burkar",
       amountOre: 80000,
-      source: 'manual',
+      source: "manual",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     },
@@ -52,10 +52,10 @@ test('parseSwedishFinancialCsv detects duplicate transactions against existing o
   assert.equal(result.validCount, 1);
   assert.equal(result.duplicateCount, 1);
   assert.equal(result.transactionsToImport.length, 1);
-  assert.equal(result.transactionsToImport[0].description, 'Nytt bisamhälle avläggare');
+  assert.equal(result.transactionsToImport[0].description, "Nytt bisamhälle avläggare");
 });
 
-test('parseHistoricalNotes extracts tasks, harvests, events, and preserves ambiguous text', () => {
+test("parseHistoricalNotes extracts tasks, harvests, events, and preserves ambiguous text", () => {
   const sampleNotes = `# Köpa
 - Apistan eller Myrsyra
 - 100 st 500 g glasburkar
@@ -80,13 +80,13 @@ Detta är en notering utan datum som bör hamna i oklassificerade.
 
   // Check detected hives
   const hiveNames = result.detectedHives.map((h) => h.name);
-  assert.ok(hiveNames.includes('Kupa A'));
-  assert.ok(hiveNames.includes('Avläggare 2026'));
+  assert.ok(hiveNames.includes("Kupa A"));
+  assert.ok(hiveNames.includes("Avläggare 2026"));
 
   // Check shopping tasks from Köpa
   assert.equal(result.tasks.length, 4); // 3 from Köpa, 1 from Nästa gång
-  assert.ok(result.tasks.some((t) => t.title.includes('Apistan')));
-  assert.ok(result.tasks.some((t) => t.title.includes('Sätta på skattlåda 2')));
+  assert.ok(result.tasks.some((t) => t.title.includes("Apistan")));
+  assert.ok(result.tasks.some((t) => t.title.includes("Sätta på skattlåda 2")));
 
   // Check harvests
   assert.equal(result.harvests.length, 2);
@@ -96,10 +96,10 @@ Detta är en notering utan datum som bör hamna i oklassificerade.
 
   // Check events
   assert.equal(result.events.length, 3);
-  assert.equal(result.events[0].date, '2026-05-02');
-  assert.ok(result.events[0].notes.includes('Första vårkontrollen'));
+  assert.equal(result.events[0].date, "2026-05-02");
+  assert.ok(result.events[0].notes.includes("Första vårkontrollen"));
 
   // Check unclassified entries (preservation of ambiguous entries)
   assert.equal(result.unclassifiedEntries.length, 1);
-  assert.ok(result.unclassifiedEntries[0].rawText.includes('utan datum'));
+  assert.ok(result.unclassifiedEntries[0].rawText.includes("utan datum"));
 });

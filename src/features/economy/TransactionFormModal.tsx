@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Transaction } from '../../domain/types';
-import { formatDate, parseSwedishCurrencyToOre, formatOreToSEK } from '../../domain/validation';
-import { X, Check } from 'lucide-react';
+import React, { useState } from "react";
+import { Transaction } from "../../domain/types";
+import { formatDate, parseSwedishCurrencyToOre, formatOreToSEK } from "../../domain/validation";
+import { X, Check } from "lucide-react";
 
 interface TransactionFormModalProps {
   transaction?: Transaction;
@@ -21,29 +21,29 @@ export const TransactionFormModal: React.FC<TransactionFormModalProps> = ({
   onSave,
 }) => {
   const [date, setDate] = useState(transaction?.date || formatDate(new Date()));
-  const [description, setDescription] = useState(transaction?.description || '');
+  const [description, setDescription] = useState(transaction?.description || "");
   // Form supports type: income (+) vs expense (-)
   const initialIsExpense = transaction ? transaction.amountOre < 0 : false;
   const [isExpense, setIsExpense] = useState(initialIsExpense);
   const initialAmountStr = transaction
-    ? (Math.abs(transaction.amountOre) / 100).toFixed(2).replace('.', ',')
-    : '';
+    ? (Math.abs(transaction.amountOre) / 100).toFixed(2).replace(".", ",")
+    : "";
   const [amountInput, setAmountInput] = useState(initialAmountStr);
-  const [counterparty, setCounterparty] = useState(transaction?.counterparty || '');
-  const [category, setCategory] = useState(transaction?.category || 'Utrustning');
+  const [counterparty, setCounterparty] = useState(transaction?.counterparty || "");
+  const [category, setCategory] = useState(transaction?.category || "Utrustning");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!description.trim()) {
-      setError('Beskrivning måste anges');
+      setError("Beskrivning måste anges");
       return;
     }
 
     const parsedOre = parseSwedishCurrencyToOre(amountInput);
     if (parsedOre === null || parsedOre === 0) {
-      setError('Ange ett giltigt belopp (större än 0)');
+      setError("Ange ett giltigt belopp (större än 0)");
       return;
     }
 
@@ -61,7 +61,7 @@ export const TransactionFormModal: React.FC<TransactionFormModalProps> = ({
       });
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Kunde inte spara transaktionen');
+      setError(err.message || "Kunde inte spara transaktionen");
       setIsSubmitting(false);
     }
   };
@@ -70,19 +70,25 @@ export const TransactionFormModal: React.FC<TransactionFormModalProps> = ({
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2 className="modal-title">{transaction ? 'Redigera transaktion' : 'Ny ekonomisk post'}</h2>
+          <h2 className="modal-title">
+            {transaction ? "Redigera transaktion" : "Ny ekonomisk post"}
+          </h2>
           <button className="modal-close-btn" onClick={onClose} aria-label="Stäng">
             <X size={20} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit}>
-          {error && <div className="form-error" style={{ marginBottom: '1rem' }}>{error}</div>}
+          {error && (
+            <div className="form-error" style={{ marginBottom: "1rem" }}>
+              {error}
+            </div>
+          )}
 
-          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+          <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
             <button
               type="button"
-              className={`btn ${!isExpense ? 'btn-primary' : 'btn-secondary'}`}
+              className={`btn ${!isExpense ? "btn-primary" : "btn-secondary"}`}
               style={{ flex: 1 }}
               onClick={() => setIsExpense(false)}
             >
@@ -90,7 +96,7 @@ export const TransactionFormModal: React.FC<TransactionFormModalProps> = ({
             </button>
             <button
               type="button"
-              className={`btn ${isExpense ? 'btn-danger' : 'btn-secondary'}`}
+              className={`btn ${isExpense ? "btn-danger" : "btn-secondary"}`}
               style={{ flex: 1 }}
               onClick={() => setIsExpense(true)}
             >
@@ -98,9 +104,11 @@ export const TransactionFormModal: React.FC<TransactionFormModalProps> = ({
             </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
             <div className="form-group">
-              <label className="form-label" htmlFor="tx-date">Datum *</label>
+              <label className="form-label" htmlFor="tx-date">
+                Datum *
+              </label>
               <input
                 id="tx-date"
                 type="date"
@@ -112,7 +120,9 @@ export const TransactionFormModal: React.FC<TransactionFormModalProps> = ({
             </div>
 
             <div className="form-group">
-              <label className="form-label" htmlFor="tx-amount">Belopp (kr) *</label>
+              <label className="form-label" htmlFor="tx-amount">
+                Belopp (kr) *
+              </label>
               <input
                 id="tx-amount"
                 type="text"
@@ -127,7 +137,9 @@ export const TransactionFormModal: React.FC<TransactionFormModalProps> = ({
           </div>
 
           <div className="form-group">
-            <label className="form-label" htmlFor="tx-desc">Beskrivning *</label>
+            <label className="form-label" htmlFor="tx-desc">
+              Beskrivning *
+            </label>
             <input
               id="tx-desc"
               type="text"
@@ -139,9 +151,11 @@ export const TransactionFormModal: React.FC<TransactionFormModalProps> = ({
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
             <div className="form-group">
-              <label className="form-label" htmlFor="tx-counterparty">Motpart / Kund / Leverantör</label>
+              <label className="form-label" htmlFor="tx-counterparty">
+                Motpart / Kund / Leverantör
+              </label>
               <input
                 id="tx-counterparty"
                 type="text"
@@ -153,7 +167,9 @@ export const TransactionFormModal: React.FC<TransactionFormModalProps> = ({
             </div>
 
             <div className="form-group">
-              <label className="form-label" htmlFor="tx-category">Kategori</label>
+              <label className="form-label" htmlFor="tx-category">
+                Kategori
+              </label>
               <select
                 id="tx-category"
                 className="form-select"
@@ -172,12 +188,17 @@ export const TransactionFormModal: React.FC<TransactionFormModalProps> = ({
           </div>
 
           <div className="modal-actions">
-            <button type="button" className="btn btn-secondary" onClick={onClose} disabled={isSubmitting}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={onClose}
+              disabled={isSubmitting}
+            >
               Avbryt
             </button>
             <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
               <Check size={16} />
-              <span>{isSubmitting ? 'Sparar...' : 'Spara transaktion'}</span>
+              <span>{isSubmitting ? "Sparar..." : "Spara transaktion"}</span>
             </button>
           </div>
         </form>

@@ -1,4 +1,4 @@
-export type HiveStatus = 'active' | 'inactive' | 'merged' | 'archived';
+export type HiveStatus = "active" | "inactive" | "merged" | "archived";
 
 export interface Hive {
   id: string; // UUID
@@ -10,14 +10,14 @@ export interface Hive {
 }
 
 export type EventType =
-  | 'inspection'
-  | 'feeding'
-  | 'treatment'
-  | 'harvest'
-  | 'equipment'
-  | 'colony_change'
-  | 'other'
-  | 'unknown';
+  | "inspection"
+  | "feeding"
+  | "treatment"
+  | "harvest"
+  | "equipment"
+  | "colony_change"
+  | "other"
+  | "unknown";
 
 export interface HiveEvent {
   id: string; // UUID
@@ -30,7 +30,7 @@ export interface HiveEvent {
   updatedAt: string; // ISO 8601
 }
 
-export type TaskStatus = 'open' | 'completed';
+export type TaskStatus = "open" | "completed";
 
 export interface Task {
   id: string; // UUID
@@ -56,7 +56,7 @@ export interface Harvest {
   updatedAt: string;
 }
 
-export type TransactionSource = 'manual' | 'import' | 'future';
+export type TransactionSource = "manual" | "import" | "future";
 
 export interface Transaction {
   id: string; // UUID
@@ -71,8 +71,8 @@ export interface Transaction {
   updatedAt: string;
 }
 
-export type EntityType = 'hive' | 'event' | 'task' | 'harvest' | 'transaction';
-export type OperationType = 'create' | 'update' | 'delete';
+export type EntityType = "hive" | "event" | "task" | "harvest" | "transaction";
+export type OperationType = "create" | "update" | "delete";
 
 export interface OutboxOp {
   id: string; // stable operation UUID
@@ -92,7 +92,7 @@ export interface SyncConflict {
   localVersion: any;
   remoteVersion: any;
   detectedAt: string;
-  status: 'unresolved' | 'resolved';
+  status: "unresolved" | "resolved";
 }
 
 export interface AppMeta {

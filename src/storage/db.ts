@@ -7,20 +7,20 @@ import {
   OutboxOp,
   SyncConflict,
   AppMeta,
-} from '../domain/types';
+} from "../domain/types";
 
-export const DB_NAME = 'bifogat_db';
+export const DB_NAME = "bifogat_db";
 export const DB_VERSION = 1;
 
 export type StoreName =
-  | 'hives'
-  | 'events'
-  | 'tasks'
-  | 'harvests'
-  | 'transactions'
-  | 'outbox'
-  | 'meta'
-  | 'conflicts';
+  | "hives"
+  | "events"
+  | "tasks"
+  | "harvests"
+  | "transactions"
+  | "outbox"
+  | "meta"
+  | "conflicts";
 
 let dbInstance: IDBDatabase | null = null;
 let dbPromise: Promise<IDBDatabase> | null = null;
@@ -30,8 +30,8 @@ export function openDatabase(): Promise<IDBDatabase> {
   if (dbPromise) return dbPromise;
 
   dbPromise = new Promise((resolve, reject) => {
-    if (typeof indexedDB === 'undefined') {
-      reject(new Error('IndexedDB is not supported in this environment'));
+    if (typeof indexedDB === "undefined") {
+      reject(new Error("IndexedDB is not supported in this environment"));
       return;
     }
 
@@ -43,44 +43,44 @@ export function openDatabase(): Promise<IDBDatabase> {
 
       // Version 1 upgrade
       if (oldVersion < 1) {
-        if (!db.objectStoreNames.contains('hives')) {
-          db.createObjectStore('hives', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains("hives")) {
+          db.createObjectStore("hives", { keyPath: "id" });
         }
 
-        if (!db.objectStoreNames.contains('events')) {
-          const eventStore = db.createObjectStore('events', { keyPath: 'id' });
-          eventStore.createIndex('by_hive', 'hiveId', { unique: false });
-          eventStore.createIndex('by_date', 'date', { unique: false });
+        if (!db.objectStoreNames.contains("events")) {
+          const eventStore = db.createObjectStore("events", { keyPath: "id" });
+          eventStore.createIndex("by_hive", "hiveId", { unique: false });
+          eventStore.createIndex("by_date", "date", { unique: false });
         }
 
-        if (!db.objectStoreNames.contains('tasks')) {
-          const taskStore = db.createObjectStore('tasks', { keyPath: 'id' });
-          taskStore.createIndex('by_status', 'status', { unique: false });
-          taskStore.createIndex('by_due', 'dueDate', { unique: false });
+        if (!db.objectStoreNames.contains("tasks")) {
+          const taskStore = db.createObjectStore("tasks", { keyPath: "id" });
+          taskStore.createIndex("by_status", "status", { unique: false });
+          taskStore.createIndex("by_due", "dueDate", { unique: false });
         }
 
-        if (!db.objectStoreNames.contains('harvests')) {
-          const harvestStore = db.createObjectStore('harvests', { keyPath: 'id' });
-          harvestStore.createIndex('by_date', 'date', { unique: false });
+        if (!db.objectStoreNames.contains("harvests")) {
+          const harvestStore = db.createObjectStore("harvests", { keyPath: "id" });
+          harvestStore.createIndex("by_date", "date", { unique: false });
         }
 
-        if (!db.objectStoreNames.contains('transactions')) {
-          const txStore = db.createObjectStore('transactions', { keyPath: 'id' });
-          txStore.createIndex('by_date', 'date', { unique: false });
+        if (!db.objectStoreNames.contains("transactions")) {
+          const txStore = db.createObjectStore("transactions", { keyPath: "id" });
+          txStore.createIndex("by_date", "date", { unique: false });
         }
 
-        if (!db.objectStoreNames.contains('outbox')) {
-          const outboxStore = db.createObjectStore('outbox', { keyPath: 'id' });
-          outboxStore.createIndex('by_timestamp', 'timestamp', { unique: false });
+        if (!db.objectStoreNames.contains("outbox")) {
+          const outboxStore = db.createObjectStore("outbox", { keyPath: "id" });
+          outboxStore.createIndex("by_timestamp", "timestamp", { unique: false });
         }
 
-        if (!db.objectStoreNames.contains('meta')) {
-          db.createObjectStore('meta', { keyPath: 'key' });
+        if (!db.objectStoreNames.contains("meta")) {
+          db.createObjectStore("meta", { keyPath: "key" });
         }
 
-        if (!db.objectStoreNames.contains('conflicts')) {
-          const conflictStore = db.createObjectStore('conflicts', { keyPath: 'id' });
-          conflictStore.createIndex('by_status', 'status', { unique: false });
+        if (!db.objectStoreNames.contains("conflicts")) {
+          const conflictStore = db.createObjectStore("conflicts", { keyPath: "id" });
+          conflictStore.createIndex("by_status", "status", { unique: false });
         }
       }
     };
@@ -97,7 +97,7 @@ export function openDatabase(): Promise<IDBDatabase> {
 
     request.onerror = () => {
       dbPromise = null;
-      reject(request.error || new Error('Failed to open IndexedDB'));
+      reject(request.error || new Error("Failed to open IndexedDB"));
     };
   });
 
@@ -110,7 +110,7 @@ export function openDatabase(): Promise<IDBDatabase> {
 export async function getAllFromStore<T>(storeName: StoreName): Promise<T[]> {
   const db = await openDatabase();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, 'readonly');
+    const tx = db.transaction(storeName, "readonly");
     const store = tx.objectStore(storeName);
     const request = store.getAll();
     request.onsuccess = () => resolve((request.result as T[]) || []);
@@ -124,7 +124,7 @@ export async function getAllFromStore<T>(storeName: StoreName): Promise<T[]> {
 export async function getFromStore<T>(storeName: StoreName, key: IDBValidKey): Promise<T | null> {
   const db = await openDatabase();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, 'readonly');
+    const tx = db.transaction(storeName, "readonly");
     const store = tx.objectStore(storeName);
     const request = store.get(key);
     request.onsuccess = () => resolve((request.result as T) || null);
@@ -138,7 +138,7 @@ export async function getFromStore<T>(storeName: StoreName, key: IDBValidKey): P
 export async function putInStore<T>(storeName: StoreName, item: T): Promise<void> {
   const db = await openDatabase();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, 'readwrite');
+    const tx = db.transaction(storeName, "readwrite");
     const store = tx.objectStore(storeName);
     const request = store.put(item);
     request.onsuccess = () => resolve();
@@ -153,7 +153,7 @@ export async function bulkPutInStore<T>(storeName: StoreName, items: T[]): Promi
   if (items.length === 0) return;
   const db = await openDatabase();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, 'readwrite');
+    const tx = db.transaction(storeName, "readwrite");
     const store = tx.objectStore(storeName);
     for (const item of items) {
       store.put(item);
@@ -169,7 +169,7 @@ export async function bulkPutInStore<T>(storeName: StoreName, items: T[]): Promi
 export async function deleteFromStore(storeName: StoreName, key: IDBValidKey): Promise<void> {
   const db = await openDatabase();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, 'readwrite');
+    const tx = db.transaction(storeName, "readwrite");
     const store = tx.objectStore(storeName);
     const request = store.delete(key);
     request.onsuccess = () => resolve();
@@ -184,13 +184,13 @@ export async function deleteFromStore(storeName: StoreName, key: IDBValidKey): P
 export async function saveEntityWithOutbox<T>(
   storeName: StoreName,
   entity: T,
-  outboxOp: OutboxOp
+  outboxOp: OutboxOp,
 ): Promise<void> {
   const db = await openDatabase();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction([storeName, 'outbox'], 'readwrite');
+    const tx = db.transaction([storeName, "outbox"], "readwrite");
     const entityStore = tx.objectStore(storeName);
-    const outboxStore = tx.objectStore('outbox');
+    const outboxStore = tx.objectStore("outbox");
 
     entityStore.put(entity);
     outboxStore.put(outboxOp);
@@ -206,13 +206,13 @@ export async function saveEntityWithOutbox<T>(
 export async function deleteEntityWithOutbox(
   storeName: StoreName,
   key: IDBValidKey,
-  outboxOp: OutboxOp
+  outboxOp: OutboxOp,
 ): Promise<void> {
   const db = await openDatabase();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction([storeName, 'outbox'], 'readwrite');
+    const tx = db.transaction([storeName, "outbox"], "readwrite");
     const entityStore = tx.objectStore(storeName);
-    const outboxStore = tx.objectStore('outbox');
+    const outboxStore = tx.objectStore("outbox");
 
     entityStore.delete(key);
     outboxStore.put(outboxOp);
@@ -228,7 +228,7 @@ export async function deleteEntityWithOutbox(
 export async function clearStore(storeName: StoreName): Promise<void> {
   const db = await openDatabase();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, 'readwrite');
+    const tx = db.transaction(storeName, "readwrite");
     const store = tx.objectStore(storeName);
     const request = store.clear();
     request.onsuccess = () => resolve();
@@ -251,13 +251,13 @@ export async function exportAllData(): Promise<{
   meta: AppMeta[];
 }> {
   const [hives, events, tasks, harvests, transactions, outbox, meta] = await Promise.all([
-    getAllFromStore<Hive>('hives'),
-    getAllFromStore<HiveEvent>('events'),
-    getAllFromStore<Task>('tasks'),
-    getAllFromStore<Harvest>('harvests'),
-    getAllFromStore<Transaction>('transactions'),
-    getAllFromStore<OutboxOp>('outbox'),
-    getAllFromStore<AppMeta>('meta'),
+    getAllFromStore<Hive>("hives"),
+    getAllFromStore<HiveEvent>("events"),
+    getAllFromStore<Task>("tasks"),
+    getAllFromStore<Harvest>("harvests"),
+    getAllFromStore<Transaction>("transactions"),
+    getAllFromStore<OutboxOp>("outbox"),
+    getAllFromStore<AppMeta>("meta"),
   ]);
 
   return {
@@ -284,10 +284,10 @@ export async function restoreAllData(data: {
   transactions?: Transaction[];
   meta?: AppMeta[];
 }): Promise<void> {
-  if (data.hives) await bulkPutInStore('hives', data.hives);
-  if (data.events) await bulkPutInStore('events', data.events);
-  if (data.tasks) await bulkPutInStore('tasks', data.tasks);
-  if (data.harvests) await bulkPutInStore('harvests', data.harvests);
-  if (data.transactions) await bulkPutInStore('transactions', data.transactions);
-  if (data.meta) await bulkPutInStore('meta', data.meta);
+  if (data.hives) await bulkPutInStore("hives", data.hives);
+  if (data.events) await bulkPutInStore("events", data.events);
+  if (data.tasks) await bulkPutInStore("tasks", data.tasks);
+  if (data.harvests) await bulkPutInStore("harvests", data.harvests);
+  if (data.transactions) await bulkPutInStore("transactions", data.transactions);
+  if (data.meta) await bulkPutInStore("meta", data.meta);
 }

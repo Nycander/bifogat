@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Hive,
   HiveEvent,
@@ -9,7 +9,7 @@ import {
   OutboxOp,
   SyncConflict,
   EventType,
-} from './domain/types';
+} from "./domain/types";
 import {
   hiveRepository,
   eventRepository,
@@ -19,46 +19,46 @@ import {
   metaRepository,
   outboxRepository,
   conflictRepository,
-} from './storage/repositories';
-import { exportAllData, restoreAllData, clearStore } from './storage/db';
-import { syncEngine, SyncEngineStatus } from './sync/syncEngine';
-import { sheetsClient } from './sync/sheetsClient';
+} from "./storage/repositories";
+import { exportAllData, restoreAllData, clearStore } from "./storage/db";
+import { syncEngine, SyncEngineStatus } from "./sync/syncEngine";
+import { sheetsClient } from "./sync/sheetsClient";
 import {
   signInWithGoogle,
   logoutGoogle,
   initAuth,
   getCurrentUser,
   getAccessToken,
-} from './auth/googleAuth';
-import { useOnlineStatus } from './pwa/useOnlineStatus';
-import { PWAInstallButton } from './pwa/PWAInstallButton';
-import { OfflineIndicator } from './pwa/OfflineIndicator';
-import { NavBar, NavTab } from './components/NavBar';
-import { SyncStatusBar } from './components/SyncStatusBar';
+} from "./auth/googleAuth";
+import { useOnlineStatus } from "./pwa/useOnlineStatus";
+import { PWAInstallButton } from "./pwa/PWAInstallButton";
+import { OfflineIndicator } from "./pwa/OfflineIndicator";
+import { NavBar, NavTab } from "./components/NavBar";
+import { SyncStatusBar } from "./components/SyncStatusBar";
 
-import { OverviewView } from './features/overview/OverviewView';
-import { HivesView } from './features/hives/HivesView';
-import { HiveDetailModal } from './features/hives/HiveDetailModal';
-import { HiveEditModal } from './features/hives/HiveEditModal';
-import { EventFormModal } from './features/events/EventFormModal';
-import { TasksView } from './features/tasks/TasksView';
-import { TaskFormModal } from './features/tasks/TaskFormModal';
-import { HarvestsView } from './features/harvests/HarvestsView';
-import { HarvestFormModal } from './features/harvests/HarvestFormModal';
-import { EconomyView } from './features/economy/EconomyView';
-import { TransactionFormModal } from './features/economy/TransactionFormModal';
-import { SettingsView } from './features/settings/SettingsView';
-import { ConflictModal } from './features/settings/ConflictModal';
-import { OutboxPreviewModal } from './features/settings/OutboxPreviewModal';
-import { CsvImportModal } from './features/settings/CsvImportModal';
-import { NotesImportModal } from './features/settings/NotesImportModal';
-import { ParsedNotesResult } from './import/notesParser';
+import { OverviewView } from "./features/overview/OverviewView";
+import { HivesView } from "./features/hives/HivesView";
+import { HiveDetailModal } from "./features/hives/HiveDetailModal";
+import { HiveEditModal } from "./features/hives/HiveEditModal";
+import { EventFormModal } from "./features/events/EventFormModal";
+import { TasksView } from "./features/tasks/TasksView";
+import { TaskFormModal } from "./features/tasks/TaskFormModal";
+import { HarvestsView } from "./features/harvests/HarvestsView";
+import { HarvestFormModal } from "./features/harvests/HarvestFormModal";
+import { EconomyView } from "./features/economy/EconomyView";
+import { TransactionFormModal } from "./features/economy/TransactionFormModal";
+import { SettingsView } from "./features/settings/SettingsView";
+import { ConflictModal } from "./features/settings/ConflictModal";
+import { OutboxPreviewModal } from "./features/settings/OutboxPreviewModal";
+import { CsvImportModal } from "./features/settings/CsvImportModal";
+import { NotesImportModal } from "./features/settings/NotesImportModal";
+import { ParsedNotesResult } from "./import/notesParser";
 
 export default function App() {
   const isOnline = useOnlineStatus();
 
   // Navigation
-  const [activeTab, setActiveTab] = useState<NavTab>('overview');
+  const [activeTab, setActiveTab] = useState<NavTab>("overview");
 
   // Application Data in Local Working Memory
   const [hives, setHives] = useState<Hive[]>([]);
@@ -66,7 +66,7 @@ export default function App() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [harvests, setHarvests] = useState<Harvest[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [meta, setMeta] = useState<AppMeta>({ key: 'config', schemaVersion: 1 });
+  const [meta, setMeta] = useState<AppMeta>({ key: "config", schemaVersion: 1 });
   const [outboxOps, setOutboxOps] = useState<OutboxOp[]>([]);
   const [conflicts, setConflicts] = useState<SyncConflict[]>([]);
 
@@ -112,20 +112,20 @@ export default function App() {
       // Seed initial sample hives if completely empty
       if (hList.length === 0 && txList.length === 0) {
         const hiveA = await hiveRepository.create({
-          name: 'Kupa A',
-          status: 'active',
-          notes: 'Stark koloni på Svea-ram. Drottning från 2025.',
+          name: "Kupa A",
+          status: "active",
+          notes: "Stark koloni på Svea-ram. Drottning från 2025.",
         });
         const hiveB = await hiveRepository.create({
-          name: 'Kupa B',
-          status: 'active',
-          notes: 'Ny avläggare från maj 2026.',
+          name: "Kupa B",
+          status: "active",
+          notes: "Ny avläggare från maj 2026.",
         });
         await taskRepository.create({
-          title: 'Vårkontroll och koll av yngelsättning',
-          notes: 'Kontrollera foderstatus och att drottningen lägger ägg.',
+          title: "Vårkontroll och koll av yngelsättning",
+          notes: "Kontrollera foderstatus och att drottningen lägger ägg.",
           dueDate: new Date().toISOString().substring(0, 10),
-          status: 'open',
+          status: "open",
           hiveId: hiveA.id,
         });
 
@@ -151,7 +151,7 @@ export default function App() {
       const status = await syncEngine.getStatus();
       setSyncStatus(status);
     } catch (err) {
-      console.error('Failed to load IndexedDB data:', err);
+      console.error("Failed to load IndexedDB data:", err);
     }
   }, []);
 
@@ -167,7 +167,7 @@ export default function App() {
       },
       () => {
         setCurrentUser(null);
-      }
+      },
     );
 
     // Sync engine status listener
@@ -205,7 +205,18 @@ export default function App() {
         await reloadData();
       }
     } catch (err: any) {
-      alert(`Inloggning misslyckades: ${err.message}`);
+      if (err?.code === 'auth/unauthorized-domain' || err?.message?.includes('unauthorized-domain')) {
+        alert(
+          `Firebase-fel (auth/unauthorized-domain):\n\n` +
+          `Domänen 'nycander.github.io' är inte auktoriserad i Firebase.\n\n` +
+          `Gör så här:\n` +
+          `1. Gå till Firebase Console (console.firebase.google.com)\n` +
+          `2. Välj ditt projekt och gå till Authentication -> Settings -> Authorized domains\n` +
+          `3. Lägg till 'nycander.github.io'`
+        );
+      } else {
+        alert(`Inloggning misslyckades: ${err.message}`);
+      }
     }
   };
 
@@ -223,13 +234,13 @@ export default function App() {
 
   const handleCreateNewSpreadsheet = async () => {
     const token = await getAccessToken();
-    if (!token) throw new Error('Logga in med Google först');
-    const created = await sheetsClient.createSpreadsheet(token, 'Bifogat - Biodlingsloggbok');
+    if (!token) throw new Error("Logga in med Google först");
+    const created = await sheetsClient.createSpreadsheet(token, "Bifogat - Biodlingsloggbok");
     await handleSaveSpreadsheetId(created.id, created.title);
   };
 
   // Hive Handlers
-  const handleSaveHive = async (data: { name: string; status: Hive['status']; notes?: string }) => {
+  const handleSaveHive = async (data: { name: string; status: Hive["status"]; notes?: string }) => {
     if (editingHive) {
       await hiveRepository.update(editingHive.id, data);
     } else {
@@ -266,7 +277,7 @@ export default function App() {
     if (editingTask) {
       await taskRepository.update(editingTask.id, data);
     } else {
-      await taskRepository.create({ ...data, status: 'open' });
+      await taskRepository.create({ ...data, status: "open" });
     }
     await reloadData();
     setEditingTask(undefined);
@@ -311,7 +322,7 @@ export default function App() {
     if (editingTx) {
       await transactionRepository.update(editingTx.id, data);
     } else {
-      await transactionRepository.create({ ...data, source: 'manual' });
+      await transactionRepository.create({ ...data, source: "manual" });
     }
     await reloadData();
     setEditingTx(undefined);
@@ -351,7 +362,7 @@ export default function App() {
   // CSV Import
   const handleConfirmCsvImport = async (
     transactionsToImport: Transaction[],
-    lastBalanceOre: number | null
+    lastBalanceOre: number | null,
   ) => {
     for (const tx of transactionsToImport) {
       await transactionRepository.create({
@@ -360,14 +371,14 @@ export default function App() {
         amountOre: tx.amountOre,
         counterparty: tx.counterparty,
         category: tx.category,
-        source: 'import',
+        source: "import",
       });
     }
     if (lastBalanceOre !== null) {
       await metaRepository.save({ importedHistoricalBalanceOre: lastBalanceOre });
     }
     await reloadData();
-    setActiveTab('economy');
+    setActiveTab("economy");
   };
 
   // Notes Import
@@ -383,8 +394,8 @@ export default function App() {
       if (!hiveNameToIdMap.has(lower)) {
         const created = await hiveRepository.create({
           name: h.name,
-          status: 'active',
-          notes: 'Skapad automatiskt vid import av anteckningar',
+          status: "active",
+          notes: "Skapad automatiskt vid import av anteckningar",
         });
         hiveNameToIdMap.set(lower, created.id);
       }
@@ -427,15 +438,15 @@ export default function App() {
     }
 
     await reloadData();
-    setActiveTab('overview');
+    setActiveTab("overview");
   };
 
   // Full Data Export
   const handleExportBackup = async () => {
     const backup = await exportAllData();
-    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `bifogat-biodling-backup-${new Date().toISOString().substring(0, 10)}.json`;
     document.body.appendChild(a);
@@ -446,13 +457,13 @@ export default function App() {
 
   // Clear Local Data
   const handleClearLocalData = async () => {
-    await clearStore('hives');
-    await clearStore('events');
-    await clearStore('tasks');
-    await clearStore('harvests');
-    await clearStore('transactions');
-    await clearStore('outbox');
-    await clearStore('conflicts');
+    await clearStore("hives");
+    await clearStore("events");
+    await clearStore("tasks");
+    await clearStore("harvests");
+    await clearStore("transactions");
+    await clearStore("outbox");
+    await clearStore("conflicts");
     await reloadData();
   };
 
@@ -462,7 +473,14 @@ export default function App() {
 
       {/* Header */}
       <header className="app-header">
-        <a href="#home" className="header-brand" onClick={(e) => { e.preventDefault(); setActiveTab('overview'); }}>
+        <a
+          href="#home"
+          className="header-brand"
+          onClick={(e) => {
+            e.preventDefault();
+            setActiveTab("overview");
+          }}
+        >
           <img src="/icon.svg" alt="Bifogat logotyp" className="header-logo" />
           <div className="header-title-group">
             <span className="header-title">Bifogat</span>
@@ -484,7 +502,7 @@ export default function App() {
 
       {/* Main View Area */}
       <main className="main-content">
-        {activeTab === 'overview' && (
+        {activeTab === "overview" && (
           <OverviewView
             hives={hives}
             events={events}
@@ -506,7 +524,7 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'hives' && (
+        {activeTab === "hives" && (
           <HivesView
             hives={hives}
             events={events}
@@ -522,7 +540,7 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'tasks' && (
+        {activeTab === "tasks" && (
           <TasksView
             tasks={tasks}
             hives={hives}
@@ -539,7 +557,7 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'harvests' && (
+        {activeTab === "harvests" && (
           <HarvestsView
             harvests={harvests}
             hives={hives}
@@ -551,7 +569,7 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'economy' && (
+        {activeTab === "economy" && (
           <EconomyView
             transactions={transactions}
             importedHistoricalBalanceOre={meta.importedHistoricalBalanceOre}
@@ -567,7 +585,7 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'settings' && (
+        {activeTab === "settings" && (
           <SettingsView
             meta={meta}
             currentUser={currentUser}
@@ -594,7 +612,7 @@ export default function App() {
       <NavBar
         activeTab={activeTab}
         onSelectTab={(tab) => setActiveTab(tab)}
-        openTaskCount={tasks.filter((t) => t.status === 'open').length}
+        openTaskCount={tasks.filter((t) => t.status === "open").length}
       />
 
       {/* Modals */}
