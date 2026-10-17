@@ -105,7 +105,7 @@ class SyncEngine {
     };
   }
 
-  async triggerSync(): Promise<{ success: boolean; error?: string }> {
+  async triggerSync(options?: { allowWrite?: boolean }): Promise<{ success: boolean; error?: string }> {
     if (this.isRunning) {
       return { success: false, error: 'Synkronisering pågår redan' };
     }
