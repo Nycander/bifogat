@@ -7,7 +7,16 @@ import {
   User,
   signOut,
 } from "firebase/auth";
-import firebaseConfig from "../../firebase-applet-config.json";
+import localConfig from "../../firebase-applet-config.json";
+
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || localConfig.apiKey,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || localConfig.authDomain,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || localConfig.projectId,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || localConfig.storageBucket,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || localConfig.messagingSenderId,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || localConfig.appId,
+};
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 const auth = getAuth(app);
