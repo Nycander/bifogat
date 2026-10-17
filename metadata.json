@@ -2,6 +2,7 @@
   "name": "Bifogat",
   "description": "Offline-first biodlingsloggbok PWA with Google Sheets sync, hive inspections, task tracking, harvest records, and financial ledger.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }
-

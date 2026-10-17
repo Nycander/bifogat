@@ -1,31 +1,56 @@
-import {
-  Hive,
-  HiveEvent,
-  Task,
-  Harvest,
-  Transaction,
-  AppMeta,
-} from '../domain/types';
+import { Hive, HiveEvent, Task, Harvest, Transaction, AppMeta } from "../domain/types";
 
 export const SHEET_TABS = {
-  HIVES: 'Hives',
-  EVENTS: 'Events',
-  TASKS: 'Tasks',
-  HARVESTS: 'Harvests',
-  TRANSACTIONS: 'Transactions',
-  APP_META: 'AppMeta',
+  HIVES: "Hives",
+  EVENTS: "Events",
+  TASKS: "Tasks",
+  HARVESTS: "Harvests",
+  TRANSACTIONS: "Transactions",
+  APP_META: "AppMeta",
 } as const;
 
 export const SCHEMAS = {
-  [SHEET_TABS.HIVES]: ['id', 'name', 'status', 'notes', 'createdAt', 'updatedAt'],
-  [SHEET_TABS.EVENTS]: ['id', 'hiveId', 'date', 'type', 'title', 'notes', 'createdAt', 'updatedAt'],
-  [SHEET_TABS.TASKS]: ['id', 'title', 'notes', 'hiveId', 'dueDate', 'status', 'createdAt', 'updatedAt', 'completedAt'],
-  [SHEET_TABS.HARVESTS]: ['id', 'date', 'hiveId', 'honeyWeightGrams', 'jarSizeGrams', 'jarCount', 'notes', 'createdAt', 'updatedAt'],
-  [SHEET_TABS.TRANSACTIONS]: ['id', 'date', 'description', 'amountSEK', 'amountOre', 'counterparty', 'category', 'source', 'externalReference', 'createdAt', 'updatedAt'],
-  [SHEET_TABS.APP_META]: ['key', 'value', 'updatedAt'],
+  [SHEET_TABS.HIVES]: ["id", "name", "status", "notes", "createdAt", "updatedAt"],
+  [SHEET_TABS.EVENTS]: ["id", "hiveId", "date", "type", "title", "notes", "createdAt", "updatedAt"],
+  [SHEET_TABS.TASKS]: [
+    "id",
+    "title",
+    "notes",
+    "hiveId",
+    "dueDate",
+    "status",
+    "createdAt",
+    "updatedAt",
+    "completedAt",
+  ],
+  [SHEET_TABS.HARVESTS]: [
+    "id",
+    "date",
+    "hiveId",
+    "honeyWeightGrams",
+    "jarSizeGrams",
+    "jarCount",
+    "notes",
+    "createdAt",
+    "updatedAt",
+  ],
+  [SHEET_TABS.TRANSACTIONS]: [
+    "id",
+    "date",
+    "description",
+    "amountSEK",
+    "amountOre",
+    "counterparty",
+    "category",
+    "source",
+    "externalReference",
+    "createdAt",
+    "updatedAt",
+  ],
+  [SHEET_TABS.APP_META]: ["key", "value", "updatedAt"],
 };
 
-const BASE_URL = 'https://sheets.googleapis.com/v4/spreadsheets';
+const BASE_URL = "https://sheets.googleapis.com/v4/spreadsheets";
 
 /**
  * Helper to call Google Sheets API with Bearer token
@@ -33,7 +58,7 @@ const BASE_URL = 'https://sheets.googleapis.com/v4/spreadsheets';
 async function sheetsFetch(accessToken: string, endpoint: string, options: RequestInit = {}) {
   const headers = {
     Authorization: `Bearer ${accessToken}`,
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
     ...(options.headers || {}),
   };
 
@@ -63,7 +88,10 @@ export const sheetsClient = {
   /**
    * Create a new spreadsheet with the required tabs
    */
-  async createSpreadsheet(accessToken: string, title = 'Bifogat - Biodlingsloggbok'): Promise<{ id: string; title: string }> {
+  async createSpreadsheet(
+    accessToken: string,
+    title = "Bifogat - Biodlingsloggbok",
+  ): Promise<{ id: string; title: string }> {
     const body = {
       properties: { title },
       sheets: Object.entries(SCHEMAS).map(([sheetTitle, headers]) => ({
@@ -82,8 +110,8 @@ export const sheetsClient = {
       })),
     };
 
-    const res = await sheetsFetch(accessToken, '', {
-      method: 'POST',
+    const res = await sheetsFetch(accessToken, "", {
+      method: "POST",
       body: JSON.stringify(body),
     });
 
@@ -95,9 +123,7 @@ export const sheetsClient = {
    */
   async ensureSchema(accessToken: string, spreadsheetId: string): Promise<void> {
     const meta = await sheetsFetch(accessToken, `/${spreadsheetId}?fields=sheets.properties`);
-    const existingTitles: string[] = (meta.sheets || []).map(
-      (s: any) => s.properties?.title
-    );
+    const existingTitles: string[] = (meta.sheets || []).map((s: any) => s.properties?.title);
 
     const missingTabs = Object.keys(SCHEMAS).filter((tab) => !existingTitles.includes(tab));
 
@@ -109,7 +135,7 @@ export const sheetsClient = {
         },
       }));
       await sheetsFetch(accessToken, `/${spreadsheetId}:batchUpdate`, {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify({ requests }),
       });
     }
@@ -125,9 +151,9 @@ export const sheetsClient = {
           accessToken,
           `/${spreadsheetId}/values/${encodeURIComponent(`${tabTitle}!A1`)}?valueInputOption=USER_ENTERED`,
           {
-            method: 'PUT',
+            method: "PUT",
             body: JSON.stringify({ values: [headers] }),
-          }
+          },
         );
       }
     }
@@ -136,7 +162,11 @@ export const sheetsClient = {
   /**
    * Read all data rows from a tab as array of objects keyed by header
    */
-  async readTab(accessToken: string, spreadsheetId: string, tabTitle: string): Promise<Record<string, string>[]> {
+  async readTab(
+    accessToken: string,
+    spreadsheetId: string,
+    tabTitle: string,
+  ): Promise<Record<string, string>[]> {
     const range = encodeURIComponent(`${tabTitle}!A:Z`);
     const data = await sheetsFetch(accessToken, `/${spreadsheetId}/values/${range}`);
     const rows: string[][] = data.values || [];
@@ -150,7 +180,7 @@ export const sheetsClient = {
       if (!row || row.length === 0 || !row[0]) continue; // skip empty rows or rows without ID
       const record: Record<string, string> = {};
       headers.forEach((h, colIndex) => {
-        record[h] = row[colIndex] !== undefined ? String(row[colIndex]) : '';
+        record[h] = row[colIndex] !== undefined ? String(row[colIndex]) : "";
       });
       results.push(record);
     }
@@ -161,15 +191,20 @@ export const sheetsClient = {
   /**
    * Append a row to a tab
    */
-  async appendRow(accessToken: string, spreadsheetId: string, tabTitle: string, rowValues: any[]): Promise<void> {
+  async appendRow(
+    accessToken: string,
+    spreadsheetId: string,
+    tabTitle: string,
+    rowValues: any[],
+  ): Promise<void> {
     const range = encodeURIComponent(`${tabTitle}!A:Z`);
     await sheetsFetch(
       accessToken,
       `/${spreadsheetId}/values/${range}:append?valueInputOption=USER_ENTERED`,
       {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify({ values: [rowValues] }),
-      }
+      },
     );
   },
 
@@ -181,7 +216,7 @@ export const sheetsClient = {
     spreadsheetId: string,
     tabTitle: string,
     id: string,
-    rowValues: any[]
+    rowValues: any[],
   ): Promise<boolean> {
     // 1. Fetch column A to find the row index
     const colARange = encodeURIComponent(`${tabTitle}!A:A`);
@@ -207,9 +242,9 @@ export const sheetsClient = {
       accessToken,
       `/${spreadsheetId}/values/${targetRange}?valueInputOption=USER_ENTERED`,
       {
-        method: 'PUT',
+        method: "PUT",
         body: JSON.stringify({ values: [rowValues] }),
-      }
+      },
     );
     return true;
   },
@@ -217,7 +252,12 @@ export const sheetsClient = {
   /**
    * Delete a row by ID in column A
    */
-  async deleteRowById(accessToken: string, spreadsheetId: string, tabTitle: string, id: string): Promise<boolean> {
+  async deleteRowById(
+    accessToken: string,
+    spreadsheetId: string,
+    tabTitle: string,
+    id: string,
+  ): Promise<boolean> {
     // In Sheets, clearing or blanking out the row content
     const colARange = encodeURIComponent(`${tabTitle}!A:A`);
     const colAData = await sheetsFetch(accessToken, `/${spreadsheetId}/values/${colARange}`);
@@ -234,7 +274,7 @@ export const sheetsClient = {
 
     const targetRange = encodeURIComponent(`${tabTitle}!A${rowIndex}:Z${rowIndex}`);
     await sheetsFetch(accessToken, `/${spreadsheetId}/values/${targetRange}:clear`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({}),
     });
     return true;

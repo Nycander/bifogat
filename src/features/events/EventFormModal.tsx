@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Hive, EventType } from '../../domain/types';
-import { formatDate } from '../../domain/validation';
-import { X, Check } from 'lucide-react';
+import React, { useState } from "react";
+import { Hive, EventType } from "../../domain/types";
+import { formatDate } from "../../domain/validation";
+import { X, Check } from "lucide-react";
 
 interface EventFormModalProps {
   hives: Hive[];
@@ -22,11 +22,11 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
   onClose,
   onSave,
 }) => {
-  const [hiveId, setHiveId] = useState(initialHiveId || (hives[0]?.id ?? ''));
+  const [hiveId, setHiveId] = useState(initialHiveId || (hives[0]?.id ?? ""));
   const [date, setDate] = useState(formatDate(new Date()));
-  const [type, setType] = useState<EventType>('inspection');
-  const [title, setTitle] = useState('');
-  const [notes, setNotes] = useState('');
+  const [type, setType] = useState<EventType>("inspection");
+  const [title, setTitle] = useState("");
+  const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,11 +35,11 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
     if (isSubmitting) return; // Prevent double tap
 
     if (!hiveId) {
-      setError('Du måste välja en kupa');
+      setError("Du måste välja en kupa");
       return;
     }
     if (!title.trim() && !notes.trim()) {
-      setError('Fyll i åtminstone en kort sammanfattning eller anteckning');
+      setError("Fyll i åtminstone en kort sammanfattning eller anteckning");
       return;
     }
 
@@ -50,12 +50,12 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
         hiveId,
         date,
         type,
-        title: title.trim() || 'Kupbesök',
+        title: title.trim() || "Kupbesök",
         notes: notes.trim(),
       });
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Kunde inte spara händelsen');
+      setError(err.message || "Kunde inte spara händelsen");
       setIsSubmitting(false);
     }
   };
@@ -71,10 +71,16 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
         </div>
 
         <form onSubmit={handleSubmit}>
-          {error && <div className="form-error" style={{ marginBottom: '1rem' }}>{error}</div>}
+          {error && (
+            <div className="form-error" style={{ marginBottom: "1rem" }}>
+              {error}
+            </div>
+          )}
 
           <div className="form-group">
-            <label className="form-label" htmlFor="event-hive">Kupa *</label>
+            <label className="form-label" htmlFor="event-hive">
+              Kupa *
+            </label>
             <select
               id="event-hive"
               className="form-select"
@@ -84,15 +90,17 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
             >
               {hives.map((h) => (
                 <option key={h.id} value={h.id}>
-                  {h.name} {h.status !== 'active' ? `(${h.status})` : ''}
+                  {h.name} {h.status !== "active" ? `(${h.status})` : ""}
                 </option>
               ))}
             </select>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
             <div className="form-group">
-              <label className="form-label" htmlFor="event-date">Datum *</label>
+              <label className="form-label" htmlFor="event-date">
+                Datum *
+              </label>
               <input
                 id="event-date"
                 type="date"
@@ -104,7 +112,9 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
             </div>
 
             <div className="form-group">
-              <label className="form-label" htmlFor="event-type">Typ av händelse</label>
+              <label className="form-label" htmlFor="event-type">
+                Typ av händelse
+              </label>
               <select
                 id="event-type"
                 className="form-select"
@@ -123,7 +133,9 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
           </div>
 
           <div className="form-group">
-            <label className="form-label" htmlFor="event-title">Kort sammanfattning</label>
+            <label className="form-label" htmlFor="event-title">
+              Kort sammanfattning
+            </label>
             <input
               id="event-title"
               type="text"
@@ -136,7 +148,9 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
           </div>
 
           <div className="form-group">
-            <label className="form-label" htmlFor="event-notes">Detaljerade anteckningar (frivilligt)</label>
+            <label className="form-label" htmlFor="event-notes">
+              Detaljerade anteckningar (frivilligt)
+            </label>
             <textarea
               id="event-notes"
               className="form-textarea"
@@ -148,12 +162,17 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
           </div>
 
           <div className="modal-actions">
-            <button type="button" className="btn btn-secondary" onClick={onClose} disabled={isSubmitting}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={onClose}
+              disabled={isSubmitting}
+            >
               Avbryt
             </button>
             <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
               <Check size={16} />
-              <span>{isSubmitting ? 'Sparar...' : 'Spara händelse'}</span>
+              <span>{isSubmitting ? "Sparar..." : "Spara händelse"}</span>
             </button>
           </div>
         </form>

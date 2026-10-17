@@ -1,5 +1,5 @@
-import { Transaction } from '../domain/types';
-import { parseSwedishCurrencyToOre, parseSwedishDate, generateUUID } from '../domain/validation';
+import { Transaction } from "../domain/types";
+import { parseSwedishCurrencyToOre, parseSwedishDate, generateUUID } from "../domain/validation";
 
 export interface CsvRowPreview {
   rawLineIndex: number;
@@ -11,7 +11,7 @@ export interface CsvRowPreview {
   rawBalance: string;
   balanceOre: number | null;
   counterparty: string;
-  status: 'valid' | 'skipped_balance_summary' | 'malformed' | 'duplicate';
+  status: "valid" | "skipped_balance_summary" | "malformed" | "duplicate";
   statusReason?: string;
 }
 
@@ -33,7 +33,7 @@ export interface CsvImportResult {
  */
 function splitCsvLine(line: string, delimiter: string): string[] {
   const result: string[] = [];
-  let current = '';
+  let current = "";
   let inQuotes = false;
 
   for (let i = 0; i < line.length; i++) {
@@ -47,7 +47,7 @@ function splitCsvLine(line: string, delimiter: string): string[] {
       }
     } else if (char === delimiter && !inQuotes) {
       result.push(current.trim());
-      current = '';
+      current = "";
     } else {
       current += char;
     }
@@ -61,7 +61,7 @@ function splitCsvLine(line: string, delimiter: string): string[] {
  */
 export function parseSwedishFinancialCsv(
   csvContent: string,
-  existingTransactions: Transaction[] = []
+  existingTransactions: Transaction[] = [],
 ): CsvImportResult {
   const rawLines = csvContent
     .split(/\r?\n/)
@@ -85,17 +85,23 @@ export function parseSwedishFinancialCsv(
 
   // Detect delimiter: semicolon or comma
   const firstLine = rawLines[0];
-  const delimiter = firstLine.includes(';') ? ';' : ',';
+  const delimiter = firstLine.includes(";") ? ";" : ",";
 
   // Read header
   const headerParts = splitCsvLine(firstLine, delimiter).map((h) => h.toLowerCase());
 
   // Match columns with tolerance for trailing whitespace (e.g. "Beskrivning ")
-  const dateColIdx = headerParts.findIndex((h) => h.includes('datum') || h.includes('date'));
-  const descColIdx = headerParts.findIndex((h) => h.includes('beskrivning') || h.includes('desc'));
-  const changeColIdx = headerParts.findIndex((h) => h.includes('förändring') || h.includes('belopp') || h.includes('amount'));
-  const balanceColIdx = headerParts.findIndex((h) => h.includes('ackumulerat') || h.includes('saldo') || h.includes('balance'));
-  const counterpartyColIdx = headerParts.findIndex((h) => h.includes('motpart') || h.includes('mottagare') || h.includes('avsändare'));
+  const dateColIdx = headerParts.findIndex((h) => h.includes("datum") || h.includes("date"));
+  const descColIdx = headerParts.findIndex((h) => h.includes("beskrivning") || h.includes("desc"));
+  const changeColIdx = headerParts.findIndex(
+    (h) => h.includes("förändring") || h.includes("belopp") || h.includes("amount"),
+  );
+  const balanceColIdx = headerParts.findIndex(
+    (h) => h.includes("ackumulerat") || h.includes("saldo") || h.includes("balance"),
+  );
+  const counterpartyColIdx = headerParts.findIndex(
+    (h) => h.includes("motpart") || h.includes("mottagare") || h.includes("avsändare"),
+  );
 
   const previews: CsvRowPreview[] = [];
   const transactionsToImport: Transaction[] = [];
@@ -107,11 +113,16 @@ export function parseSwedishFinancialCsv(
     const rawLine = rawLines[i];
     const cols = splitCsvLine(rawLine, delimiter);
 
-    const rawDate = dateColIdx >= 0 && cols[dateColIdx] !== undefined ? cols[dateColIdx] : '';
-    const rawDesc = descColIdx >= 0 && cols[descColIdx] !== undefined ? cols[descColIdx] : '';
-    const rawChange = changeColIdx >= 0 && cols[changeColIdx] !== undefined ? cols[changeColIdx] : '';
-    const rawBalance = balanceColIdx >= 0 && cols[balanceColIdx] !== undefined ? cols[balanceColIdx] : '';
-    const rawCounterparty = counterpartyColIdx >= 0 && cols[counterpartyColIdx] !== undefined ? cols[counterpartyColIdx] : '';
+    const rawDate = dateColIdx >= 0 && cols[dateColIdx] !== undefined ? cols[dateColIdx] : "";
+    const rawDesc = descColIdx >= 0 && cols[descColIdx] !== undefined ? cols[descColIdx] : "";
+    const rawChange =
+      changeColIdx >= 0 && cols[changeColIdx] !== undefined ? cols[changeColIdx] : "";
+    const rawBalance =
+      balanceColIdx >= 0 && cols[balanceColIdx] !== undefined ? cols[balanceColIdx] : "";
+    const rawCounterparty =
+      counterpartyColIdx >= 0 && cols[counterpartyColIdx] !== undefined
+        ? cols[counterpartyColIdx]
+        : "";
 
     // Check if this row is an empty line or purely balance summary row (no date or no change)
     if (!rawDate && !rawChange && rawBalance) {
@@ -121,14 +132,14 @@ export function parseSwedishFinancialCsv(
         rawLineIndex: i + 1,
         date: null,
         rawDate,
-        description: rawDesc || 'Salderingsrad',
+        description: rawDesc || "Salderingsrad",
         rawChange,
         amountOre: null,
         rawBalance,
         balanceOre: bOre,
         counterparty: rawCounterparty,
-        status: 'skipped_balance_summary',
-        statusReason: 'Summerings-/saldorad utan enskild transaktionsförändring',
+        status: "skipped_balance_summary",
+        statusReason: "Summerings-/saldorad utan enskild transaktionsförändring",
       });
       continue;
     }
@@ -153,19 +164,22 @@ export function parseSwedishFinancialCsv(
         rawBalance,
         balanceOre: parsedBalOre,
         counterparty: rawCounterparty,
-        status: 'malformed',
+        status: "malformed",
         statusReason: !parsedDate
-          ? 'Ogiltigt datumformat'
+          ? "Ogiltigt datumformat"
           : parsedOre === null
-          ? 'Ogiltigt belopp/förändring'
-          : 'Beskrivning saknas',
+            ? "Ogiltigt belopp/förändring"
+            : "Beskrivning saknas",
       });
       continue;
     }
 
     // Check duplicate against existing transactions in DB
     const isDuplicate = existingTransactions.some(
-      (et) => et.date === parsedDate && et.description.trim() === rawDesc.trim() && et.amountOre === parsedOre
+      (et) =>
+        et.date === parsedDate &&
+        et.description.trim() === rawDesc.trim() &&
+        et.amountOre === parsedOre,
     );
 
     if (isDuplicate) {
@@ -179,8 +193,8 @@ export function parseSwedishFinancialCsv(
         rawBalance,
         balanceOre: parsedBalOre,
         counterparty: rawCounterparty,
-        status: 'duplicate',
-        statusReason: 'Motsvarande transaktion finns redan registrerad',
+        status: "duplicate",
+        statusReason: "Motsvarande transaktion finns redan registrerad",
       });
       continue;
     }
@@ -194,7 +208,7 @@ export function parseSwedishFinancialCsv(
       description: rawDesc,
       amountOre: parsedOre,
       counterparty: rawCounterparty || undefined,
-      source: 'import',
+      source: "import",
       createdAt: now,
       updatedAt: now,
     };
@@ -211,14 +225,14 @@ export function parseSwedishFinancialCsv(
       rawBalance,
       balanceOre: parsedBalOre,
       counterparty: rawCounterparty,
-      status: 'valid',
+      status: "valid",
     });
   }
 
-  const validCount = previews.filter((r) => r.status === 'valid').length;
-  const skippedCount = previews.filter((r) => r.status === 'skipped_balance_summary').length;
-  const malformedCount = previews.filter((r) => r.status === 'malformed').length;
-  const duplicateCount = previews.filter((r) => r.status === 'duplicate').length;
+  const validCount = previews.filter((r) => r.status === "valid").length;
+  const skippedCount = previews.filter((r) => r.status === "skipped_balance_summary").length;
+  const malformedCount = previews.filter((r) => r.status === "malformed").length;
+  const duplicateCount = previews.filter((r) => r.status === "duplicate").length;
 
   const balanceMatches = lastAckOre !== null ? runningCalcOre === lastAckOre : true;
 

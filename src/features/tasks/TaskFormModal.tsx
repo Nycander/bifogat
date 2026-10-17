@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Task, Hive } from '../../domain/types';
-import { X, Check } from 'lucide-react';
+import React, { useState } from "react";
+import { Task, Hive } from "../../domain/types";
+import { X, Check } from "lucide-react";
 
 interface TaskFormModalProps {
   task?: Task;
@@ -14,23 +14,18 @@ interface TaskFormModalProps {
   }) => Promise<void>;
 }
 
-export const TaskFormModal: React.FC<TaskFormModalProps> = ({
-  task,
-  hives,
-  onClose,
-  onSave,
-}) => {
-  const [title, setTitle] = useState(task?.title || '');
-  const [notes, setNotes] = useState(task?.notes || '');
-  const [hiveId, setHiveId] = useState(task?.hiveId || '');
-  const [dueDate, setDueDate] = useState(task?.dueDate || '');
+export const TaskFormModal: React.FC<TaskFormModalProps> = ({ task, hives, onClose, onSave }) => {
+  const [title, setTitle] = useState(task?.title || "");
+  const [notes, setNotes] = useState(task?.notes || "");
+  const [hiveId, setHiveId] = useState(task?.hiveId || "");
+  const [dueDate, setDueDate] = useState(task?.dueDate || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) {
-      setError('Beskrivning av uppgiften måste fyllas i');
+      setError("Beskrivning av uppgiften måste fyllas i");
       return;
     }
 
@@ -45,7 +40,7 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
       });
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Kunde inte spara uppgiften');
+      setError(err.message || "Kunde inte spara uppgiften");
       setIsSubmitting(false);
     }
   };
@@ -54,17 +49,23 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2 className="modal-title">{task ? 'Redigera uppgift' : 'Ny uppgift / att göra'}</h2>
+          <h2 className="modal-title">{task ? "Redigera uppgift" : "Ny uppgift / att göra"}</h2>
           <button className="modal-close-btn" onClick={onClose} aria-label="Stäng">
             <X size={20} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit}>
-          {error && <div className="form-error" style={{ marginBottom: '1rem' }}>{error}</div>}
+          {error && (
+            <div className="form-error" style={{ marginBottom: "1rem" }}>
+              {error}
+            </div>
+          )}
 
           <div className="form-group">
-            <label className="form-label" htmlFor="task-title">Uppgift *</label>
+            <label className="form-label" htmlFor="task-title">
+              Uppgift *
+            </label>
             <input
               id="task-title"
               type="text"
@@ -77,9 +78,11 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
             <div className="form-group">
-              <label className="form-label" htmlFor="task-due">Förfallodatum (valfritt)</label>
+              <label className="form-label" htmlFor="task-due">
+                Förfallodatum (valfritt)
+              </label>
               <input
                 id="task-due"
                 type="date"
@@ -90,7 +93,9 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
             </div>
 
             <div className="form-group">
-              <label className="form-label" htmlFor="task-hive">Koppla till kupa (valfritt)</label>
+              <label className="form-label" htmlFor="task-hive">
+                Koppla till kupa (valfritt)
+              </label>
               <select
                 id="task-hive"
                 className="form-select"
@@ -108,7 +113,9 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
           </div>
 
           <div className="form-group">
-            <label className="form-label" htmlFor="task-notes">Ytterligare detaljer (valfritt)</label>
+            <label className="form-label" htmlFor="task-notes">
+              Ytterligare detaljer (valfritt)
+            </label>
             <textarea
               id="task-notes"
               className="form-textarea"
@@ -120,12 +127,17 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
           </div>
 
           <div className="modal-actions">
-            <button type="button" className="btn btn-secondary" onClick={onClose} disabled={isSubmitting}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={onClose}
+              disabled={isSubmitting}
+            >
               Avbryt
             </button>
             <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
               <Check size={16} />
-              <span>{isSubmitting ? 'Sparar...' : 'Spara uppgift'}</span>
+              <span>{isSubmitting ? "Sparar..." : "Spara uppgift"}</span>
             </button>
           </div>
         </form>

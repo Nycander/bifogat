@@ -8,8 +8,8 @@ import {
   SyncConflict,
   AppMeta,
   EntityType,
-} from '../domain/types';
-import { generateUUID } from '../domain/validation';
+} from "../domain/types";
+import { generateUUID } from "../domain/validation";
 import {
   getAllFromStore,
   getFromStore,
@@ -19,14 +19,14 @@ import {
   deleteEntityWithOutbox,
   clearStore,
   StoreName,
-} from './db';
+} from "./db";
 
 // Helper to create an outbox operation
 function createOutboxOp(
   entity: EntityType,
-  operation: 'create' | 'update' | 'delete',
+  operation: "create" | "update" | "delete",
   recordId: string,
-  payload?: any
+  payload?: any,
 ): OutboxOp {
   return {
     id: generateUUID(),
@@ -44,20 +44,20 @@ function createOutboxOp(
    ========================================================================== */
 export const hiveRepository = {
   async getAll(): Promise<Hive[]> {
-    const list = await getAllFromStore<Hive>('hives');
+    const list = await getAllFromStore<Hive>("hives");
     // Sort active first, then alphabetically by name
     return list.sort((a, b) => {
-      if (a.status === 'active' && b.status !== 'active') return -1;
-      if (a.status !== 'active' && b.status === 'active') return 1;
-      return a.name.localeCompare(b.name, 'sv');
+      if (a.status === "active" && b.status !== "active") return -1;
+      if (a.status !== "active" && b.status === "active") return 1;
+      return a.name.localeCompare(b.name, "sv");
     });
   },
 
   async getById(id: string): Promise<Hive | null> {
-    return getFromStore<Hive>('hives', id);
+    return getFromStore<Hive>("hives", id);
   },
 
-  async create(data: Omit<Hive, 'id' | 'createdAt' | 'updatedAt'>): Promise<Hive> {
+  async create(data: Omit<Hive, "id" | "createdAt" | "updatedAt">): Promise<Hive> {
     const now = new Date().toISOString();
     const hive: Hive = {
       id: generateUUID(),
@@ -65,27 +65,27 @@ export const hiveRepository = {
       createdAt: now,
       updatedAt: now,
     };
-    const op = createOutboxOp('hive', 'create', hive.id, hive);
-    await saveEntityWithOutbox('hives', hive, op);
+    const op = createOutboxOp("hive", "create", hive.id, hive);
+    await saveEntityWithOutbox("hives", hive, op);
     return hive;
   },
 
-  async update(id: string, updates: Partial<Omit<Hive, 'id' | 'createdAt'>>): Promise<Hive> {
-    const existing = await getFromStore<Hive>('hives', id);
+  async update(id: string, updates: Partial<Omit<Hive, "id" | "createdAt">>): Promise<Hive> {
+    const existing = await getFromStore<Hive>("hives", id);
     if (!existing) throw new Error(`Kupa med id ${id} hittades inte.`);
     const updated: Hive = {
       ...existing,
       ...updates,
       updatedAt: new Date().toISOString(),
     };
-    const op = createOutboxOp('hive', 'update', updated.id, updated);
-    await saveEntityWithOutbox('hives', updated, op);
+    const op = createOutboxOp("hive", "update", updated.id, updated);
+    await saveEntityWithOutbox("hives", updated, op);
     return updated;
   },
 
   async delete(id: string): Promise<void> {
-    const op = createOutboxOp('hive', 'delete', id);
-    await deleteEntityWithOutbox('hives', id, op);
+    const op = createOutboxOp("hive", "delete", id);
+    await deleteEntityWithOutbox("hives", id, op);
   },
 };
 
@@ -94,7 +94,7 @@ export const hiveRepository = {
    ========================================================================== */
 export const eventRepository = {
   async getAll(): Promise<HiveEvent[]> {
-    const list = await getAllFromStore<HiveEvent>('events');
+    const list = await getAllFromStore<HiveEvent>("events");
     // Chronological: newest first
     return list.sort((a, b) => {
       const cmp = b.date.localeCompare(a.date);
@@ -109,10 +109,10 @@ export const eventRepository = {
   },
 
   async getById(id: string): Promise<HiveEvent | null> {
-    return getFromStore<HiveEvent>('events', id);
+    return getFromStore<HiveEvent>("events", id);
   },
 
-  async create(data: Omit<HiveEvent, 'id' | 'createdAt' | 'updatedAt'>): Promise<HiveEvent> {
+  async create(data: Omit<HiveEvent, "id" | "createdAt" | "updatedAt">): Promise<HiveEvent> {
     const now = new Date().toISOString();
     const event: HiveEvent = {
       id: generateUUID(),
@@ -120,27 +120,30 @@ export const eventRepository = {
       createdAt: now,
       updatedAt: now,
     };
-    const op = createOutboxOp('event', 'create', event.id, event);
-    await saveEntityWithOutbox('events', event, op);
+    const op = createOutboxOp("event", "create", event.id, event);
+    await saveEntityWithOutbox("events", event, op);
     return event;
   },
 
-  async update(id: string, updates: Partial<Omit<HiveEvent, 'id' | 'createdAt'>>): Promise<HiveEvent> {
-    const existing = await getFromStore<HiveEvent>('events', id);
+  async update(
+    id: string,
+    updates: Partial<Omit<HiveEvent, "id" | "createdAt">>,
+  ): Promise<HiveEvent> {
+    const existing = await getFromStore<HiveEvent>("events", id);
     if (!existing) throw new Error(`Händelse med id ${id} hittades inte.`);
     const updated: HiveEvent = {
       ...existing,
       ...updates,
       updatedAt: new Date().toISOString(),
     };
-    const op = createOutboxOp('event', 'update', updated.id, updated);
-    await saveEntityWithOutbox('events', updated, op);
+    const op = createOutboxOp("event", "update", updated.id, updated);
+    await saveEntityWithOutbox("events", updated, op);
     return updated;
   },
 
   async delete(id: string): Promise<void> {
-    const op = createOutboxOp('event', 'delete', id);
-    await deleteEntityWithOutbox('events', id, op);
+    const op = createOutboxOp("event", "delete", id);
+    await deleteEntityWithOutbox("events", id, op);
   },
 };
 
@@ -149,11 +152,11 @@ export const eventRepository = {
    ========================================================================== */
 export const taskRepository = {
   async getAll(): Promise<Task[]> {
-    const list = await getAllFromStore<Task>('tasks');
+    const list = await getAllFromStore<Task>("tasks");
     return list.sort((a, b) => {
       // Open tasks first
-      if (a.status === 'open' && b.status === 'completed') return -1;
-      if (a.status === 'completed' && b.status === 'open') return 1;
+      if (a.status === "open" && b.status === "completed") return -1;
+      if (a.status === "completed" && b.status === "open") return 1;
       // Due date sorting for open tasks
       if (a.dueDate && b.dueDate) return a.dueDate.localeCompare(b.dueDate);
       if (a.dueDate && !b.dueDate) return -1;
@@ -164,14 +167,14 @@ export const taskRepository = {
 
   async getOpen(): Promise<Task[]> {
     const all = await this.getAll();
-    return all.filter((t) => t.status === 'open');
+    return all.filter((t) => t.status === "open");
   },
 
   async getById(id: string): Promise<Task | null> {
-    return getFromStore<Task>('tasks', id);
+    return getFromStore<Task>("tasks", id);
   },
 
-  async create(data: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>): Promise<Task> {
+  async create(data: Omit<Task, "id" | "createdAt" | "updatedAt">): Promise<Task> {
     const now = new Date().toISOString();
     const task: Task = {
       id: generateUUID(),
@@ -179,43 +182,43 @@ export const taskRepository = {
       createdAt: now,
       updatedAt: now,
     };
-    const op = createOutboxOp('task', 'create', task.id, task);
-    await saveEntityWithOutbox('tasks', task, op);
+    const op = createOutboxOp("task", "create", task.id, task);
+    await saveEntityWithOutbox("tasks", task, op);
     return task;
   },
 
-  async update(id: string, updates: Partial<Omit<Task, 'id' | 'createdAt'>>): Promise<Task> {
-    const existing = await getFromStore<Task>('tasks', id);
+  async update(id: string, updates: Partial<Omit<Task, "id" | "createdAt">>): Promise<Task> {
+    const existing = await getFromStore<Task>("tasks", id);
     if (!existing) throw new Error(`Uppgift med id ${id} hittades inte.`);
     const updated: Task = {
       ...existing,
       ...updates,
       updatedAt: new Date().toISOString(),
     };
-    const op = createOutboxOp('task', 'update', updated.id, updated);
-    await saveEntityWithOutbox('tasks', updated, op);
+    const op = createOutboxOp("task", "update", updated.id, updated);
+    await saveEntityWithOutbox("tasks", updated, op);
     return updated;
   },
 
   async toggleComplete(id: string): Promise<Task> {
-    const existing = await getFromStore<Task>('tasks', id);
+    const existing = await getFromStore<Task>("tasks", id);
     if (!existing) throw new Error(`Uppgift med id ${id} hittades inte.`);
     const now = new Date().toISOString();
-    const isCompleted = existing.status === 'open';
+    const isCompleted = existing.status === "open";
     const updated: Task = {
       ...existing,
-      status: isCompleted ? 'completed' : 'open',
+      status: isCompleted ? "completed" : "open",
       completedAt: isCompleted ? now : undefined,
       updatedAt: now,
     };
-    const op = createOutboxOp('task', 'update', updated.id, updated);
-    await saveEntityWithOutbox('tasks', updated, op);
+    const op = createOutboxOp("task", "update", updated.id, updated);
+    await saveEntityWithOutbox("tasks", updated, op);
     return updated;
   },
 
   async delete(id: string): Promise<void> {
-    const op = createOutboxOp('task', 'delete', id);
-    await deleteEntityWithOutbox('tasks', id, op);
+    const op = createOutboxOp("task", "delete", id);
+    await deleteEntityWithOutbox("tasks", id, op);
   },
 };
 
@@ -224,16 +227,16 @@ export const taskRepository = {
    ========================================================================== */
 export const harvestRepository = {
   async getAll(): Promise<Harvest[]> {
-    const list = await getAllFromStore<Harvest>('harvests');
+    const list = await getAllFromStore<Harvest>("harvests");
     // Sort newest date first
     return list.sort((a, b) => b.date.localeCompare(a.date));
   },
 
   async getById(id: string): Promise<Harvest | null> {
-    return getFromStore<Harvest>('harvests', id);
+    return getFromStore<Harvest>("harvests", id);
   },
 
-  async create(data: Omit<Harvest, 'id' | 'createdAt' | 'updatedAt'>): Promise<Harvest> {
+  async create(data: Omit<Harvest, "id" | "createdAt" | "updatedAt">): Promise<Harvest> {
     const now = new Date().toISOString();
     const harvest: Harvest = {
       id: generateUUID(),
@@ -241,34 +244,36 @@ export const harvestRepository = {
       createdAt: now,
       updatedAt: now,
     };
-    const op = createOutboxOp('harvest', 'create', harvest.id, harvest);
-    await saveEntityWithOutbox('harvests', harvest, op);
+    const op = createOutboxOp("harvest", "create", harvest.id, harvest);
+    await saveEntityWithOutbox("harvests", harvest, op);
     return harvest;
   },
 
-  async update(id: string, updates: Partial<Omit<Harvest, 'id' | 'createdAt'>>): Promise<Harvest> {
-    const existing = await getFromStore<Harvest>('harvests', id);
+  async update(id: string, updates: Partial<Omit<Harvest, "id" | "createdAt">>): Promise<Harvest> {
+    const existing = await getFromStore<Harvest>("harvests", id);
     if (!existing) throw new Error(`Skörd med id ${id} hittades inte.`);
     const updated: Harvest = {
       ...existing,
       ...updates,
       updatedAt: new Date().toISOString(),
     };
-    const op = createOutboxOp('harvest', 'update', updated.id, updated);
-    await saveEntityWithOutbox('harvests', updated, op);
+    const op = createOutboxOp("harvest", "update", updated.id, updated);
+    await saveEntityWithOutbox("harvests", updated, op);
     return updated;
   },
 
   async delete(id: string): Promise<void> {
-    const op = createOutboxOp('harvest', 'delete', id);
-    await deleteEntityWithOutbox('harvests', id, op);
+    const op = createOutboxOp("harvest", "delete", id);
+    await deleteEntityWithOutbox("harvests", id, op);
   },
 
-  async getAnnualSummary(): Promise<Record<string, { totalGrams: number; totalJars: number; entries: number }>> {
+  async getAnnualSummary(): Promise<
+    Record<string, { totalGrams: number; totalJars: number; entries: number }>
+  > {
     const all = await this.getAll();
     const summary: Record<string, { totalGrams: number; totalJars: number; entries: number }> = {};
     for (const h of all) {
-      const year = h.date.substring(0, 4) || 'Okänt år';
+      const year = h.date.substring(0, 4) || "Okänt år";
       if (!summary[year]) {
         summary[year] = { totalGrams: 0, totalJars: 0, entries: 0 };
       }
@@ -289,7 +294,7 @@ export const harvestRepository = {
    ========================================================================== */
 export const transactionRepository = {
   async getAll(): Promise<Transaction[]> {
-    const list = await getAllFromStore<Transaction>('transactions');
+    const list = await getAllFromStore<Transaction>("transactions");
     // Sort date descending (newest first)
     return list.sort((a, b) => {
       const cmp = b.date.localeCompare(a.date);
@@ -299,10 +304,10 @@ export const transactionRepository = {
   },
 
   async getById(id: string): Promise<Transaction | null> {
-    return getFromStore<Transaction>('transactions', id);
+    return getFromStore<Transaction>("transactions", id);
   },
 
-  async create(data: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>): Promise<Transaction> {
+  async create(data: Omit<Transaction, "id" | "createdAt" | "updatedAt">): Promise<Transaction> {
     const now = new Date().toISOString();
     const tx: Transaction = {
       id: generateUUID(),
@@ -310,27 +315,30 @@ export const transactionRepository = {
       createdAt: now,
       updatedAt: now,
     };
-    const op = createOutboxOp('transaction', 'create', tx.id, tx);
-    await saveEntityWithOutbox('transactions', tx, op);
+    const op = createOutboxOp("transaction", "create", tx.id, tx);
+    await saveEntityWithOutbox("transactions", tx, op);
     return tx;
   },
 
-  async update(id: string, updates: Partial<Omit<Transaction, 'id' | 'createdAt'>>): Promise<Transaction> {
-    const existing = await getFromStore<Transaction>('transactions', id);
+  async update(
+    id: string,
+    updates: Partial<Omit<Transaction, "id" | "createdAt">>,
+  ): Promise<Transaction> {
+    const existing = await getFromStore<Transaction>("transactions", id);
     if (!existing) throw new Error(`Transaktion med id ${id} hittades inte.`);
     const updated: Transaction = {
       ...existing,
       ...updates,
       updatedAt: new Date().toISOString(),
     };
-    const op = createOutboxOp('transaction', 'update', updated.id, updated);
-    await saveEntityWithOutbox('transactions', updated, op);
+    const op = createOutboxOp("transaction", "update", updated.id, updated);
+    await saveEntityWithOutbox("transactions", updated, op);
     return updated;
   },
 
   async delete(id: string): Promise<void> {
-    const op = createOutboxOp('transaction', 'delete', id);
-    await deleteEntityWithOutbox('transactions', id, op);
+    const op = createOutboxOp("transaction", "delete", id);
+    await deleteEntityWithOutbox("transactions", id, op);
   },
 
   async getBalance(): Promise<number> {
@@ -342,9 +350,12 @@ export const transactionRepository = {
     Record<string, { incomeOre: number; expenseOre: number; netOre: number; count: number }>
   > {
     const all = await this.getAll();
-    const summary: Record<string, { incomeOre: number; expenseOre: number; netOre: number; count: number }> = {};
+    const summary: Record<
+      string,
+      { incomeOre: number; expenseOre: number; netOre: number; count: number }
+    > = {};
     for (const t of all) {
-      const year = t.date.substring(0, 4) || 'Okänt år';
+      const year = t.date.substring(0, 4) || "Okänt år";
       if (!summary[year]) {
         summary[year] = { incomeOre: 0, expenseOre: 0, netOre: 0, count: 0 };
       }
@@ -366,7 +377,7 @@ export const transactionRepository = {
    ========================================================================== */
 export const outboxRepository = {
   async getAll(): Promise<OutboxOp[]> {
-    const list = await getAllFromStore<OutboxOp>('outbox');
+    const list = await getAllFromStore<OutboxOp>("outbox");
     return list.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
   },
 
@@ -376,15 +387,15 @@ export const outboxRepository = {
   },
 
   async remove(id: string): Promise<void> {
-    await deleteFromStore('outbox', id);
+    await deleteFromStore("outbox", id);
   },
 
   async updateOp(op: OutboxOp): Promise<void> {
-    await putInStore('outbox', op);
+    await putInStore("outbox", op);
   },
 
   async clear(): Promise<void> {
-    await clearStore('outbox');
+    await clearStore("outbox");
   },
 };
 
@@ -393,50 +404,57 @@ export const outboxRepository = {
    ========================================================================== */
 export const conflictRepository = {
   async getAll(): Promise<SyncConflict[]> {
-    const list = await getAllFromStore<SyncConflict>('conflicts');
-    return list.filter((c) => c.status === 'unresolved');
+    const list = await getAllFromStore<SyncConflict>("conflicts");
+    return list.filter((c) => c.status === "unresolved");
   },
 
   async getById(id: string): Promise<SyncConflict | null> {
-    return getFromStore<SyncConflict>('conflicts', id);
+    return getFromStore<SyncConflict>("conflicts", id);
   },
 
-  async addConflict(conflict: Omit<SyncConflict, 'id' | 'detectedAt' | 'status'>): Promise<SyncConflict> {
+  async addConflict(
+    conflict: Omit<SyncConflict, "id" | "detectedAt" | "status">,
+  ): Promise<SyncConflict> {
     const item: SyncConflict = {
       id: generateUUID(),
       ...conflict,
       detectedAt: new Date().toISOString(),
-      status: 'unresolved',
+      status: "unresolved",
     };
-    await putInStore('conflicts', item);
+    await putInStore("conflicts", item);
     return item;
   },
 
   async resolveConflict(id: string, keepLocal: boolean): Promise<void> {
-    const conflict = await getFromStore<SyncConflict>('conflicts', id);
+    const conflict = await getFromStore<SyncConflict>("conflicts", id);
     if (!conflict) return;
 
     const storeMap: Record<EntityType, StoreName> = {
-      hive: 'hives',
-      event: 'events',
-      task: 'tasks',
-      harvest: 'harvests',
-      transaction: 'transactions',
+      hive: "hives",
+      event: "events",
+      task: "tasks",
+      harvest: "harvests",
+      transaction: "transactions",
     };
     const store = storeMap[conflict.entity];
 
     if (keepLocal) {
       // Keep local version, create an outbox op to push to Sheets
       await putInStore(store, conflict.localVersion);
-      const op = createOutboxOp(conflict.entity, 'update', conflict.recordId, conflict.localVersion);
-      await putInStore('outbox', op);
+      const op = createOutboxOp(
+        conflict.entity,
+        "update",
+        conflict.recordId,
+        conflict.localVersion,
+      );
+      await putInStore("outbox", op);
     } else {
       // Overwrite local with remote version
       await putInStore(store, conflict.remoteVersion);
     }
 
-    conflict.status = 'resolved';
-    await putInStore('conflicts', conflict);
+    conflict.status = "resolved";
+    await putInStore("conflicts", conflict);
   },
 };
 
@@ -445,7 +463,7 @@ export const conflictRepository = {
    ========================================================================== */
 export const metaRepository = {
   async get(): Promise<AppMeta> {
-    const meta = await getFromStore<AppMeta>('meta', 'config');
+    const meta = await getFromStore<AppMeta>("meta", "config");
     if (meta) {
       if (meta.requireManualWriteConfirmation === undefined) {
         meta.requireManualWriteConfirmation = true;
@@ -453,21 +471,21 @@ export const metaRepository = {
       return meta;
     }
     const defaultMeta: AppMeta = {
-      key: 'config',
+      key: "config",
       schemaVersion: 1,
       requireManualWriteConfirmation: true,
     };
-    await putInStore('meta', defaultMeta);
+    await putInStore("meta", defaultMeta);
     return defaultMeta;
   },
 
-  async save(updates: Partial<Omit<AppMeta, 'key'>>): Promise<AppMeta> {
+  async save(updates: Partial<Omit<AppMeta, "key">>): Promise<AppMeta> {
     const current = await this.get();
     const updated: AppMeta = {
       ...current,
       ...updates,
     };
-    await putInStore('meta', updated);
+    await putInStore("meta", updated);
     return updated;
   },
 };

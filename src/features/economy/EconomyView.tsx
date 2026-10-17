@@ -1,7 +1,16 @@
-import React from 'react';
-import { Transaction } from '../../domain/types';
-import { formatOreToSEK } from '../../domain/validation';
-import { Plus, Wallet, Calendar, ArrowUpRight, ArrowDownLeft, Trash2, Edit2, AlertCircle } from 'lucide-react';
+import React from "react";
+import { Transaction } from "../../domain/types";
+import { formatOreToSEK } from "../../domain/validation";
+import {
+  Plus,
+  Wallet,
+  Calendar,
+  ArrowUpRight,
+  ArrowDownLeft,
+  Trash2,
+  Edit2,
+  AlertCircle,
+} from "lucide-react";
 
 interface EconomyViewProps {
   transactions: Transaction[];
@@ -21,9 +30,12 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
   const totalBalanceOre = transactions.reduce((sum, t) => sum + (t.amountOre || 0), 0);
 
   // Group by year
-  const summaryByYear: Record<string, { incomeOre: number; expenseOre: number; netOre: number; count: number }> = {};
+  const summaryByYear: Record<
+    string,
+    { incomeOre: number; expenseOre: number; netOre: number; count: number }
+  > = {};
   for (const t of transactions) {
-    const yr = t.date.substring(0, 4) || 'Okänt år';
+    const yr = t.date.substring(0, 4) || "Okänt år";
     if (!summaryByYear[yr]) {
       summaryByYear[yr] = { incomeOre: 0, expenseOre: 0, netOre: 0, count: 0 };
     }
@@ -55,10 +67,17 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: "1rem",
+        }}
+      >
         <div>
           <h1>Ekonomi & kassa</h1>
-          <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>
+          <p style={{ fontSize: "0.875rem", color: "var(--color-text-muted)" }}>
             Försäljning av honung, materialinköp och löpande saldo
           </p>
         </div>
@@ -72,26 +91,68 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
       <div
         className="card"
         style={{
-          background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
-          borderColor: '#fde68a',
-          marginBottom: '1rem',
+          background: "linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)",
+          borderColor: "#fde68a",
+          marginBottom: "1rem",
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "0.5rem",
+          }}
+        >
           <div>
-            <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-accent-dark)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <div
+              style={{
+                fontSize: "0.8rem",
+                fontWeight: 700,
+                color: "var(--color-accent-dark)",
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+              }}
+            >
               BERÄKNAT TOTALSALDO
             </div>
-            <div style={{ fontSize: '1.75rem', fontWeight: 800, color: totalBalanceOre >= 0 ? '#15803d' : '#b91c1c' }}>
+            <div
+              style={{
+                fontSize: "1.75rem",
+                fontWeight: 800,
+                color: totalBalanceOre >= 0 ? "#15803d" : "#b91c1c",
+              }}
+            >
               {formatOreToSEK(totalBalanceOre)}
             </div>
           </div>
           {importedHistoricalBalanceOre !== undefined && (
-            <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', background: '#fff', padding: '0.5rem 0.75rem', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
+            <div
+              style={{
+                fontSize: "0.85rem",
+                color: "var(--color-text-muted)",
+                background: "#fff",
+                padding: "0.5rem 0.75rem",
+                borderRadius: "8px",
+                border: "1px solid var(--color-border)",
+              }}
+            >
               <div>Historiskt kalkylarksaldo:</div>
-              <strong style={{ color: 'var(--color-text-main)' }}>{formatOreToSEK(importedHistoricalBalanceOre)}</strong>
+              <strong style={{ color: "var(--color-text-main)" }}>
+                {formatOreToSEK(importedHistoricalBalanceOre)}
+              </strong>
               {importedHistoricalBalanceOre !== totalBalanceOre && (
-                <div style={{ fontSize: '0.75rem', color: 'var(--color-warning)', display: 'flex', alignItems: 'center', gap: '0.2rem', marginTop: '0.2rem' }}>
+                <div
+                  style={{
+                    fontSize: "0.75rem",
+                    color: "var(--color-warning)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.2rem",
+                    marginTop: "0.2rem",
+                  }}
+                >
                   <AlertCircle size={12} />
                   Diff: {formatOreToSEK(totalBalanceOre - importedHistoricalBalanceOre)}
                 </div>
@@ -103,19 +164,39 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
 
       {/* Annual Summary */}
       {years.length > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+            gap: "0.75rem",
+            marginBottom: "1.25rem",
+          }}
+        >
           {years.map((yr) => {
             const data = summaryByYear[yr];
             return (
-              <div key={yr} className="card" style={{ padding: '0.85rem', marginBottom: 0 }}>
-                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-accent-dark)' }}>{yr}</div>
-                <div style={{ fontSize: '0.8rem', color: '#15803d', marginTop: '0.3rem' }}>
+              <div key={yr} className="card" style={{ padding: "0.85rem", marginBottom: 0 }}>
+                <div
+                  style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--color-accent-dark)" }}
+                >
+                  {yr}
+                </div>
+                <div style={{ fontSize: "0.8rem", color: "#15803d", marginTop: "0.3rem" }}>
                   In: +{formatOreToSEK(data.incomeOre)}
                 </div>
-                <div style={{ fontSize: '0.8rem', color: '#b91c1c' }}>
+                <div style={{ fontSize: "0.8rem", color: "#b91c1c" }}>
                   Ut: -{formatOreToSEK(data.expenseOre)}
                 </div>
-                <div style={{ fontSize: '0.95rem', fontWeight: 700, color: data.netOre >= 0 ? '#15803d' : '#b91c1c', marginTop: '0.2rem', borderTop: '1px solid var(--color-border)', paddingTop: '0.2rem' }}>
+                <div
+                  style={{
+                    fontSize: "0.95rem",
+                    fontWeight: 700,
+                    color: data.netOre >= 0 ? "#15803d" : "#b91c1c",
+                    marginTop: "0.2rem",
+                    borderTop: "1px solid var(--color-border)",
+                    paddingTop: "0.2rem",
+                  }}
+                >
                   Netto: {formatOreToSEK(data.netOre)}
                 </div>
               </div>
@@ -145,17 +226,19 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
 
             return (
               <div key={tx.id} className="list-item">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
                   <div
                     style={{
-                      width: '36px',
-                      height: '36px',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      backgroundColor: isIncome ? 'var(--color-success-bg)' : 'var(--color-danger-bg)',
-                      color: isIncome ? 'var(--color-success)' : 'var(--color-danger)',
+                      width: "36px",
+                      height: "36px",
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: isIncome
+                        ? "var(--color-success-bg)"
+                        : "var(--color-danger-bg)",
+                      color: isIncome ? "var(--color-success)" : "var(--color-danger)",
                       flexShrink: 0,
                     }}
                   >
@@ -163,48 +246,78 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
                   </div>
 
                   <div className="list-item-main">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.5rem",
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: "0.8rem",
+                          color: "var(--color-text-muted)",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.25rem",
+                        }}
+                      >
                         <Calendar size={12} />
                         {tx.date}
                       </span>
                       {tx.counterparty && (
-                        <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-text-main)' }}>
+                        <span
+                          style={{
+                            fontSize: "0.8rem",
+                            fontWeight: 600,
+                            color: "var(--color-text-main)",
+                          }}
+                        >
                           • {tx.counterparty}
                         </span>
                       )}
                       {tx.category && (
-                        <span className="badge badge-inactive" style={{ fontSize: '0.7rem' }}>
+                        <span className="badge badge-inactive" style={{ fontSize: "0.7rem" }}>
                           {tx.category}
                         </span>
                       )}
                     </div>
 
-                    <div className="list-item-title" style={{ marginTop: '0.15rem' }}>
+                    <div className="list-item-title" style={{ marginTop: "0.15rem" }}>
                       {tx.description}
                     </div>
 
                     {runningBal !== undefined && (
-                      <div style={{ fontSize: '0.75rem', color: 'var(--color-text-light)' }}>
+                      <div style={{ fontSize: "0.75rem", color: "var(--color-text-light)" }}>
                         Löpande saldo: {formatOreToSEK(runningBal)}
                       </div>
                     )}
                   </div>
                 </div>
 
-                <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem' }}>
+                <div
+                  style={{
+                    textAlign: "right",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "flex-end",
+                    gap: "0.25rem",
+                  }}
+                >
                   <div
                     style={{
-                      fontSize: '1.05rem',
+                      fontSize: "1.05rem",
                       fontWeight: 800,
-                      color: isIncome ? 'var(--color-success)' : 'var(--color-danger)',
-                      whiteSpace: 'nowrap',
+                      color: isIncome ? "var(--color-success)" : "var(--color-danger)",
+                      whiteSpace: "nowrap",
                     }}
                   >
-                    {isIncome ? '+' : ''}{formatOreToSEK(tx.amountOre)}
+                    {isIncome ? "+" : ""}
+                    {formatOreToSEK(tx.amountOre)}
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
                     <button
                       className="btn btn-secondary btn-sm btn-icon-only"
                       onClick={() => onEditTransaction(tx)}

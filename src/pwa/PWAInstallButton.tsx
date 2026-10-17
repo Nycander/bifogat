@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { usePWAInstall } from './usePWAInstall';
-import { Download, Smartphone } from 'lucide-react';
+import React, { useState } from "react";
+import { usePWAInstall } from "./usePWAInstall";
+import { Download, Smartphone } from "lucide-react";
 
 export const PWAInstallButton: React.FC = () => {
   const { isInstallable, isInstalled, isIOS, install } = usePWAInstall();
@@ -43,15 +43,14 @@ export const PWAInstallButton: React.FC = () => {
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
               <h3 className="modal-title">Installera på iPhone & iPad</h3>
               <p className="modal-text">
-                1. Tryck på knappen <strong>Dela</strong> (fyrkant med pil uppåt) i Safaris verktygsfält.<br />
+                1. Tryck på knappen <strong>Dela</strong> (fyrkant med pil uppåt) i Safaris
+                verktygsfält.
+                <br />
                 2. Rulla ner och välj <strong>Lägg till på hemskärmen</strong>.<br />
                 3. Nu startar Bifogat som en fristående app med fullt offline-stöd!
               </p>
               <div className="modal-actions">
-                <button
-                  onClick={() => setShowIOSGuide(false)}
-                  className="btn btn-secondary"
-                >
+                <button onClick={() => setShowIOSGuide(false)} className="btn btn-secondary">
                   Stäng
                 </button>
               </div>

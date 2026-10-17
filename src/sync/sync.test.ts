@@ -1,15 +1,15 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import { OutboxOp, SyncConflict, Hive, Transaction } from '../domain/types.ts';
-import { generateUUID } from '../domain/validation.ts';
+import test from "node:test";
+import assert from "node:assert/strict";
+import { OutboxOp, SyncConflict, Hive, Transaction } from "../domain/types.ts";
+import { generateUUID } from "../domain/validation.ts";
 
-test('outbox retry behavior tracks retryCount and records last error message', () => {
+test("outbox retry behavior tracks retryCount and records last error message", () => {
   const op: OutboxOp = {
     id: generateUUID(),
-    entity: 'hive',
-    operation: 'create',
+    entity: "hive",
+    operation: "create",
     recordId: generateUUID(),
-    payload: { name: 'Kupa A', status: 'active' },
+    payload: { name: "Kupa A", status: "active" },
     timestamp: new Date().toISOString(),
     retryCount: 0,
   };
@@ -19,26 +19,26 @@ test('outbox retry behavior tracks retryCount and records last error message', (
 
   // Simulate network failure
   op.retryCount += 1;
-  op.lastError = 'Nätverksfel vid kontakt med Google Sheets';
+  op.lastError = "Nätverksfel vid kontakt med Google Sheets";
 
   assert.equal(op.retryCount, 1);
-  assert.equal(op.lastError, 'Nätverksfel vid kontakt med Google Sheets');
+  assert.equal(op.lastError, "Nätverksfel vid kontakt med Google Sheets");
 });
 
-test('idempotent synchronization operations preserve stable record UUID across retries', () => {
+test("idempotent synchronization operations preserve stable record UUID across retries", () => {
   const hiveId = generateUUID();
   const hive: Hive = {
     id: hiveId,
-    name: 'Kupa B',
-    status: 'active',
-    createdAt: '2026-05-01T10:00:00Z',
-    updatedAt: '2026-05-01T10:00:00Z',
+    name: "Kupa B",
+    status: "active",
+    createdAt: "2026-05-01T10:00:00Z",
+    updatedAt: "2026-05-01T10:00:00Z",
   };
 
   const op1: OutboxOp = {
     id: generateUUID(),
-    entity: 'hive',
-    operation: 'create',
+    entity: "hive",
+    operation: "create",
     recordId: hive.id,
     payload: hive,
     timestamp: new Date().toISOString(),
@@ -50,25 +50,25 @@ test('idempotent synchronization operations preserve stable record UUID across r
   assert.equal(op1.recordId, hiveId);
 });
 
-test('conflict detection flags concurrent modification when local updatedAt differs from remote', () => {
+test("conflict detection flags concurrent modification when local updatedAt differs from remote", () => {
   const hiveId = generateUUID();
 
   const localVersion: Hive = {
     id: hiveId,
-    name: 'Kupa A - Ändrad lokalt',
-    status: 'active',
-    notes: 'Ny drottning tillsatt lokalt',
-    createdAt: '2026-05-01T10:00:00Z',
-    updatedAt: '2026-05-03T14:00:00Z', // Local modification
+    name: "Kupa A - Ändrad lokalt",
+    status: "active",
+    notes: "Ny drottning tillsatt lokalt",
+    createdAt: "2026-05-01T10:00:00Z",
+    updatedAt: "2026-05-03T14:00:00Z", // Local modification
   };
 
   const remoteVersion: Hive = {
     id: hiveId,
-    name: 'Kupa A - Ändrad i Google Sheets',
-    status: 'inactive',
-    notes: 'Svag koloni noterad i kalkylarket',
-    createdAt: '2026-05-01T10:00:00Z',
-    updatedAt: '2026-05-03T15:30:00Z', // Remote modification
+    name: "Kupa A - Ändrad i Google Sheets",
+    status: "inactive",
+    notes: "Svag koloni noterad i kalkylarket",
+    createdAt: "2026-05-01T10:00:00Z",
+    updatedAt: "2026-05-03T15:30:00Z", // Remote modification
   };
 
   const isConflicted = localVersion.updatedAt !== remoteVersion.updatedAt;
@@ -76,15 +76,15 @@ test('conflict detection flags concurrent modification when local updatedAt diff
 
   const conflict: SyncConflict = {
     id: generateUUID(),
-    entity: 'hive',
+    entity: "hive",
     recordId: hiveId,
     localVersion,
     remoteVersion,
     detectedAt: new Date().toISOString(),
-    status: 'unresolved',
+    status: "unresolved",
   };
 
-  assert.equal(conflict.status, 'unresolved');
-  assert.equal(conflict.localVersion.name, 'Kupa A - Ändrad lokalt');
-  assert.equal(conflict.remoteVersion.name, 'Kupa A - Ändrad i Google Sheets');
+  assert.equal(conflict.status, "unresolved");
+  assert.equal(conflict.localVersion.name, "Kupa A - Ändrad lokalt");
+  assert.equal(conflict.remoteVersion.name, "Kupa A - Ändrad i Google Sheets");
 });

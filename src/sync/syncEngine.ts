@@ -7,7 +7,7 @@ import {
   OutboxOp,
   SyncConflict,
   EntityType,
-} from '../domain/types';
+} from "../domain/types";
 import {
   outboxRepository,
   conflictRepository,
@@ -17,17 +17,12 @@ import {
   taskRepository,
   harvestRepository,
   transactionRepository,
-} from '../storage/repositories';
-import {
-  getAllFromStore,
-  putInStore,
-  deleteFromStore,
-  bulkPutInStore,
-} from '../storage/db';
-import { sheetsClient, SHEET_TABS, SCHEMAS } from './sheetsClient';
-import { getAccessToken } from '../auth/googleAuth';
+} from "../storage/repositories";
+import { getAllFromStore, putInStore, deleteFromStore, bulkPutInStore } from "../storage/db";
+import { sheetsClient, SHEET_TABS, SCHEMAS } from "./sheetsClient";
+import { getAccessToken } from "../auth/googleAuth";
 
-export type SyncState = 'idle' | 'syncing' | 'error' | 'offline' | 'needs_auth' | 'no_sheet';
+export type SyncState = "idle" | "syncing" | "error" | "offline" | "needs_auth" | "no_sheet";
 
 export interface SyncEngineStatus {
   state: SyncState;
@@ -40,18 +35,18 @@ export interface SyncEngineStatus {
 type SyncListener = (status: SyncEngineStatus) => void;
 
 class SyncEngine {
-  private state: SyncState = 'idle';
+  private state: SyncState = "idle";
   private lastError: string | null = null;
   private listeners: Set<SyncListener> = new Set();
   private isRunning = false;
 
   constructor() {
-    if (typeof window !== 'undefined') {
-      window.addEventListener('online', () => {
+    if (typeof window !== "undefined") {
+      window.addEventListener("online", () => {
         this.triggerSync();
       });
-      window.addEventListener('offline', () => {
-        this.state = 'offline';
+      window.addEventListener("offline", () => {
+        this.state = "offline";
         this.notify();
       });
     }
@@ -69,7 +64,7 @@ class SyncEngine {
       try {
         l(status);
       } catch (err) {
-        console.error('Error in sync listener:', err);
+        console.error("Error in sync listener:", err);
       }
     }
   }
@@ -90,10 +85,10 @@ class SyncEngine {
     const conflicts = await conflictRepository.getAll();
 
     let state = this.state;
-    if (typeof navigator !== 'undefined' && !navigator.onLine) {
-      state = 'offline';
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      state = "offline";
     } else if (!meta.spreadsheetId) {
-      state = 'no_sheet';
+      state = "no_sheet";
     }
 
     return {
@@ -105,33 +100,35 @@ class SyncEngine {
     };
   }
 
-  async triggerSync(options?: { allowWrite?: boolean }): Promise<{ success: boolean; error?: string }> {
+  async triggerSync(options?: {
+    allowWrite?: boolean;
+  }): Promise<{ success: boolean; error?: string }> {
     if (this.isRunning) {
-      return { success: false, error: 'Synkronisering pågår redan' };
+      return { success: false, error: "Synkronisering pågår redan" };
     }
 
-    if (typeof navigator !== 'undefined' && !navigator.onLine) {
-      this.state = 'offline';
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      this.state = "offline";
       this.notify();
-      return { success: false, error: 'Enheten är offline' };
+      return { success: false, error: "Enheten är offline" };
     }
 
     const token = await getAccessToken();
     if (!token) {
-      this.state = 'needs_auth';
+      this.state = "needs_auth";
       this.notify();
-      return { success: false, error: 'Behörighet saknas. Logga in med Google.' };
+      return { success: false, error: "Behörighet saknas. Logga in med Google." };
     }
 
     const meta = await metaRepository.get();
     if (!meta.spreadsheetId) {
-      this.state = 'no_sheet';
+      this.state = "no_sheet";
       this.notify();
-      return { success: false, error: 'Inget kalkylark är valt i inställningarna' };
+      return { success: false, error: "Inget kalkylark är valt i inställningarna" };
     }
 
     this.isRunning = true;
-    this.state = 'syncing';
+    this.state = "syncing";
     this.lastError = null;
     this.notify();
 
@@ -152,14 +149,14 @@ class SyncEngine {
       const now = new Date().toISOString();
       await metaRepository.save({ lastSyncTime: now });
 
-      this.state = 'idle';
+      this.state = "idle";
       this.lastError = null;
       this.notify();
       return { success: true };
     } catch (err: any) {
-      console.error('Sync failed:', err);
-      this.state = 'error';
-      this.lastError = err.message || 'Ett okänt fel uppstod vid synkronisering';
+      console.error("Sync failed:", err);
+      this.state = "error";
+      this.lastError = err.message || "Ett okänt fel uppstod vid synkronisering";
       this.notify();
       return { success: false, error: this.lastError || undefined };
     } finally {
@@ -190,8 +187,8 @@ class SyncEngine {
       if (!r.id) continue;
       const remoteHive: Hive = {
         id: r.id,
-        name: r.name || 'Namnlös kupa',
-        status: (r.status as any) || 'active',
+        name: r.name || "Namnlös kupa",
+        status: (r.status as any) || "active",
         notes: r.notes || undefined,
         createdAt: r.createdAt || new Date().toISOString(),
         updatedAt: r.updatedAt || new Date().toISOString(),
@@ -202,7 +199,7 @@ class SyncEngine {
         // If both modified and updatedAt differs
         if (local.updatedAt !== remoteHive.updatedAt) {
           await conflictRepository.addConflict({
-            entity: 'hive',
+            entity: "hive",
             recordId: r.id,
             localVersion: local,
             remoteVersion: remoteHive,
@@ -210,7 +207,7 @@ class SyncEngine {
         }
       } else {
         // Safe to merge
-        await putInStore('hives', remoteHive);
+        await putInStore("hives", remoteHive);
       }
     }
 
@@ -222,9 +219,9 @@ class SyncEngine {
         id: r.id,
         hiveId: r.hiveId,
         date: r.date || new Date().toISOString().substring(0, 10),
-        type: (r.type as any) || 'other',
-        title: r.title || '',
-        notes: r.notes || '',
+        type: (r.type as any) || "other",
+        title: r.title || "",
+        notes: r.notes || "",
         createdAt: r.createdAt || new Date().toISOString(),
         updatedAt: r.updatedAt || new Date().toISOString(),
       };
@@ -233,14 +230,14 @@ class SyncEngine {
       if (pendingRecordIds.has(r.id) && local) {
         if (local.updatedAt !== remoteEvent.updatedAt) {
           await conflictRepository.addConflict({
-            entity: 'event',
+            entity: "event",
             recordId: r.id,
             localVersion: local,
             remoteVersion: remoteEvent,
           });
         }
       } else {
-        await putInStore('events', remoteEvent);
+        await putInStore("events", remoteEvent);
       }
     }
 
@@ -250,11 +247,11 @@ class SyncEngine {
       if (!r.id) continue;
       const remoteTask: Task = {
         id: r.id,
-        title: r.title || '',
+        title: r.title || "",
         notes: r.notes || undefined,
         hiveId: r.hiveId || undefined,
         dueDate: r.dueDate || undefined,
-        status: (r.status as any) || 'open',
+        status: (r.status as any) || "open",
         createdAt: r.createdAt || new Date().toISOString(),
         updatedAt: r.updatedAt || new Date().toISOString(),
         completedAt: r.completedAt || undefined,
@@ -264,14 +261,14 @@ class SyncEngine {
       if (pendingRecordIds.has(r.id) && local) {
         if (local.updatedAt !== remoteTask.updatedAt) {
           await conflictRepository.addConflict({
-            entity: 'task',
+            entity: "task",
             recordId: r.id,
             localVersion: local,
             remoteVersion: remoteTask,
           });
         }
       } else {
-        await putInStore('tasks', remoteTask);
+        await putInStore("tasks", remoteTask);
       }
     }
 
@@ -295,14 +292,14 @@ class SyncEngine {
       if (pendingRecordIds.has(r.id) && local) {
         if (local.updatedAt !== remoteHarvest.updatedAt) {
           await conflictRepository.addConflict({
-            entity: 'harvest',
+            entity: "harvest",
             recordId: r.id,
             localVersion: local,
             remoteVersion: remoteHarvest,
           });
         }
       } else {
-        await putInStore('harvests', remoteHarvest);
+        await putInStore("harvests", remoteHarvest);
       }
     }
 
@@ -313,11 +310,11 @@ class SyncEngine {
       const remoteItem: Transaction = {
         id: r.id,
         date: r.date || new Date().toISOString().substring(0, 10),
-        description: r.description || '',
+        description: r.description || "",
         amountOre: r.amountOre ? parseInt(r.amountOre, 10) : 0,
         counterparty: r.counterparty || undefined,
         category: r.category || undefined,
-        source: (r.source as any) || 'manual',
+        source: (r.source as any) || "manual",
         externalReference: r.externalReference || undefined,
         createdAt: r.createdAt || new Date().toISOString(),
         updatedAt: r.updatedAt || new Date().toISOString(),
@@ -327,14 +324,14 @@ class SyncEngine {
       if (pendingRecordIds.has(r.id) && local) {
         if (local.updatedAt !== remoteItem.updatedAt) {
           await conflictRepository.addConflict({
-            entity: 'transaction',
+            entity: "transaction",
             recordId: r.id,
             localVersion: local,
             remoteVersion: remoteItem,
           });
         }
       } else {
-        await putInStore('transactions', remoteItem);
+        await putInStore("transactions", remoteItem);
       }
     }
   }
@@ -353,7 +350,7 @@ class SyncEngine {
       } catch (err: any) {
         // Record failure and stop further outbox items to preserve order
         op.retryCount += 1;
-        op.lastError = err.message || 'Fel vid skrivning till Google Sheets';
+        op.lastError = err.message || "Fel vid skrivning till Google Sheets";
         await outboxRepository.updateOp(op);
         throw err;
       }
@@ -367,64 +364,64 @@ class SyncEngine {
     let rowValues: any[] = [];
 
     switch (entity) {
-      case 'hive': {
+      case "hive": {
         tabTitle = SHEET_TABS.HIVES;
         const h: Hive = payload;
-        rowValues = [h.id, h.name, h.status, h.notes || '', h.createdAt, h.updatedAt];
+        rowValues = [h.id, h.name, h.status, h.notes || "", h.createdAt, h.updatedAt];
         break;
       }
-      case 'event': {
+      case "event": {
         tabTitle = SHEET_TABS.EVENTS;
         const e: HiveEvent = payload;
         rowValues = [e.id, e.hiveId, e.date, e.type, e.title, e.notes, e.createdAt, e.updatedAt];
         break;
       }
-      case 'task': {
+      case "task": {
         tabTitle = SHEET_TABS.TASKS;
         const t: Task = payload;
         rowValues = [
           t.id,
           t.title,
-          t.notes || '',
-          t.hiveId || '',
-          t.dueDate || '',
+          t.notes || "",
+          t.hiveId || "",
+          t.dueDate || "",
           t.status,
           t.createdAt,
           t.updatedAt,
-          t.completedAt || '',
+          t.completedAt || "",
         ];
         break;
       }
-      case 'harvest': {
+      case "harvest": {
         tabTitle = SHEET_TABS.HARVESTS;
         const h: Harvest = payload;
         rowValues = [
           h.id,
           h.date,
-          h.hiveId || '',
-          h.honeyWeightGrams !== undefined ? h.honeyWeightGrams : '',
-          h.jarSizeGrams !== undefined ? h.jarSizeGrams : '',
-          h.jarCount !== undefined ? h.jarCount : '',
-          h.notes || '',
+          h.hiveId || "",
+          h.honeyWeightGrams !== undefined ? h.honeyWeightGrams : "",
+          h.jarSizeGrams !== undefined ? h.jarSizeGrams : "",
+          h.jarCount !== undefined ? h.jarCount : "",
+          h.notes || "",
           h.createdAt,
           h.updatedAt,
         ];
         break;
       }
-      case 'transaction': {
+      case "transaction": {
         tabTitle = SHEET_TABS.TRANSACTIONS;
         const tx: Transaction = payload;
-        const sekStr = (tx.amountOre / 100).toFixed(2).replace('.', ',');
+        const sekStr = (tx.amountOre / 100).toFixed(2).replace(".", ",");
         rowValues = [
           tx.id,
           tx.date,
           tx.description,
           sekStr,
           tx.amountOre,
-          tx.counterparty || '',
-          tx.category || '',
+          tx.counterparty || "",
+          tx.category || "",
           tx.source,
-          tx.externalReference || '',
+          tx.externalReference || "",
           tx.createdAt,
           tx.updatedAt,
         ];
@@ -434,7 +431,7 @@ class SyncEngine {
         throw new Error(`Okänd entitet: ${entity}`);
     }
 
-    if (operation === 'delete') {
+    if (operation === "delete") {
       await sheetsClient.deleteRowById(token, spreadsheetId, tabTitle, recordId);
     } else {
       // create or update are both idempotent through updateRowById (which updates if present or appends if new)
