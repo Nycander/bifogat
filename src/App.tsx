@@ -35,6 +35,7 @@ import { PWAInstallButton } from "./pwa/PWAInstallButton";
 import { OfflineIndicator } from "./pwa/OfflineIndicator";
 import { NavBar, NavTab } from "./components/NavBar";
 import { SyncStatusBar } from "./components/SyncStatusBar";
+import { Logo } from "./components/Logo";
 
 import { OverviewView } from "./features/overview/OverviewView";
 import { HivesView } from "./features/hives/HivesView";
@@ -536,7 +537,7 @@ export default function App() {
             setActiveTab("overview");
           }}
         >
-          <img src="/icon.svg" alt="Bifogat logotyp" className="header-logo" />
+          <Logo className="header-logo" size={32} />
           <div className="header-title-group">
             <span className="header-title">Bifogat</span>
             <span className="header-subtitle">Biodlingsloggbok</span>
