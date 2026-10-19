@@ -23,6 +23,7 @@ interface OverviewViewProps {
   syncStatus: SyncEngineStatus;
   onOpenLogEvent: () => void;
   onOpenCreateTask: () => void;
+  onOpenHoneySale: () => void;
   onToggleTask: (id: string) => Promise<void>;
   onNavigateToTab: (tab: any, subTab?: "hives" | "tasks") => void;
   onSelectHive: (hive: Hive) => void;
@@ -37,6 +38,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
   syncStatus,
   onOpenLogEvent,
   onOpenCreateTask,
+  onOpenHoneySale,
   onToggleTask,
   onNavigateToTab,
   onSelectHive,
@@ -95,6 +97,14 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         >
           <CheckSquare size={18} color="var(--color-primary)" />
           <span>Ny uppgift</span>
+        </button>
+        <button
+          className="btn btn-secondary"
+          onClick={onOpenHoneySale}
+          style={{ padding: "0.75rem", justifyContent: "center" }}
+        >
+          <Droplet size={18} color="#d97706" />
+          <span>Sälj honung</span>
         </button>
       </div>
 

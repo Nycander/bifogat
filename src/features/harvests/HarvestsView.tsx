@@ -21,6 +21,7 @@ interface HarvestsViewProps {
   onDeleteHarvest: (id: string) => Promise<void>;
   onOpenJarFilling: (harvestId?: string) => void;
   onDeleteFilling: (harvestId: string, fillingId: string) => Promise<void>;
+  onOpenHoneySale?: () => void;
 }
 
 export const HarvestsView: React.FC<HarvestsViewProps> = ({
@@ -31,6 +32,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
   onDeleteHarvest,
   onOpenJarFilling,
   onDeleteFilling,
+  onOpenHoneySale,
 }) => {
   const [expandedBatchIds, setExpandedBatchIds] = useState<Record<string, boolean>>({});
 
@@ -96,7 +98,25 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
             Separata slungningar, vattenhaltmätning och löpande burkfyllning
           </p>
         </div>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+          {onOpenHoneySale && (
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={onOpenHoneySale}
+              style={{
+                background: "#d97706",
+                borderColor: "#b45309",
+                color: "#ffffff",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.35rem",
+                fontWeight: 700,
+              }}
+            >
+              <Droplet size={16} />
+              <span>Sälj burkar</span>
+            </button>
+          )}
           {harvests.length > 0 && (
             <button
               className="btn btn-secondary btn-sm"
