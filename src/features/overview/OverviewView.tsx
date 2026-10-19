@@ -24,7 +24,7 @@ interface OverviewViewProps {
   onOpenLogEvent: () => void;
   onOpenCreateTask: () => void;
   onToggleTask: (id: string) => Promise<void>;
-  onNavigateToTab: (tab: any) => void;
+  onNavigateToTab: (tab: any, subTab?: "hives" | "tasks") => void;
   onSelectHive: (hive: Hive) => void;
 }
 
@@ -116,7 +116,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
 
         <div
           className="stat-card"
-          onClick={() => onNavigateToTab("tasks")}
+          onClick={() => onNavigateToTab("hives", "tasks")}
           style={{ cursor: "pointer" }}
           role="button"
           tabIndex={0}
@@ -180,7 +180,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           </h2>
           <button
             className="btn btn-secondary btn-sm"
-            onClick={() => onNavigateToTab("tasks")}
+            onClick={() => onNavigateToTab("hives", "tasks")}
             style={{ fontSize: "0.8rem" }}
           >
             <span>Visa alla ({tasks.filter((t) => t.status === "open").length})</span>

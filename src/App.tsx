@@ -41,7 +41,6 @@ import { HivesView } from "./features/hives/HivesView";
 import { HiveDetailModal } from "./features/hives/HiveDetailModal";
 import { HiveEditModal } from "./features/hives/HiveEditModal";
 import { EventFormModal } from "./features/events/EventFormModal";
-import { TasksView } from "./features/tasks/TasksView";
 import { TaskFormModal } from "./features/tasks/TaskFormModal";
 import { HarvestsView } from "./features/harvests/HarvestsView";
 import { HarvestFormModal } from "./features/harvests/HarvestFormModal";
@@ -81,9 +80,11 @@ export default function App() {
   const [showHiveModal, setShowHiveModal] = useState(false);
   const [editingHive, setEditingHive] = useState<Hive | undefined>();
   const [selectedHiveDetail, setSelectedHiveDetail] = useState<Hive | null>(null);
+  const [hivesSubTab, setHivesSubTab] = useState<"hives" | "tasks">("hives");
 
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | undefined>();
+  const [taskInitialHiveId, setTaskInitialHiveId] = useState<string | undefined>();
 
   const [showHarvestModal, setShowHarvestModal] = useState(false);
   const [editingHarvest, setEditingHarvest] = useState<Harvest | undefined>();
@@ -573,7 +574,10 @@ export default function App() {
               setShowTaskModal(true);
             }}
             onToggleTask={handleToggleTask}
-            onNavigateToTab={(tab) => setActiveTab(tab)}
+            onNavigateToTab={(tab, subTab) => {
+              setActiveTab(tab);
+              if (subTab) setHivesSubTab(subTab);
+            }}
             onSelectHive={(hive) => setSelectedHiveDetail(hive)}
           />
         )}
@@ -582,6 +586,8 @@ export default function App() {
           <HivesView
             hives={hives}
             events={events}
+            tasks={tasks}
+            initialSubTab={hivesSubTab}
             onOpenHiveDetail={(hive) => setSelectedHiveDetail(hive)}
             onOpenCreateHive={() => {
               setEditingHive(undefined);
@@ -591,19 +597,14 @@ export default function App() {
               setPreselectedHiveId(hiveId);
               setShowEventModal(true);
             }}
-          />
-        )}
-
-        {activeTab === "tasks" && (
-          <TasksView
-            tasks={tasks}
-            hives={hives}
             onToggleTask={handleToggleTask}
-            onOpenCreateTask={() => {
+            onOpenCreateTask={(hiveId) => {
+              setTaskInitialHiveId(hiveId);
               setEditingTask(undefined);
               setShowTaskModal(true);
             }}
             onEditTask={(task) => {
+              setTaskInitialHiveId(task.hiveId);
               setEditingTask(task);
               setShowTaskModal(true);
             }}
@@ -709,6 +710,7 @@ export default function App() {
         <HiveDetailModal
           hive={selectedHiveDetail}
           events={events}
+          tasks={tasks}
           onClose={() => setSelectedHiveDetail(null)}
           onLogEvent={(hiveId) => {
             setSelectedHiveDetail(null);
@@ -720,6 +722,18 @@ export default function App() {
             setEditingHive(hive);
             setShowHiveModal(true);
           }}
+          onToggleTask={handleToggleTask}
+          onOpenCreateTask={(hiveId) => {
+            setTaskInitialHiveId(hiveId);
+            setEditingTask(undefined);
+            setShowTaskModal(true);
+          }}
+          onEditTask={(task) => {
+            setTaskInitialHiveId(task.hiveId);
+            setEditingTask(task);
+            setShowTaskModal(true);
+          }}
+          onDeleteTask={handleDeleteTask}
         />
       )}
 
@@ -727,7 +741,11 @@ export default function App() {
         <TaskFormModal
           task={editingTask}
           hives={hives}
-          onClose={() => setShowTaskModal(false)}
+          initialHiveId={taskInitialHiveId}
+          onClose={() => {
+            setShowTaskModal(false);
+            setTaskInitialHiveId(undefined);
+          }}
           onSave={handleSaveTask}
         />
       )}
