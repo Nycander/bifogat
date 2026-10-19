@@ -155,8 +155,19 @@ class SyncEngine {
       return { success: true };
     } catch (err: any) {
       console.error("Sync failed:", err);
-      this.state = "error";
-      this.lastError = err.message || "Ett okänt fel uppstod vid synkronisering";
+      const isAuthError =
+        err.message?.includes("401") ||
+        err.message?.includes("UNAUTHENTICATED") ||
+        err.message?.includes("Invalid Credentials");
+
+      if (isAuthError) {
+        this.state = "needs_auth";
+        this.lastError =
+          "Google-behörigheten har gått ut. Klicka på 'Förnya behörighet' i Inställningar för att återansluta kalkylarket.";
+      } else {
+        this.state = "error";
+        this.lastError = err.message || "Ett okänt fel uppstod vid synkronisering";
+      }
       this.notify();
       return { success: false, error: this.lastError || undefined };
     } finally {

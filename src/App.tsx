@@ -29,7 +29,9 @@ import {
   initAuth,
   getCurrentUser,
   getAccessToken,
+  getSavedUser,
 } from "./auth/googleAuth";
+import { HoneySaleModal } from "./features/economy/HoneySaleModal";
 import { useOnlineStatus } from "./pwa/useOnlineStatus";
 import { PWAInstallButton } from "./pwa/PWAInstallButton";
 import { OfflineIndicator } from "./pwa/OfflineIndicator";
@@ -72,7 +74,7 @@ export default function App() {
   const [conflicts, setConflicts] = useState<SyncConflict[]>([]);
 
   // Auth & Sync State
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<any>(() => getSavedUser());
   const [syncStatus, setSyncStatus] = useState<SyncEngineStatus>(syncEngine.getStatusSync());
 
   // Modals
@@ -92,6 +94,7 @@ export default function App() {
   const [showJarFillingModal, setShowJarFillingModal] = useState(false);
   const [fillingBatchId, setFillingBatchId] = useState<string | undefined>();
 
+  const [showHoneySaleModal, setShowHoneySaleModal] = useState(false);
   const [showTxModal, setShowTxModal] = useState(false);
   const [editingTx, setEditingTx] = useState<Transaction | undefined>();
 
@@ -309,12 +312,34 @@ export default function App() {
     title: string;
     notes?: string;
     hiveId?: string;
+    hiveIds?: string[];
     dueDate?: string;
   }) => {
     if (editingTask) {
-      await taskRepository.update(editingTask.id, data);
+      await taskRepository.update(editingTask.id, {
+        title: data.title,
+        notes: data.notes,
+        hiveId: data.hiveId,
+        dueDate: data.dueDate,
+      });
+    } else if (data.hiveIds && data.hiveIds.length > 0) {
+      for (const hId of data.hiveIds) {
+        await taskRepository.create({
+          title: data.title,
+          notes: data.notes,
+          dueDate: data.dueDate,
+          hiveId: hId,
+          status: "open",
+        });
+      }
     } else {
-      await taskRepository.create({ ...data, status: "open" });
+      await taskRepository.create({
+        title: data.title,
+        notes: data.notes,
+        dueDate: data.dueDate,
+        hiveId: data.hiveId,
+        status: "open",
+      });
     }
     await reloadData();
     setEditingTask(undefined);
@@ -386,6 +411,27 @@ export default function App() {
 
   const handleDeleteTransaction = async (id: string) => {
     await transactionRepository.delete(id);
+    await reloadData();
+  };
+
+  const handleSaveHoneySale = async (data: {
+    date: string;
+    description: string;
+    amountOre: number;
+    counterparty?: string;
+    category: string;
+    jarCount: number;
+    jarSizeGrams: number;
+    harvestId?: string;
+  }) => {
+    await transactionRepository.create({
+      date: data.date,
+      description: data.description,
+      amountOre: data.amountOre,
+      counterparty: data.counterparty,
+      category: data.category,
+      source: "manual",
+    });
     await reloadData();
   };
 
@@ -574,6 +620,7 @@ export default function App() {
               setEditingTask(undefined);
               setShowTaskModal(true);
             }}
+            onOpenHoneySale={() => setShowHoneySaleModal(true)}
             onToggleTask={handleToggleTask}
             onNavigateToTab={(tab, subTab) => {
               setActiveTab(tab);
@@ -631,6 +678,7 @@ export default function App() {
               setShowJarFillingModal(true);
             }}
             onDeleteFilling={handleDeleteFilling}
+            onOpenHoneySale={() => setShowHoneySaleModal(true)}
           />
         )}
 
@@ -642,6 +690,7 @@ export default function App() {
               setEditingTx(undefined);
               setShowTxModal(true);
             }}
+            onOpenHoneySale={() => setShowHoneySaleModal(true)}
             onEditTransaction={(tx) => {
               setEditingTx(tx);
               setShowTxModal(true);
@@ -769,6 +818,14 @@ export default function App() {
             setFillingBatchId(undefined);
           }}
           onSaveFilling={handleSaveFilling}
+        />
+      )}
+
+      {showHoneySaleModal && (
+        <HoneySaleModal
+          harvests={harvests}
+          onClose={() => setShowHoneySaleModal(false)}
+          onSaveSale={handleSaveHoneySale}
         />
       )}
 

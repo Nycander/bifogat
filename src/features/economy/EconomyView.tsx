@@ -10,12 +10,14 @@ import {
   Trash2,
   Edit2,
   AlertCircle,
+  Droplet,
 } from "lucide-react";
 
 interface EconomyViewProps {
   transactions: Transaction[];
   importedHistoricalBalanceOre?: number;
   onOpenCreateTransaction: () => void;
+  onOpenHoneySale: () => void;
   onEditTransaction: (tx: Transaction) => void;
   onDeleteTransaction: (id: string) => Promise<void>;
 }
@@ -24,6 +26,7 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
   transactions,
   importedHistoricalBalanceOre,
   onOpenCreateTransaction,
+  onOpenHoneySale,
   onEditTransaction,
   onDeleteTransaction,
 }) => {
@@ -81,10 +84,28 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
             Försäljning av honung, materialinköp och löpande saldo
           </p>
         </div>
-        <button className="btn btn-primary btn-sm" onClick={onOpenCreateTransaction}>
-          <Plus size={16} />
-          <span>Ny transaktion</span>
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+          <button
+            className="btn btn-primary btn-sm"
+            onClick={onOpenHoneySale}
+            style={{
+              background: "#d97706",
+              borderColor: "#b45309",
+              color: "#ffffff",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.35rem",
+              fontWeight: 700,
+            }}
+          >
+            <Droplet size={16} />
+            <span>Sälj honung</span>
+          </button>
+          <button className="btn btn-secondary btn-sm" onClick={onOpenCreateTransaction}>
+            <Plus size={16} />
+            <span>Ny transaktion</span>
+          </button>
+        </div>
       </div>
 
       {/* Main Balance Banner */}

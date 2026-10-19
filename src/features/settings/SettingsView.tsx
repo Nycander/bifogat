@@ -141,6 +141,34 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 Logga ut
               </button>
             </div>
+
+            {syncStatus.state === "needs_auth" && (
+              <div
+                style={{
+                  marginTop: "0.75rem",
+                  padding: "0.65rem 0.85rem",
+                  background: "#fffbeb",
+                  border: "1px solid #fde68a",
+                  borderRadius: "8px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "0.5rem",
+                  flexWrap: "wrap",
+                }}
+              >
+                <div style={{ fontSize: "0.85rem", color: "#92400e" }}>
+                  Google-behörigheten har gått ut och behöver förnyas för kalkylarkssynk.
+                </div>
+                <button
+                  className="btn btn-primary btn-sm"
+                  onClick={onSignIn}
+                  style={{ whiteSpace: "nowrap" }}
+                >
+                  Förnya behörighet
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <div>
