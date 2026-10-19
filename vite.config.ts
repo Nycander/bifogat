@@ -3,24 +3,27 @@ import path from "path";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
-export default defineConfig(() => {
+export default defineConfig(({ command }) => {
+  const isBuild = command === "build";
+  const basePath = process.env.BASE_PATH || (isBuild ? "./" : "/");
+
   return {
-    base: process.env.BASE_PATH || "./",
+    base: basePath,
     plugins: [
       react(),
       VitePWA({
         registerType: "autoUpdate",
         includeAssets: ["favicon.ico", "apple-touch-icon.png", "icon.svg"],
         manifest: {
-          id: ".",
+          id: "/",
           name: "Bifogat Biodlingsloggbok",
           short_name: "Bifogat",
           description: "Offline-first beekeeping logbook with Google Sheets synchronization",
           theme_color: "#d97706",
           background_color: "#f8f9fa",
           display: "standalone",
-          start_url: ".",
-          scope: ".",
+          start_url: "/",
+          scope: "/",
           icons: [
             {
               src: "pwa-192x192.png",
@@ -46,7 +49,7 @@ export default defineConfig(() => {
           globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
         },
         devOptions: {
-          enabled: true,
+          enabled: false,
         },
       }),
     ],

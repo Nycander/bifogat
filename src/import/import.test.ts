@@ -156,4 +156,66 @@ test("parseHistoricalNotes correctly identifies exact hives (Kupa A, B, C, Avlä
   assert.equal(hiveNames.includes("Skörd"), false);
 });
 
+test("parseHistoricalNotes correctly identifies exactly 4 hives without false positives from avläggare descriptions", () => {
+  const realisticNotes = `
+# Inköp
+- 10 st ramar
+- Drivfoder
+
+# Kupa A
+- 2026-05-15: Kupa A: Drottning sedd, 4 ramar täckt yngel
+- 2026-05-28: Avläggare gjord på 3 ramar från Kupa A
+
+# Kupa B
+- 2026-05-16: Starkt samhälle, satt på skattlåda
+
+# Kupa C
+- 2026-05-18: Drottningcell borttagen, lugnt lynne
+
+# Avläggare 2026
+- 2026-06-05: Avläggare 2026: Ny drottning parad och lägger ägg
+- 2026-06-15: Avläggare tillsatt foder
+`;
+
+  const result = parseHistoricalNotes(realisticNotes);
+  const hiveNames = result.detectedHives.map((h) => h.name).sort();
+  assert.equal(result.detectedHives.length, 4, `Expected exactly 4 hives, got ${result.detectedHives.length}: ${hiveNames.join(", ")}`);
+  assert.deepEqual(hiveNames, ["Avläggare 2026", "Kupa A", "Kupa B", "Kupa C"]);
+});
+
+test("parseHistoricalNotes identifies hives from plain text without markdown hashes", () => {
+  const plainTextNotes = `
+Kupa A
+2026-05-15: Drottning sedd, 4 ramar täckt yngel
+
+Kupa B
+2026-05-16: Starkt samhälle
+
+Kupa C
+2026-05-18: Lugnt lynne
+
+Avläggare 2026
+2026-06-05: Ny drottning
+`;
+
+  const result = parseHistoricalNotes(plainTextNotes);
+  const hiveNames = result.detectedHives.map((h) => h.name).sort();
+  assert.equal(result.detectedHives.length, 4);
+  assert.deepEqual(hiveNames, ["Avläggare 2026", "Kupa A", "Kupa B", "Kupa C"]);
+});
+
+test("parseHistoricalNotes identifies hives with inline dash and space prefixes", () => {
+  const inlineNotes = `
+2026-05-15 Kupa A - 4 ramar yngel
+2026-05-16 Kupa B, satt på skattlåda
+2026-05-18 Kupa C: lugnt
+2026-06-05 Avläggare 2026: matad
+`;
+
+  const result = parseHistoricalNotes(inlineNotes);
+  const hiveNames = result.detectedHives.map((h) => h.name).sort();
+  assert.equal(result.detectedHives.length, 4);
+  assert.deepEqual(hiveNames, ["Avläggare 2026", "Kupa A", "Kupa B", "Kupa C"]);
+});
+
 

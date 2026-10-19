@@ -3,6 +3,7 @@ import {
   HiveEvent,
   Task,
   Harvest,
+  JarFilling,
   Transaction,
   OutboxOp,
   SyncConflict,
@@ -267,6 +268,58 @@ export const harvestRepository = {
     await deleteEntityWithOutbox("harvests", id, op);
   },
 
+  async addFilling(
+    harvestId: string,
+    fillingData: Omit<JarFilling, "id" | "createdAt">,
+  ): Promise<Harvest> {
+    const harvest = await getFromStore<Harvest>("harvests", harvestId);
+    if (!harvest) throw new Error(`Skörd med id ${harvestId} hittades inte.`);
+
+    const newFilling: JarFilling = {
+      id: generateUUID(),
+      date: fillingData.date,
+      jarCount: fillingData.jarCount,
+      jarSizeGrams: fillingData.jarSizeGrams,
+      notes: fillingData.notes,
+      createdAt: new Date().toISOString(),
+    };
+
+    const currentFillings = harvest.fillings || [];
+    const updatedFillings = [...currentFillings, newFilling];
+    const totalJars = updatedFillings.reduce((sum, f) => sum + (f.jarCount || 0), 0);
+
+    const updated: Harvest = {
+      ...harvest,
+      fillings: updatedFillings,
+      jarCount: totalJars,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const op = createOutboxOp("harvest", "update", updated.id, updated);
+    await saveEntityWithOutbox("harvests", updated, op);
+    return updated;
+  },
+
+  async deleteFilling(harvestId: string, fillingId: string): Promise<Harvest> {
+    const harvest = await getFromStore<Harvest>("harvests", harvestId);
+    if (!harvest) throw new Error(`Skörd med id ${harvestId} hittades inte.`);
+
+    const currentFillings = harvest.fillings || [];
+    const updatedFillings = currentFillings.filter((f) => f.id !== fillingId);
+    const totalJars = updatedFillings.reduce((sum, f) => sum + (f.jarCount || 0), 0);
+
+    const updated: Harvest = {
+      ...harvest,
+      fillings: updatedFillings,
+      jarCount: totalJars,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const op = createOutboxOp("harvest", "update", updated.id, updated);
+    await saveEntityWithOutbox("harvests", updated, op);
+    return updated;
+  },
+
   async getAnnualSummary(): Promise<
     Record<string, { totalGrams: number; totalJars: number; entries: number }>
   > {
@@ -281,7 +334,10 @@ export const harvestRepository = {
       if (h.honeyWeightGrams !== undefined) {
         summary[year].totalGrams += h.honeyWeightGrams;
       }
-      if (h.jarCount !== undefined) {
+      if (h.fillings && h.fillings.length > 0) {
+        const jarSum = h.fillings.reduce((sum, f) => sum + (f.jarCount || 0), 0);
+        summary[year].totalJars += jarSum;
+      } else if (h.jarCount !== undefined) {
         summary[year].totalJars += h.jarCount;
       }
     }

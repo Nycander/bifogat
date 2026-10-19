@@ -1,18 +1,19 @@
 import React, { useState } from "react";
 import { Harvest, Hive } from "../../domain/types";
 import { formatDate } from "../../domain/validation";
-import { X, Check } from "lucide-react";
+import { X, Check, Droplet, Sparkles } from "lucide-react";
 
 interface HarvestFormModalProps {
   harvest?: Harvest;
   hives: Hive[];
   onClose: () => void;
   onSave: (data: {
+    batchName?: string;
     date: string;
+    collectedDates?: string;
     hiveId?: string;
     honeyWeightGrams?: number;
-    jarSizeGrams?: number;
-    jarCount?: number;
+    waterContentPercent?: number;
     notes?: string;
   }) => Promise<void>;
 }
@@ -23,17 +24,18 @@ export const HarvestFormModal: React.FC<HarvestFormModalProps> = ({
   onClose,
   onSave,
 }) => {
+  const currentYear = new Date().getFullYear();
+  const defaultBatchName = harvest?.batchName || `Sommarskörd ${currentYear}`;
+
+  const [batchName, setBatchName] = useState(defaultBatchName);
   const [date, setDate] = useState(harvest?.date || formatDate(new Date()));
+  const [collectedDates, setCollectedDates] = useState(harvest?.collectedDates || "");
   const [hiveId, setHiveId] = useState(harvest?.hiveId || "");
-  // For easy user entry, let user enter weight in kg or grams
   const [weightKg, setWeightKg] = useState(
     harvest?.honeyWeightGrams !== undefined ? (harvest.honeyWeightGrams / 1000).toString() : "",
   );
-  const [jarCount, setJarCount] = useState(
-    harvest?.jarCount !== undefined ? harvest.jarCount.toString() : "",
-  );
-  const [jarSizeGrams, setJarSizeGrams] = useState(
-    harvest?.jarSizeGrams ? harvest.jarSizeGrams.toString() : "500",
+  const [waterContent, setWaterContent] = useState(
+    harvest?.waterContentPercent !== undefined ? harvest.waterContentPercent.toString() : "",
   );
   const [notes, setNotes] = useState(harvest?.notes || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,41 +54,70 @@ export const HarvestFormModal: React.FC<HarvestFormModalProps> = ({
       honeyWeightGrams = Math.round(kg * 1000);
     }
 
-    let parsedJarCount: number | undefined;
-    if (jarCount.trim()) {
-      const count = parseInt(jarCount, 10);
-      if (isNaN(count) || count < 0) {
-        setError("Ange ett giltigt antal burkar");
+    let parsedWaterContent: number | undefined;
+    if (waterContent.trim()) {
+      const wc = parseFloat(waterContent.replace(",", "."));
+      if (isNaN(wc) || wc < 0 || wc > 40) {
+        setError("Ange en rimlig vattenhalt i procent (t.ex. 17.5%)");
         return;
       }
-      parsedJarCount = count;
+      parsedWaterContent = wc;
     }
-
-    const parsedJarSize = jarSizeGrams.trim() ? parseInt(jarSizeGrams, 10) : undefined;
 
     try {
       setIsSubmitting(true);
       setError(null);
       await onSave({
+        batchName: batchName.trim() || `Skörd ${date}`,
         date,
+        collectedDates: collectedDates.trim() || undefined,
         hiveId: hiveId || undefined,
         honeyWeightGrams,
-        jarCount: parsedJarCount,
-        jarSizeGrams: parsedJarSize,
+        waterContentPercent: parsedWaterContent,
         notes: notes.trim() || undefined,
       });
       onClose();
     } catch (err: any) {
-      setError(err.message || "Kunde inte spara skörderesultatet");
+      setError(err.message || "Kunde inte spara skördepartiet");
       setIsSubmitting(false);
     }
   };
+
+  // Water content quality indicator
+  const numWater = parseFloat(waterContent.replace(",", "."));
+  let waterQuality: { text: string; color: string; bg: string } | null = null;
+  if (!isNaN(numWater)) {
+    if (numWater < 18) {
+      waterQuality = {
+        text: "Utmärkt kvalitet (< 18% vattenhalt, mycket hållbar)",
+        color: "#166534",
+        bg: "#f0fdf4",
+      };
+    } else if (numWater <= 20) {
+      waterQuality = {
+        text: "Godkänd svensk standard (18–20% vattenhalt)",
+        color: "#854d0e",
+        bg: "#fefce8",
+      };
+    } else {
+      waterQuality = {
+        text: "Varning: Hög vattenhalt (> 20%). Risk för jäsning!",
+        color: "#991b1b",
+        bg: "#fef2f2",
+      };
+    }
+  }
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2 className="modal-title">{harvest ? "Redigera skörd" : "Registrera honungsskörd"}</h2>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <Droplet size={20} color="var(--color-primary)" />
+            <h2 className="modal-title">
+              {harvest ? "Redigera skördeparti" : "Registrera skördedag & slungning"}
+            </h2>
+          </div>
           <button className="modal-close-btn" onClick={onClose} aria-label="Stäng">
             <X size={20} />
           </button>
@@ -99,10 +130,49 @@ export const HarvestFormModal: React.FC<HarvestFormModalProps> = ({
             </div>
           )}
 
+          {/* Batch name and quick buttons */}
+          <div className="form-group">
+            <label className="form-label" htmlFor="batch-name">
+              Partinamn / Batch *
+            </label>
+            <input
+              id="batch-name"
+              type="text"
+              className="form-input"
+              value={batchName}
+              onChange={(e) => setBatchName(e.target.value)}
+              placeholder={`t.ex. Vårskörd ${currentYear} eller Sommarskörd ${currentYear}`}
+              required
+              autoFocus
+            />
+            <div style={{ display: "flex", gap: "0.35rem", marginTop: "0.35rem", flexWrap: "wrap" }}>
+              {[`Vårskörd ${currentYear}`, `Sensommarskörd ${currentYear}`, `Ljunghonung ${currentYear}`].map(
+                (suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    onClick={() => setBatchName(suggestion)}
+                    style={{
+                      background: "none",
+                      border: "1px dashed var(--color-border)",
+                      padding: "0.2rem 0.5rem",
+                      borderRadius: "12px",
+                      fontSize: "0.75rem",
+                      cursor: "pointer",
+                      color: "var(--color-text-muted)",
+                    }}
+                  >
+                    + {suggestion}
+                  </button>
+                ),
+              )}
+            </div>
+          </div>
+
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
             <div className="form-group">
               <label className="form-label" htmlFor="harvest-date">
-                Skördedatum *
+                Slungningsdatum *
               </label>
               <input
                 id="harvest-date"
@@ -116,7 +186,7 @@ export const HarvestFormModal: React.FC<HarvestFormModalProps> = ({
 
             <div className="form-group">
               <label className="form-label" htmlFor="harvest-hive">
-                Kupa (valfritt)
+                Bigård / Kupa
               </label>
               <select
                 id="harvest-hive"
@@ -127,68 +197,85 @@ export const HarvestFormModal: React.FC<HarvestFormModalProps> = ({
                 <option value="">Gemensam skörd / hela bigården</option>
                 {hives.map((h) => (
                   <option key={h.id} value={h.id}>
-                    {h.name}
+                    {h.name} {h.status !== "active" ? `(${h.status})` : ""}
                   </option>
                 ))}
               </select>
             </div>
           </div>
 
+          <div className="form-group">
+            <label className="form-label" htmlFor="harvest-collected">
+              Insamlingsperiod / Datum när ramar togs in (valfritt)
+            </label>
+            <input
+              id="harvest-collected"
+              type="text"
+              className="form-input"
+              placeholder="t.ex. 2026-06-10 till 2026-06-12"
+              value={collectedDates}
+              onChange={(e) => setCollectedDates(e.target.value)}
+            />
+          </div>
+
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
             <div className="form-group">
               <label className="form-label" htmlFor="harvest-weight">
-                Vikt slungad honung (kg)
+                Slungad mängd honung (kg)
               </label>
               <input
                 id="harvest-weight"
                 type="text"
                 className="form-input"
-                placeholder="t.ex. 22,5"
+                placeholder="t.ex. 35,5"
                 value={weightKg}
                 onChange={(e) => setWeightKg(e.target.value)}
               />
-              <span className="form-help">Lämna tomt om okänd</span>
+              <span className="form-help">Total vikt i kärl efter slungning & silning</span>
             </div>
 
             <div className="form-group">
-              <label className="form-label" htmlFor="harvest-jars">
-                Antal burkar
+              <label className="form-label" htmlFor="harvest-water">
+                Vattenhalt (%)
               </label>
               <input
-                id="harvest-jars"
-                type="number"
-                min="0"
+                id="harvest-water"
+                type="text"
                 className="form-input"
-                placeholder="t.ex. 45"
-                value={jarCount}
-                onChange={(e) => setJarCount(e.target.value)}
+                placeholder="t.ex. 17,4"
+                value={waterContent}
+                onChange={(e) => setWaterContent(e.target.value)}
               />
+              <span className="form-help">Mätt med refraktometer</span>
             </div>
           </div>
 
-          <div className="form-group">
-            <label className="form-label" htmlFor="harvest-jarsize">
-              Burkstorlek (gram)
-            </label>
-            <input
-              id="harvest-jarsize"
-              type="number"
-              min="0"
-              className="form-input"
-              value={jarSizeGrams}
-              onChange={(e) => setJarSizeGrams(e.target.value)}
-              placeholder="500"
-            />
-          </div>
+          {/* Water quality feedback */}
+          {waterQuality && (
+            <div
+              style={{
+                background: waterQuality.bg,
+                color: waterQuality.color,
+                border: `1px solid ${waterQuality.color}33`,
+                padding: "0.5rem 0.75rem",
+                borderRadius: "6px",
+                marginBottom: "1rem",
+                fontSize: "0.825rem",
+                fontWeight: 500,
+              }}
+            >
+              💧 {waterQuality.text}
+            </div>
+          )}
 
           <div className="form-group">
             <label className="form-label" htmlFor="harvest-notes">
-              Anteckningar
+              Dragkälla & anteckningar
             </label>
             <textarea
               id="harvest-notes"
               className="form-textarea"
-              placeholder="Vattenhalt (t.ex. 17.5%), dragkälla (raps, lind, ljung), ympning..."
+              placeholder="t.ex. Raps och maskros, rörd med ymp från förra året, mognad i 3 dagar..."
               rows={3}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -206,7 +293,7 @@ export const HarvestFormModal: React.FC<HarvestFormModalProps> = ({
             </button>
             <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
               <Check size={16} />
-              <span>{isSubmitting ? "Sparar..." : "Spara skörd"}</span>
+              <span>{isSubmitting ? "Sparar..." : "Spara skördeparti"}</span>
             </button>
           </div>
         </form>
