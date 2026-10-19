@@ -1,54 +1,69 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
     <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#f59e0b" />
-      <stop offset="100%" stop-color="#b45309" />
+      <stop offset="0%" stop-color="#a1bc98" />
+      <stop offset="100%" stop-color="#778873" />
     </linearGradient>
     <linearGradient id="combGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#fef3c7" stop-opacity="0.95" />
-      <stop offset="100%" stop-color="#fde68a" stop-opacity="0.8" />
+      <stop offset="0%" stop-color="#f1f3e0" stop-opacity="0.95" />
+      <stop offset="100%" stop-color="#d2dcb6" stop-opacity="0.85" />
+    </linearGradient>
+    <linearGradient id="stripeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="50%" stop-color="#fbbf24" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+    <linearGradient id="wingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95" />
+      <stop offset="100%" stop-color="#f1f3e0" stop-opacity="0.8" />
     </linearGradient>
     <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#451a03" flood-opacity="0.35" />
+      <feDropShadow dx="0" dy="5" stdDeviation="8" flood-color="#273026" flood-opacity="0.25" />
     </filter>
   </defs>
 
-  <!-- Background rounded squircle matching warm palette -->
+  <!-- Background rounded squircle matching warm sage palette -->
   <rect width="512" height="512" rx="112" fill="url(#bgGrad)" />
+  <rect width="504" height="504" x="4" y="4" rx="108" fill="none" stroke="#f1f3e0" stroke-width="4" stroke-opacity="0.45" />
 
   <g filter="url(#shadow)">
-    <!-- Honeycomb hex backdrop -->
-    <polygon points="256,70 340,118 340,214 256,262 172,214 172,118" fill="url(#combGrad)" stroke="#92400e" stroke-width="6" />
-    <polygon points="172,214 256,262 256,358 172,406 88,358 88,262" fill="url(#combGrad)" stroke="#92400e" stroke-width="6" />
-    <polygon points="340,214 424,262 424,358 340,406 256,358 256,262" fill="url(#combGrad)" stroke="#92400e" stroke-width="6" />
+    <!-- Honeycomb hex backdrop in soft sage cream -->
+    <polygon points="256,70 340,118 340,214 256,262 172,214 172,118" fill="url(#combGrad)" stroke="#778873" stroke-width="6" stroke-linejoin="round" />
+    <polygon points="172,214 256,262 256,358 172,406 88,358 88,262" fill="url(#combGrad)" stroke="#778873" stroke-width="6" stroke-linejoin="round" />
+    <polygon points="340,214 424,262 424,358 340,406 256,358 256,262" fill="url(#combGrad)" stroke="#778873" stroke-width="6" stroke-linejoin="round" />
 
     <!-- Bee in Center -->
     <!-- Wings -->
-    <ellipse cx="205" cy="195" rx="42" ry="62" transform="rotate(-30 205 195)" fill="#ffffff" fill-opacity="0.9" stroke="#0284c7" stroke-width="4" />
-    <ellipse cx="307" cy="195" rx="42" ry="62" transform="rotate(30 307 195)" fill="#ffffff" fill-opacity="0.9" stroke="#0284c7" stroke-width="4" />
+    <ellipse cx="205" cy="195" rx="44" ry="64" transform="rotate(-30 205 195)" fill="url(#wingGrad)" stroke="#778873" stroke-width="4" />
+    <line x1="205" y1="140" x2="205" y2="245" transform="rotate(-30 205 195)" stroke="#a1bc98" stroke-width="2.5" stroke-linecap="round" stroke-opacity="0.75" />
+    
+    <ellipse cx="307" cy="195" rx="44" ry="64" transform="rotate(30 307 195)" fill="url(#wingGrad)" stroke="#778873" stroke-width="4" />
+    <line x1="307" y1="140" x2="307" y2="245" transform="rotate(30 307 195)" stroke="#a1bc98" stroke-width="2.5" stroke-linecap="round" stroke-opacity="0.75" />
 
     <!-- Bee body -->
-    <ellipse cx="256" cy="270" rx="52" ry="72" fill="#1c1917" />
-    <!-- Yellow amber stripes -->
-    <path d="M 208 242 Q 256 252 304 242 L 307 262 Q 256 272 205 262 Z" fill="#fbbf24" />
-    <path d="M 205 277 Q 256 288 307 277 L 304 297 Q 256 308 208 297 Z" fill="#fbbf24" />
-    <path d="M 215 312 Q 256 324 297 312 L 290 327 Q 256 337 222 327 Z" fill="#fbbf24" />
+    <ellipse cx="256" cy="270" rx="52" ry="72" fill="#273026" />
+    
+    <!-- Warm honey stripes -->
+    <path d="M 208 242 Q 256 252 304 242 L 307 262 Q 256 272 205 262 Z" fill="url(#stripeGrad)" />
+    <path d="M 205 277 Q 256 288 307 277 L 304 297 Q 256 308 208 297 Z" fill="url(#stripeGrad)" />
+    <path d="M 215 312 Q 256 324 297 312 L 290 327 Q 256 337 222 327 Z" fill="url(#stripeGrad)" />
 
     <!-- Stinger -->
-    <polygon points="256,348 250,364 262,364" fill="#0f172a" />
+    <polygon points="256,348 250,364 262,364" fill="#1c241c" />
 
     <!-- Head -->
-    <circle cx="256" cy="178" r="30" fill="#1c1917" />
+    <circle cx="256" cy="178" r="30" fill="#273026" />
+    
     <!-- Eyes -->
-    <ellipse cx="242" cy="173" rx="5.5" ry="8.5" fill="#ffffff" />
-    <circle cx="243" cy="174" r="3.5" fill="#0f172a" />
-    <ellipse cx="270" cy="173" rx="5.5" ry="8.5" fill="#ffffff" />
-    <circle cx="269" cy="174" r="3.5" fill="#0f172a" />
+    <ellipse cx="242" cy="173" rx="5.5" ry="8.5" fill="#f1f3e0" />
+    <circle cx="243" cy="174" r="3.5" fill="#1c241c" />
+    <ellipse cx="270" cy="173" rx="5.5" ry="8.5" fill="#f1f3e0" />
+    <circle cx="269" cy="174" r="3.5" fill="#1c241c" />
 
     <!-- Antennae -->
-    <path d="M 246 152 Q 232 128 222 133" stroke="#1c1917" stroke-width="5" stroke-linecap="round" fill="none" />
-    <circle cx="220" cy="134" r="5.5" fill="#d97706" />
-    <path d="M 266 152 Q 280 128 290 133" stroke="#1c1917" stroke-width="5" stroke-linecap="round" fill="none" />
-    <circle cx="292" cy="134" r="5.5" fill="#d97706" />
+    <path d="M 246 152 Q 232 128 222 133" stroke="#273026" stroke-width="5" stroke-linecap="round" fill="none" />
+    <circle cx="220" cy="134" r="5.5" fill="#f59e0b" />
+    <path d="M 266 152 Q 280 128 290 133" stroke="#273026" stroke-width="5" stroke-linecap="round" fill="none" />
+    <circle cx="292" cy="134" r="5.5" fill="#f59e0b" />
   </g>
 </svg>

@@ -19,7 +19,7 @@ export default defineConfig(({ command }) => {
           name: "Bifogat Biodlingsloggbok",
           short_name: "Bifogat",
           description: "Offline-first beekeeping logbook with Google Sheets synchronization",
-          theme_color: "#d97706",
+          theme_color: "#778873",
           background_color: "#f8f9fa",
           display: "standalone",
           start_url: "/",
