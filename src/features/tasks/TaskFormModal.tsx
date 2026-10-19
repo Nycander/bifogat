@@ -5,6 +5,7 @@ import { X, Check } from "lucide-react";
 interface TaskFormModalProps {
   task?: Task;
   hives: Hive[];
+  initialHiveId?: string;
   onClose: () => void;
   onSave: (data: {
     title: string;
@@ -14,10 +15,16 @@ interface TaskFormModalProps {
   }) => Promise<void>;
 }
 
-export const TaskFormModal: React.FC<TaskFormModalProps> = ({ task, hives, onClose, onSave }) => {
+export const TaskFormModal: React.FC<TaskFormModalProps> = ({
+  task,
+  hives,
+  initialHiveId,
+  onClose,
+  onSave,
+}) => {
   const [title, setTitle] = useState(task?.title || "");
   const [notes, setNotes] = useState(task?.notes || "");
-  const [hiveId, setHiveId] = useState(task?.hiveId || "");
+  const [hiveId, setHiveId] = useState(task?.hiveId || initialHiveId || "");
   const [dueDate, setDueDate] = useState(task?.dueDate || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);

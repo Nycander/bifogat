@@ -1,7 +1,7 @@
 import React from "react";
 import { Home, Layers, CheckSquare, Droplet, Wallet, Settings } from "lucide-react";
 
-export type NavTab = "overview" | "hives" | "tasks" | "harvests" | "economy" | "settings";
+export type NavTab = "overview" | "hives" | "harvests" | "economy" | "settings";
 
 interface NavBarProps {
   activeTab: NavTab;
@@ -12,11 +12,10 @@ interface NavBarProps {
 export const NavBar: React.FC<NavBarProps> = ({ activeTab, onSelectTab, openTaskCount }) => {
   const tabs = [
     { id: "overview" as NavTab, label: "Översikt", icon: Home },
-    { id: "hives" as NavTab, label: "Kupor", icon: Layers },
     {
-      id: "tasks" as NavTab,
-      label: "Uppgifter",
-      icon: CheckSquare,
+      id: "hives" as NavTab,
+      label: "Kupor",
+      icon: Layers,
       badge: openTaskCount > 0 ? openTaskCount : undefined,
     },
     { id: "harvests" as NavTab, label: "Skörd", icon: Droplet },
