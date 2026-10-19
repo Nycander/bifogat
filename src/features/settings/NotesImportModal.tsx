@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Hive } from "../../domain/types";
-import { parseHistoricalNotes, ParsedNotesResult } from "../../import/notesParser";
-import { X, Upload, Check, FileText, ArrowRight } from "lucide-react";
+import { parseHistoricalNotes, normalizeHiveName, ParsedNotesResult } from "../../import/notesParser";
+import { X, Upload, Check, FileText, ArrowRight, Plus } from "lucide-react";
 
 interface NotesImportModalProps {
   existingHives: Hive[];
@@ -57,6 +57,52 @@ export const NotesImportModal: React.FC<NotesImportModalProps> = ({
     }
   };
 
+  const [newHiveInput, setNewHiveInput] = useState("");
+
+  const handleRemoveHive = (nameToRemove: string) => {
+    if (!previewResult) return;
+    const remainingHives = previewResult.detectedHives.filter((h) => h.name !== nameToRemove);
+    const fallbackHive = remainingHives[0]?.name || "Kupa A";
+    setPreviewResult({
+      ...previewResult,
+      detectedHives: remainingHives,
+      events: previewResult.events.map((ev) =>
+        ev.hiveName === nameToRemove ? { ...ev, hiveName: fallbackHive } : ev,
+      ),
+      harvests: previewResult.harvests.map((h) =>
+        h.hiveName === nameToRemove ? { ...h, hiveName: fallbackHive } : h,
+      ),
+    });
+  };
+
+  const handleAddHive = () => {
+    const trimmed = newHiveInput.trim();
+    if (!trimmed || !previewResult) return;
+    const norm = normalizeHiveName(trimmed);
+    if (previewResult.detectedHives.some((h) => h.name.toLowerCase() === norm.toLowerCase())) {
+      setNewHiveInput("");
+      return;
+    }
+    const isNew = !existingHives.some((eh) => eh.name.toLowerCase() === norm.toLowerCase());
+    setPreviewResult({
+      ...previewResult,
+      detectedHives: [...previewResult.detectedHives, { name: norm, isNew }],
+    });
+    setNewHiveInput("");
+  };
+
+  const handleEventHiveChange = (eventIndex: number, newHiveName: string) => {
+    if (!previewResult) return;
+    const updatedEvents = [...previewResult.events];
+    if (updatedEvents[eventIndex]) {
+      updatedEvents[eventIndex] = { ...updatedEvents[eventIndex], hiveName: newHiveName };
+      setPreviewResult({
+        ...previewResult,
+        events: updatedEvents,
+      });
+    }
+  };
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
@@ -94,6 +140,42 @@ export const NotesImportModal: React.FC<NotesImportModalProps> = ({
               <em>Nästa gång</em> tolkas och delas upp i uppgifter, skördar och händelser med
               fullständigt bevarad originaltext.
             </p>
+
+            <div
+              style={{
+                background: "#f8fafc",
+                border: "1px solid var(--color-border)",
+                borderRadius: "8px",
+                padding: "0.65rem 0.85rem",
+                marginBottom: "1rem",
+                fontSize: "0.8rem",
+                color: "var(--color-text-muted)",
+              }}
+            >
+              <div
+                style={{
+                  fontWeight: 600,
+                  color: "var(--color-text-main)",
+                  marginBottom: "0.25rem",
+                }}
+              >
+                💡 Rekommenderat anteckningsformat för bästa tolkning:
+              </div>
+              <ul style={{ margin: 0, paddingLeft: "1.2rem", lineHeight: 1.5 }}>
+                <li>
+                  <strong>Kupsektioner:</strong> Skriv <code># Kupa A</code>, <code>Kupa A:</code>{" "}
+                  eller <code>Kupa A</code> som egen rad före noteringarna.
+                </li>
+                <li>
+                  <strong>Avläggare:</strong> Skriv <code># Avläggare 2026</code> eller{" "}
+                  <code>Avläggare 2026:</code> för att skilja kupan från ordet "avläggare" i löptext.
+                </li>
+                <li>
+                  <strong>Datum:</strong> Skriv datum först på raden, t.ex.{" "}
+                  <code>2026-05-15: Kupa A - 4 ramar yngel</code>.
+                </li>
+              </ul>
+            </div>
 
             <div style={{ marginBottom: "1.25rem" }}>
               <label
@@ -237,23 +319,104 @@ export const NotesImportModal: React.FC<NotesImportModalProps> = ({
                   </div>
                 </div>
 
-                {previewResult.detectedHives.length > 0 && (
+                <div
+                  style={{
+                    background: "#fffbeb",
+                    border: "1px solid #fde68a",
+                    padding: "0.75rem 1rem",
+                    borderRadius: "8px",
+                    marginBottom: "0.75rem",
+                    fontSize: "0.875rem",
+                  }}
+                >
                   <div
                     style={{
-                      background: "#fffbeb",
-                      border: "1px solid #fde68a",
-                      padding: "0.65rem 0.85rem",
-                      borderRadius: "8px",
-                      marginBottom: "0.75rem",
-                      fontSize: "0.85rem",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      marginBottom: "0.5rem",
                     }}
                   >
-                    <strong>Hittade kupor/avläggare:</strong>{" "}
-                    {previewResult.detectedHives
-                      .map((h) => `${h.name}${h.isNew ? " (ny)" : ""}`)
-                      .join(", ")}
+                    <span style={{ fontWeight: 600, color: "#92400e" }}>
+                      Identifierade kupor/avläggare ({previewResult.detectedHives.length} st):
+                    </span>
+                    <span style={{ fontSize: "0.75rem", color: "#b45309" }}>
+                      Klicka på kryss för att ta bort, eller lägg till saknad kupa nedan
+                    </span>
                   </div>
-                )}
+
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: "0.5rem",
+                      marginBottom: "0.75rem",
+                    }}
+                  >
+                    {previewResult.detectedHives.map((h) => (
+                      <span
+                        key={h.name}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "0.35rem",
+                          padding: "0.25rem 0.6rem",
+                          borderRadius: "16px",
+                          background: "#fef3c7",
+                          border: "1px solid #f59e0b",
+                          color: "#78350f",
+                          fontWeight: 500,
+                          fontSize: "0.85rem",
+                        }}
+                      >
+                        {h.name} {h.isNew ? "(ny)" : "(finns redan)"}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveHive(h.name)}
+                          title={`Ta bort ${h.name} från importen`}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            padding: "0 2px",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            color: "#b45309",
+                          }}
+                        >
+                          <X size={14} />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Add missing hive input */}
+                  <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                    <input
+                      type="text"
+                      className="form-input"
+                      style={{ padding: "0.35rem 0.6rem", fontSize: "0.85rem", flex: 1 }}
+                      placeholder="Saknas en kupa? Skriv t.ex. 'Kupa B' eller 'Avläggare 2026'..."
+                      value={newHiveInput}
+                      onChange={(e) => setNewHiveInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddHive();
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      onClick={handleAddHive}
+                      disabled={!newHiveInput.trim()}
+                    >
+                      <Plus size={14} />
+                      <span>Lägg till kupa</span>
+                    </button>
+                  </div>
+                </div>
 
                 {previewResult.unclassifiedEntries.length > 0 && (
                   <div

@@ -14,7 +14,6 @@ import {
   Trash2,
   ExternalLink,
   ShieldCheck,
-  GitBranch,
 } from "lucide-react";
 
 interface SettingsViewProps {
@@ -559,59 +558,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </button>
       </div>
 
-      {/* 6. GitHub Pages Hosting Guide */}
-      <div className="card">
-        <div className="card-header">
-          <h3 className="card-title">
-            <GitBranch size={18} color="var(--color-primary)" />
-            <span>Driftsättning på GitHub Pages</span>
-          </h3>
-        </div>
-        <p
-          style={{
-            fontSize: "0.875rem",
-            color: "var(--color-text-muted)",
-            marginBottom: "0.75rem",
-          }}
-        >
-          Eftersom <strong>Bifogat</strong> är en renodlad klientapplikation (SPA) utan separat
-          backend, kan den driftas helt gratis via GitHub Pages.
-        </p>
-        <div
-          style={{
-            background: "#f8fafc",
-            padding: "0.75rem 0.9rem",
-            borderRadius: "8px",
-            border: "1px solid var(--color-border)",
-            fontSize: "0.825rem",
-          }}
-        >
-          <div style={{ fontWeight: 700, marginBottom: "0.35rem" }}>Tre enkla steg:</div>
-          <ol
-            style={{
-              paddingLeft: "1.25rem",
-              display: "flex",
-              flexDirection: "column",
-              gap: "0.4rem",
-            }}
-          >
-            <li>
-              <strong>Skapa GitHub-repository</strong> och tryck upp källkoden till{" "}
-              <code>main</code>-grenen.
-            </li>
-            <li>
-              <strong>Aktivera GitHub Pages:</strong> Gå till repots <em>Settings &gt; Pages</em> på
-              GitHub och välj <em>Source: GitHub Actions</em> (den inkluderade{" "}
-              <code>.github/workflows/deploy.yml</code> bygger och driftsätter automatiskt).
-            </li>
-            <li>
-              <strong>Tillåt domänen i Google Cloud:</strong> Lägg till din GitHub Pages-adress
-              (t.ex. <code>https://dittnamn.github.io</code>) i Google Cloud Console under{" "}
-              <em>Authorized JavaScript origins</em> för ditt OAuth Client ID.
-            </li>
-          </ol>
-        </div>
-      </div>
+
 
       {/* 6. System Info & Local Storage Management */}
       <div className="card">

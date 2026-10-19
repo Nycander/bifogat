@@ -45,6 +45,7 @@ import { TasksView } from "./features/tasks/TasksView";
 import { TaskFormModal } from "./features/tasks/TaskFormModal";
 import { HarvestsView } from "./features/harvests/HarvestsView";
 import { HarvestFormModal } from "./features/harvests/HarvestFormModal";
+import { JarFillingModal } from "./features/harvests/JarFillingModal";
 import { EconomyView } from "./features/economy/EconomyView";
 import { TransactionFormModal } from "./features/economy/TransactionFormModal";
 import { SettingsView } from "./features/settings/SettingsView";
@@ -86,6 +87,8 @@ export default function App() {
 
   const [showHarvestModal, setShowHarvestModal] = useState(false);
   const [editingHarvest, setEditingHarvest] = useState<Harvest | undefined>();
+  const [showJarFillingModal, setShowJarFillingModal] = useState(false);
+  const [fillingBatchId, setFillingBatchId] = useState<string | undefined>();
 
   const [showTxModal, setShowTxModal] = useState(false);
   const [editingTx, setEditingTx] = useState<Transaction | undefined>();
@@ -257,8 +260,40 @@ export default function App() {
     type: EventType;
     title: string;
     notes: string;
+    completedTaskIds?: string[];
+    newTasks?: Array<{ title: string; dueDate?: string }>;
   }) => {
-    await eventRepository.create(data);
+    await eventRepository.create({
+      hiveId: data.hiveId,
+      date: data.date,
+      type: data.type,
+      title: data.title,
+      notes: data.notes,
+    });
+
+    // Mark any checked tasks as completed
+    if (data.completedTaskIds && data.completedTaskIds.length > 0) {
+      for (const taskId of data.completedTaskIds) {
+        await taskRepository.update(taskId, {
+          status: "completed",
+          completedAt: new Date().toISOString(),
+        });
+      }
+    }
+
+    // Create any new tasks for next visit
+    if (data.newTasks && data.newTasks.length > 0) {
+      for (const nt of data.newTasks) {
+        await taskRepository.create({
+          title: nt.title,
+          hiveId: data.hiveId,
+          dueDate: nt.dueDate,
+          status: "open",
+          notes: `Planerad under kupbesök ${data.date}`,
+        });
+      }
+    }
+
     await reloadData();
   };
 
@@ -290,11 +325,12 @@ export default function App() {
 
   // Harvest Handlers
   const handleSaveHarvest = async (data: {
+    batchName?: string;
     date: string;
+    collectedDates?: string;
     hiveId?: string;
     honeyWeightGrams?: number;
-    jarSizeGrams?: number;
-    jarCount?: number;
+    waterContentPercent?: number;
     notes?: string;
   }) => {
     if (editingHarvest) {
@@ -308,6 +344,24 @@ export default function App() {
 
   const handleDeleteHarvest = async (id: string) => {
     await harvestRepository.delete(id);
+    await reloadData();
+  };
+
+  const handleSaveFilling = async (
+    harvestId: string,
+    fillingData: {
+      date: string;
+      jarCount: number;
+      jarSizeGrams: number;
+      notes?: string;
+    },
+  ) => {
+    await harvestRepository.addFilling(harvestId, fillingData);
+    await reloadData();
+  };
+
+  const handleDeleteFilling = async (harvestId: string, fillingId: string) => {
+    await harvestRepository.deleteFilling(harvestId, fillingId);
     await reloadData();
   };
 
@@ -565,7 +619,16 @@ export default function App() {
               setEditingHarvest(undefined);
               setShowHarvestModal(true);
             }}
+            onEditHarvest={(harvest) => {
+              setEditingHarvest(harvest);
+              setShowHarvestModal(true);
+            }}
             onDeleteHarvest={handleDeleteHarvest}
+            onOpenJarFilling={(harvestId) => {
+              setFillingBatchId(harvestId);
+              setShowJarFillingModal(true);
+            }}
+            onDeleteFilling={handleDeleteFilling}
           />
         )}
 
@@ -628,6 +691,7 @@ export default function App() {
         <EventFormModal
           hives={hives}
           initialHiveId={preselectedHiveId}
+          tasks={tasks}
           onClose={() => setShowEventModal(false)}
           onSave={handleSaveEvent}
         />
@@ -674,6 +738,18 @@ export default function App() {
           hives={hives}
           onClose={() => setShowHarvestModal(false)}
           onSave={handleSaveHarvest}
+        />
+      )}
+
+      {showJarFillingModal && (
+        <JarFillingModal
+          harvests={harvests}
+          initialHarvestId={fillingBatchId}
+          onClose={() => {
+            setShowJarFillingModal(false);
+            setFillingBatchId(undefined);
+          }}
+          onSaveFilling={handleSaveFilling}
         />
       )}
 

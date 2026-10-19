@@ -54,7 +54,12 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
     .reduce((acc, h) => acc + (h.honeyWeightGrams || 0), 0);
   const currentYearJars = harvests
     .filter((h) => h.date.startsWith(currentYear))
-    .reduce((acc, h) => acc + (h.jarCount || 0), 0);
+    .reduce((acc, h) => {
+      if (h.fillings && h.fillings.length > 0) {
+        return acc + h.fillings.reduce((sum, f) => sum + (f.jarCount || 0), 0);
+      }
+      return acc + (h.jarCount || 0);
+    }, 0);
 
   const getHiveName = (hiveId: string) => {
     const h = hives.find((hive) => hive.id === hiveId);

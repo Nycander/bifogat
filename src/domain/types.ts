@@ -44,13 +44,26 @@ export interface Task {
   completedAt?: string; // ISO 8601
 }
 
+export interface JarFilling {
+  id: string; // UUID
+  date: string; // YYYY-MM-DD (filling date)
+  jarCount: number; // integer count of jars
+  jarSizeGrams: number; // e.g. 500, 350, 250, 700
+  notes?: string;
+  createdAt: string; // ISO 8601
+}
+
 export interface Harvest {
   id: string; // UUID
-  date: string; // YYYY-MM-DD
-  hiveId?: string; // optional hive reference
-  honeyWeightGrams?: number; // integer grams, undefined if unknown (preserve distinction from 0)
-  jarSizeGrams?: number; // e.g. 500
-  jarCount?: number; // integer count, undefined if unknown
+  batchName?: string; // e.g. "Vårskörd 2026", "Sensommarskörd 2026", "Parti 1"
+  date: string; // YYYY-MM-DD (slungningsdatum / harvest date)
+  collectedDates?: string; // e.g. "2026-06-08 – 2026-06-10" (dates frames were pulled)
+  hiveId?: string; // optional hive reference (blank = whole apiary)
+  waterContentPercent?: number; // e.g. 17.5 (%) measured with refractometer
+  honeyWeightGrams?: number; // integer grams extracted, undefined if unknown
+  fillings?: JarFilling[]; // list of jar filling events recorded against this batch
+  jarSizeGrams?: number; // e.g. 500 (legacy / default)
+  jarCount?: number; // integer count (legacy / computed)
   notes?: string;
   createdAt: string;
   updatedAt: string;
