@@ -38,6 +38,7 @@ import { OfflineIndicator } from "./pwa/OfflineIndicator";
 import { NavBar, NavTab } from "./components/NavBar";
 import { SyncStatusBar } from "./components/SyncStatusBar";
 import { Logo } from "./components/Logo";
+import { useSystemTheme } from "./theme/useTheme";
 
 import { OverviewView } from "./features/overview/OverviewView";
 import { HivesView } from "./features/hives/HivesView";
@@ -59,6 +60,7 @@ import { ParsedNotesResult } from "./import/notesParser";
 
 export default function App() {
   const isOnline = useOnlineStatus();
+  useSystemTheme();
 
   // Navigation
   const [activeTab, setActiveTab] = useState<NavTab>("overview");

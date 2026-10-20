@@ -242,10 +242,8 @@ export const HivesView: React.FC<HivesViewProps> = ({
                       {/* Embedded Tasks Badge / Preview */}
                       {openHiveTasks.length > 0 ? (
                         <div
+                          className={overdue ? "box-danger" : "box-warning"}
                           style={{
-                            background: overdue ? "#fff1f2" : "#fefce8",
-                            border: `1px solid ${overdue ? "#fecdd3" : "#fef08a"}`,
-                            borderRadius: "6px",
                             padding: "0.45rem 0.65rem",
                             fontSize: "0.8rem",
                             marginBottom: "0.6rem",
@@ -262,7 +260,7 @@ export const HivesView: React.FC<HivesViewProps> = ({
                             <span
                               style={{
                                 fontWeight: 700,
-                                color: overdue ? "var(--color-danger)" : "#854d0e",
+                                color: overdue ? "var(--color-danger-text)" : "var(--color-warning-text)",
                                 display: "flex",
                                 alignItems: "center",
                                 gap: "0.3rem",
@@ -277,7 +275,7 @@ export const HivesView: React.FC<HivesViewProps> = ({
                                 style={{
                                   fontSize: "0.7rem",
                                   fontWeight: 600,
-                                  color: overdue ? "var(--color-danger)" : "#a16207",
+                                  color: overdue ? "var(--color-danger-text)" : "var(--color-warning-text)",
                                 }}
                               >
                                 {overdue ? "Försenad!" : nextTask.dueDate}
@@ -287,7 +285,7 @@ export const HivesView: React.FC<HivesViewProps> = ({
                           {nextTask && (
                             <div
                               style={{
-                                color: "var(--color-text-main)",
+                                color: "var(--color-text-primary)",
                                 fontWeight: 500,
                                 whiteSpace: "nowrap",
                                 overflow: "hidden",
@@ -302,7 +300,7 @@ export const HivesView: React.FC<HivesViewProps> = ({
                         <div
                           style={{
                             fontSize: "0.75rem",
-                            color: "var(--color-success)",
+                            color: "var(--color-success-text)",
                             display: "flex",
                             alignItems: "center",
                             gap: "0.3rem",
@@ -318,10 +316,9 @@ export const HivesView: React.FC<HivesViewProps> = ({
                       {/* Latest Event */}
                       {latestEvent ? (
                         <div
+                          className="box-inset"
                           style={{
-                            background: "#f8fafc",
                             padding: "0.5rem 0.65rem",
-                            borderRadius: "6px",
                             fontSize: "0.8rem",
                             marginBottom: "0.75rem",
                           }}

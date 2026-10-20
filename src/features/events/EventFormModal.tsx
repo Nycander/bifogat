@@ -163,10 +163,8 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
 
           {/* 1. Att göra inför detta besök */}
           <div
+            className="box-success"
             style={{
-              background: "#f0fdf4",
-              border: "1px solid #bbf7d0",
-              borderRadius: "8px",
               padding: "0.75rem 0.9rem",
               marginBottom: "1rem",
             }}
@@ -179,16 +177,16 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
                 marginBottom: "0.4rem",
               }}
             >
-              <span style={{ fontWeight: 600, fontSize: "0.875rem", color: "#166534" }}>
+              <span style={{ fontWeight: 600, fontSize: "0.875rem", color: "var(--color-success-text)" }}>
                 Att göra inför / under detta besök ({openTasksForThisHive.length} st):
               </span>
-              <span style={{ fontSize: "0.75rem", color: "#15803d" }}>
+              <span style={{ fontSize: "0.75rem", color: "var(--color-success-text)", opacity: 0.85 }}>
                 Bocka av det du har utfört
               </span>
             </div>
 
             {openTasksForThisHive.length === 0 ? (
-              <div style={{ fontSize: "0.8rem", color: "#15803d", fontStyle: "italic" }}>
+              <div style={{ fontSize: "0.8rem", color: "var(--color-success-text)", fontStyle: "italic", opacity: 0.85 }}>
                 Inga tidigare planerade uppgifter för denna kupa.
               </div>
             ) : (
@@ -204,11 +202,11 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
                         gap: "0.5rem",
                         fontSize: "0.85rem",
                         cursor: "pointer",
-                        background: isChecked ? "#dcfce7" : "#ffffff",
+                        background: isChecked ? "var(--color-success-surface)" : "var(--color-surface-bg)",
                         padding: "0.35rem 0.6rem",
                         borderRadius: "6px",
                         border: "1px solid",
-                        borderColor: isChecked ? "#86efac" : "#e2e8f0",
+                        borderColor: isChecked ? "var(--color-success-border)" : "var(--color-border-subtle)",
                         transition: "all 0.15s ease",
                       }}
                     >
@@ -219,15 +217,15 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
                         style={{ display: "none" }}
                       />
                       {isChecked ? (
-                        <CheckSquare size={16} color="#166534" />
+                        <CheckSquare size={16} color="var(--color-success-base)" />
                       ) : (
-                        <Square size={16} color="#94a3b8" />
+                        <Square size={16} color="var(--color-text-secondary)" />
                       )}
                       <span
                         style={{
                           flex: 1,
                           textDecoration: isChecked ? "line-through" : "none",
-                          color: isChecked ? "#166534" : "#1e293b",
+                          color: isChecked ? "var(--color-success-text)" : "var(--color-text-primary)",
                           fontWeight: isChecked ? 600 : 400,
                         }}
                       >
@@ -237,8 +235,8 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
                         <span
                           style={{
                             fontSize: "0.7rem",
-                            background: "#e2e8f0",
-                            color: "#475569",
+                            background: "var(--color-surface-inset)",
+                            color: "var(--color-text-secondary)",
                             padding: "0.1rem 0.4rem",
                             borderRadius: "10px",
                           }}
@@ -247,7 +245,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
                         </span>
                       )}
                       {isChecked && (
-                        <span style={{ fontSize: "0.7rem", color: "#166534", fontWeight: 600 }}>
+                        <span style={{ fontSize: "0.7rem", color: "var(--color-success-text)", fontWeight: 600 }}>
                           Klar!
                         </span>
                       )}
@@ -312,10 +310,8 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
 
           {/* 3. Planera till nästa besök */}
           <div
+            className="box-inset"
             style={{
-              background: "#f8fafc",
-              border: "1px solid var(--color-border)",
-              borderRadius: "8px",
               padding: "0.75rem 0.9rem",
               marginBottom: "1rem",
             }}
@@ -324,7 +320,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
               style={{
                 fontWeight: 600,
                 fontSize: "0.875rem",
-                color: "var(--color-text-main)",
+                color: "var(--color-text-primary)",
                 marginBottom: "0.4rem",
               }}
             >
@@ -347,8 +343,8 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
-                      background: "#fff",
-                      border: "1px solid var(--color-border)",
+                      background: "var(--color-surface-bg)",
+                      border: "1px solid var(--color-border-subtle)",
                       padding: "0.3rem 0.5rem",
                       borderRadius: "6px",
                       fontSize: "0.825rem",
@@ -357,7 +353,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
                     <div>
                       <span>📌 {nt.title}</span>
                       {nt.dueDate && (
-                        <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", marginLeft: "0.5rem" }}>
+                        <span style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)", marginLeft: "0.5rem" }}>
                           (utförs senast: {nt.dueDate})
                         </span>
                       )}
@@ -369,7 +365,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
                         background: "none",
                         border: "none",
                         cursor: "pointer",
-                        color: "#ef4444",
+                        color: "var(--color-danger-base)",
                         padding: "0 2px",
                       }}
                       title="Ta bort"

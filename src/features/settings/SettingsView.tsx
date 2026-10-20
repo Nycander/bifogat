@@ -100,16 +100,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         {currentUser ? (
           <div>
             <div
+              className="box-inset"
               style={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
                 flexWrap: "wrap",
                 gap: "0.75rem",
-                background: "#f8fafc",
                 padding: "0.75rem",
-                borderRadius: "8px",
-                border: "1px solid var(--color-border)",
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
@@ -118,8 +116,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     width: "36px",
                     height: "36px",
                     borderRadius: "50%",
-                    background: "var(--color-primary-light)",
-                    color: "var(--color-accent-dark)",
+                    background: "var(--color-primary-surface)",
+                    color: "var(--color-text-primary)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -132,7 +130,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   <div style={{ fontWeight: 600 }}>
                     {currentUser.displayName || "Google-användare"}
                   </div>
-                  <div style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
+                  <div style={{ fontSize: "0.8rem", color: "var(--color-text-secondary)" }}>
                     {currentUser.email}
                   </div>
                 </div>
@@ -144,12 +142,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
             {syncStatus.state === "needs_auth" && (
               <div
+                className="box-warning"
                 style={{
                   marginTop: "0.75rem",
                   padding: "0.65rem 0.85rem",
-                  background: "#fffbeb",
-                  border: "1px solid #fde68a",
-                  borderRadius: "8px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
@@ -157,7 +153,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   flexWrap: "wrap",
                 }}
               >
-                <div style={{ fontSize: "0.85rem", color: "#92400e" }}>
+                <div style={{ fontSize: "0.85rem", color: "var(--color-warning-text)" }}>
                   Google-behörigheten har gått ut och behöver förnyas för kalkylarkssynk.
                 </div>
                 <button
@@ -229,11 +225,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
         {meta.spreadsheetId ? (
           <div
+            className="box-success"
             style={{
-              background: "#f0fdf4",
-              border: "1px solid #bbf7d0",
               padding: "0.75rem",
-              borderRadius: "8px",
               marginBottom: "0.75rem",
             }}
           >
@@ -247,10 +241,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               }}
             >
               <div>
-                <div style={{ fontSize: "0.75rem", color: "#166534", fontWeight: 600 }}>
+                <div style={{ fontSize: "0.75rem", color: "var(--color-success-text)", fontWeight: 600 }}>
                   KOPPLAT KALKYLARK
                 </div>
-                <div style={{ fontWeight: 700, color: "#14532d" }}>
+                <div style={{ fontWeight: 700, color: "var(--color-text-primary)" }}>
                   {meta.spreadsheetTitle || "Bifogat - Biodlingsloggbok"}
                 </div>
                 <div
@@ -357,14 +351,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           }}
         >
           <div
+            className="box-inset"
             style={{
-              background: "#f8fafc",
               padding: "0.65rem",
-              borderRadius: "8px",
-              border: "1px solid var(--color-border)",
             }}
           >
-            <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
+            <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
               Senaste synk
             </div>
             <div style={{ fontSize: "0.95rem", fontWeight: 700 }}>
@@ -379,40 +371,36 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
           </div>
           <div
+            className="box-inset"
             style={{
-              background: "#f8fafc",
               padding: "0.65rem",
-              borderRadius: "8px",
-              border: "1px solid var(--color-border)",
             }}
           >
-            <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
+            <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
               Lokala ändringar i kö
             </div>
             <div
               style={{
                 fontSize: "0.95rem",
                 fontWeight: 700,
-                color: outboxOps.length > 0 ? "var(--color-primary)" : "inherit",
+                color: outboxOps.length > 0 ? "var(--color-primary-base)" : "inherit",
               }}
             >
               {outboxOps.length} poster
             </div>
           </div>
           <div
+            className="box-inset"
             style={{
-              background: "#f8fafc",
               padding: "0.65rem",
-              borderRadius: "8px",
-              border: "1px solid var(--color-border)",
             }}
           >
-            <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>Konflikter</div>
+            <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>Konflikter</div>
             <div
               style={{
                 fontSize: "0.95rem",
                 fontWeight: 700,
-                color: conflicts.length > 0 ? "var(--color-danger)" : "inherit",
+                color: conflicts.length > 0 ? "var(--color-danger-base)" : "inherit",
               }}
             >
               {conflicts.length} st
@@ -421,11 +409,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
 
         <div
+          className="box-warning"
           style={{
-            background: "#fffbeb",
-            border: "1px solid #fde68a",
             padding: "0.75rem 0.9rem",
-            borderRadius: "8px",
             marginBottom: "0.85rem",
           }}
         >
@@ -486,11 +472,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
         {conflicts.length > 0 && (
           <div
+            className="box-danger"
             style={{
-              background: "#fee2e2",
-              border: "1px solid #fca5a5",
               padding: "0.75rem",
-              borderRadius: "8px",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
@@ -502,7 +486,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 display: "flex",
                 alignItems: "center",
                 gap: "0.5rem",
-                color: "#991b1b",
+                color: "var(--color-danger-text)",
                 fontSize: "0.85rem",
                 fontWeight: 600,
               }}
@@ -518,11 +502,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
         {syncStatus.lastError && (
           <div
+            className="box-danger"
             style={{
-              background: "#fee2e2",
-              color: "#991b1b",
               padding: "0.65rem",
-              borderRadius: "8px",
               fontSize: "0.8rem",
               marginTop: "0.5rem",
             }}
