@@ -171,18 +171,16 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
               return (
                 <div
                   key={yr}
+                  className="box-inset"
                   style={{
-                    background: "#fff",
                     padding: "0.85rem",
-                    borderRadius: "8px",
-                    border: "1px solid var(--color-border)",
                   }}
                 >
                   <div
                     style={{
                       fontSize: "0.8rem",
                       fontWeight: 700,
-                      color: "var(--color-accent-dark)",
+                      color: "var(--color-text-brand)",
                       textTransform: "uppercase",
                       letterSpacing: "0.5px",
                     }}
@@ -193,18 +191,18 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                     style={{
                       fontSize: "1.25rem",
                       fontWeight: 800,
-                      color: "var(--color-text-main)",
+                      color: "var(--color-text-primary)",
                       marginTop: "0.2rem",
                     }}
                   >
                     {data.totalExtractedGrams > 0 ? `${kgExtracted} kg slungat` : `${data.totalJars} st burkar`}
                   </div>
-                  <div style={{ fontSize: "0.775rem", color: "var(--color-text-muted)", marginTop: "0.25rem" }}>
+                  <div style={{ fontSize: "0.775rem", color: "var(--color-text-secondary)", marginTop: "0.25rem" }}>
                     <div>
                       🍯 <strong>{data.totalJars} st burkar</strong> ({kgJarred} kg)
                     </div>
                     {data.totalExtractedGrams > 0 && (
-                      <div style={{ color: "#b45309", marginTop: "0.15rem" }}>
+                      <div style={{ color: "var(--color-warning-text)", marginTop: "0.15rem" }}>
                         📦 {kgRemaining} kg kvar i kärl
                       </div>
                     )}
@@ -262,10 +260,10 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                 key={harvest.id}
                 className="card"
                 style={{
-                  border: "1px solid var(--color-border)",
+                  border: "1px solid var(--color-border-default)",
                   borderRadius: "10px",
                   padding: "1rem",
-                  background: "#ffffff",
+                  background: "var(--color-surface-bg)",
                 }}
               >
                 {/* Header row */}
@@ -286,7 +284,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                           margin: 0,
                           fontSize: "1.1rem",
                           fontWeight: 700,
-                          color: "var(--color-text-main)",
+                          color: "var(--color-text-primary)",
                         }}
                       >
                         {harvest.batchName || `Skörd ${harvest.date}`}
@@ -304,16 +302,23 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                             fontWeight: 600,
                             background:
                               harvest.waterContentPercent < 18
-                                ? "#dcfce7"
+                                ? "var(--color-success-surface)"
                                 : harvest.waterContentPercent <= 20
-                                  ? "#fef9c3"
-                                  : "#fee2e2",
+                                  ? "var(--color-warning-surface)"
+                                  : "var(--color-danger-surface)",
                             color:
                               harvest.waterContentPercent < 18
-                                ? "#166534"
+                                ? "var(--color-success-text)"
                                 : harvest.waterContentPercent <= 20
-                                  ? "#854d0e"
-                                  : "#991b1b",
+                                  ? "var(--color-warning-text)"
+                                  : "var(--color-danger-text)",
+                            border: `1px solid ${
+                              harvest.waterContentPercent < 18
+                                ? "var(--color-success-border)"
+                                : harvest.waterContentPercent <= 20
+                                  ? "var(--color-warning-border)"
+                                  : "var(--color-danger-border)"
+                            }`,
                           }}
                         >
                           💧 {harvest.waterContentPercent}% vatten
@@ -371,46 +376,45 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
 
                 {/* Progress & metrics */}
                 <div
+                  className="box-inset"
                   style={{
                     display: "grid",
                     gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
                     gap: "0.6rem",
-                    background: "#f8fafc",
                     padding: "0.75rem",
-                    borderRadius: "8px",
                     marginBottom: "0.75rem",
                   }}
                 >
                   <div>
-                    <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
+                    <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
                       Slungad vikt
                     </div>
-                    <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--color-text-main)" }}>
+                    <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--color-text-primary)" }}>
                       {totalExtractedKg > 0 ? `${totalExtractedKg.toFixed(1).replace(".", ",")} kg` : "Ej angiven"}
                     </div>
                   </div>
 
                   <div>
-                    <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
+                    <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
                       Tappat på burk
                     </div>
-                    <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "#166534" }}>
+                    <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--color-success-text)" }}>
                       {jarredKg.toFixed(1).replace(".", ",")} kg{" "}
-                      <span style={{ fontSize: "0.8rem", fontWeight: 500, color: "var(--color-text-muted)" }}>
+                      <span style={{ fontSize: "0.8rem", fontWeight: 500, color: "var(--color-text-secondary)" }}>
                         ({totalJars} st)
                       </span>
                     </div>
                   </div>
 
                   <div>
-                    <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
+                    <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
                       Kvar i mognadskärl
                     </div>
                     <div
                       style={{
                         fontSize: "1.1rem",
                         fontWeight: 700,
-                        color: remainingKg > 0 ? "#b45309" : "#166534",
+                        color: remainingKg > 0 ? "var(--color-warning-text)" : "var(--color-success-text)",
                       }}
                     >
                       {totalExtractedKg > 0
@@ -428,7 +432,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                         display: "flex",
                         justifyContent: "space-between",
                         fontSize: "0.75rem",
-                        color: "var(--color-text-muted)",
+                        color: "var(--color-text-secondary)",
                         marginBottom: "0.25rem",
                       }}
                     >
@@ -440,7 +444,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                     <div
                       style={{
                         height: "8px",
-                        background: "#e2e8f0",
+                        background: "var(--color-border-subtle)",
                         borderRadius: "4px",
                         overflow: "hidden",
                       }}
@@ -449,7 +453,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                         style={{
                           height: "100%",
                           width: `${percentJarred}%`,
-                          background: percentJarred === 100 ? "#22c55e" : "#f59e0b",
+                          background: percentJarred === 100 ? "var(--color-success-base)" : "var(--color-honey-base)",
                           transition: "width 0.3s ease",
                         }}
                       />
@@ -460,14 +464,11 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                 {/* Notes */}
                 {harvest.notes && (
                   <div
+                    className="box-honey"
                     style={{
                       fontSize: "0.85rem",
-                      color: "var(--color-text-main)",
-                      background: "#fffbeb",
                       padding: "0.5rem 0.75rem",
-                      borderRadius: "6px",
                       marginBottom: "0.75rem",
-                      border: "1px solid #fef3c7",
                     }}
                   >
                     <strong>Anteckningar:</strong> {harvest.notes}

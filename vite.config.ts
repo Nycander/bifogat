@@ -4,8 +4,21 @@ import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig(({ command }) => {
-  const isBuild = command === "build";
-  const basePath = process.env.BASE_PATH || (isBuild ? "./" : "/");
+  // Determine base path:
+  // 1. Explicit BASE_PATH env var (e.g. "/bifogat/" for GitHub Pages)
+  // 2. GITHUB_REPOSITORY (e.g. "nycander/bifogat" -> "/bifogat/")
+  // 3. Fallback to "/" for root deployments, AI Studio preview, and local dev
+  let basePath = process.env.BASE_PATH;
+  if (!basePath && process.env.GITHUB_REPOSITORY) {
+    const repo = process.env.GITHUB_REPOSITORY.split("/")[1];
+    basePath = `/${repo}/`;
+  }
+  if (!basePath) {
+    basePath = "/";
+  }
+  if (!basePath.endsWith("/")) {
+    basePath = `${basePath}/`;
+  }
 
   return {
     base: basePath,
@@ -15,15 +28,15 @@ export default defineConfig(({ command }) => {
         registerType: "autoUpdate",
         includeAssets: ["favicon.ico", "apple-touch-icon.png", "icon.svg"],
         manifest: {
-          id: "/",
+          id: basePath,
           name: "Bifogat Biodlingsloggbok",
           short_name: "Bifogat",
           description: "Offline-first beekeeping logbook with Google Sheets synchronization",
           theme_color: "#778873",
-          background_color: "#f8f9fa",
+          background_color: "#1b211a",
           display: "standalone",
-          start_url: "/",
-          scope: "/",
+          start_url: basePath,
+          scope: basePath,
           icons: [
             {
               src: "pwa-192x192.png",

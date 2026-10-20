@@ -114,19 +114,17 @@ export const HiveDetailModal: React.FC<HiveDetailModalProps> = ({
 
         {hive.notes && (
           <div
+            className="box-inset"
             style={{
-              background: "#f8fafc",
               padding: "0.75rem",
-              borderRadius: "8px",
               marginBottom: "1rem",
-              border: "1px solid var(--color-border)",
             }}
           >
-            <div style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-muted)" }}>
+            <div style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-secondary)" }}>
               ANTECKNING OM KUPAN
             </div>
             <div
-              style={{ fontSize: "0.9rem", color: "var(--color-text-main)", marginTop: "0.2rem" }}
+              style={{ fontSize: "0.9rem", color: "var(--color-text-primary)", marginTop: "0.2rem" }}
             >
               {hive.notes}
             </div>

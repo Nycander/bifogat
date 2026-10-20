@@ -32,6 +32,17 @@
     />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
+    <script>
+      (function() {
+        try {
+          localStorage.removeItem('bifogat_theme');
+          var isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+          var metaTheme = document.querySelector('meta[name="theme-color"]');
+          if (metaTheme) metaTheme.setAttribute('content', isDark ? '#151b14' : '#778873');
+        } catch(e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
