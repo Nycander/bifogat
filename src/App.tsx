@@ -64,6 +64,17 @@ export default function App() {
 
   // Navigation
   const [activeTab, setActiveTab] = useState<NavTab>("overview");
+  const [prevTab, setPrevTab] = useState<NavTab>("overview");
+
+  const tabOrder: NavTab[] = ["overview", "hives", "harvests", "economy", "settings"];
+  const prevIndex = tabOrder.indexOf(prevTab);
+  const currentIndex = tabOrder.indexOf(activeTab);
+  const slideDirection = currentIndex > prevIndex ? "view-transition-right" : "view-transition-left";
+
+  const handleSelectTab = (tab: NavTab) => {
+    setPrevTab(activeTab);
+    setActiveTab(tab);
+  };
 
   // Application Data in Local Working Memory
   const [hives, setHives] = useState<Hive[]>([]);
@@ -605,7 +616,7 @@ export default function App() {
       </header>
 
       {/* Main View Area */}
-      <main className="main-content">
+      <main className={`main-content ${slideDirection}`} key={activeTab}>
         {activeTab === "overview" && (
           <OverviewView
             hives={hives}
@@ -728,7 +739,7 @@ export default function App() {
       {/* Bottom Navigation for Mobile and Quick Desktop Access */}
       <NavBar
         activeTab={activeTab}
-        onSelectTab={(tab) => setActiveTab(tab)}
+        onSelectTab={handleSelectTab}
         openTaskCount={tasks.filter((t) => t.status === "open").length}
       />
 
