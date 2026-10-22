@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { AppMeta, OutboxOp, SyncConflict } from "../../domain/types";
 import { SyncEngineStatus } from "../../sync/syncEngine";
+import { ComponentShowcaseModal } from "../../components/ui";
 import {
   Settings,
   Cloud,
@@ -58,6 +59,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [spreadsheetInput, setSpreadsheetInput] = useState(meta.spreadsheetId || "");
   const [isCreatingSheet, setIsCreatingSheet] = useState(false);
   const [sheetMessage, setSheetMessage] = useState<string | null>(null);
+  const [showUiShowcase, setShowUiShowcase] = useState(false);
 
   const handleSaveSheetId = async () => {
     if (!spreadsheetInput.trim()) return;
@@ -81,11 +83,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   return (
     <div>
-      <div style={{ marginBottom: "1.25rem" }}>
-        <h1>Inställningar & synkronisering</h1>
-        <p style={{ fontSize: "0.875rem", color: "var(--color-text-muted)" }}>
-          Koppla ditt Google-konto, välj kalkylark och hantera säkerhetskopior
-        </p>
+      <div style={{ marginBottom: "1.25rem", display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
+        <div>
+          <h1>Inställningar & synkronisering</h1>
+          <p style={{ fontSize: "0.875rem", color: "var(--color-text-muted)" }}>
+            Koppla ditt Google-konto, välj kalkylark och hantera säkerhetskopior
+          </p>
+        </div>
+        <div>
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            onClick={() => setShowUiShowcase(true)}
+          >
+            Visa UI-komponentbibliotek
+          </button>
+        </div>
       </div>
 
       {/* 1. Google Account & Authorization */}
@@ -620,6 +633,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </button>
         </div>
       </div>
+
+      <ComponentShowcaseModal
+        isOpen={showUiShowcase}
+        onClose={() => setShowUiShowcase(false)}
+      />
     </div>
   );
 };
