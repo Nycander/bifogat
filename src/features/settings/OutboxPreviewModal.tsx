@@ -54,11 +54,7 @@ export const OutboxPreviewModal: React.FC<OutboxPreviewModalProps> = ({
       case "update":
         return <span className="badge badge-event-inspection">Uppdatering</span>;
       case "delete":
-        return (
-          <span className="badge" style={{ background: "#fee2e2", color: "#b91c1c" }}>
-            Borttagning
-          </span>
-        );
+        return <span className="badge badge-danger">Borttagning</span>;
     }
   };
 
@@ -166,8 +162,8 @@ export const OutboxPreviewModal: React.FC<OutboxPreviewModalProps> = ({
 
         <div
           style={{
-            background: "#fffbeb",
-            border: "1px solid #fde68a",
+            background: "var(--color-warning-surface)",
+            border: "1px solid var(--color-warning-border)",
             padding: "0.75rem 0.9rem",
             borderRadius: "8px",
             fontSize: "0.85rem",
@@ -264,12 +260,12 @@ export const OutboxPreviewModal: React.FC<OutboxPreviewModalProps> = ({
                         <pre
                           style={{
                             fontSize: "0.7rem",
-                            background: "#f8fafc",
+                            background: "var(--color-surface-inset)",
                             padding: "0.5rem",
                             borderRadius: "4px",
                             marginTop: "0.5rem",
                             overflowX: "auto",
-                            border: "1px solid var(--color-border)",
+                            border: "1px solid var(--color-border-subtle)",
                           }}
                         >
                           {JSON.stringify(op.payload || { id: op.recordId }, null, 2)}
@@ -290,7 +286,7 @@ export const OutboxPreviewModal: React.FC<OutboxPreviewModalProps> = ({
                 className="btn btn-secondary btn-sm"
                 onClick={handleClear}
                 disabled={isSubmitting}
-                style={{ color: "var(--color-danger)", borderColor: "#fca5a5" }}
+                style={{ color: "var(--color-danger)", borderColor: "var(--color-danger-border)" }}
               >
                 <Trash2 size={14} />
                 <span>Kasta ändringar</span>

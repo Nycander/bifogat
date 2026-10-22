@@ -99,11 +99,11 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           <span>Ny uppgift</span>
         </button>
         <button
-          className="btn btn-secondary"
+          className="btn btn-honey"
           onClick={onOpenHoneySale}
           style={{ padding: "0.75rem", justifyContent: "center" }}
         >
-          <Droplet size={18} color="#d97706" />
+          <Droplet size={18} />
           <span>Sälj honung</span>
         </button>
       </div>
@@ -219,7 +219,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                   alignItems: "center",
                   gap: "0.65rem",
                   padding: "0.45rem 0",
-                  borderBottom: "1px solid #f1f5f9",
+                  borderBottom: "1px solid var(--color-border-subtle)",
                 }}
               >
                 <input

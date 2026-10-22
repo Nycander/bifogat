@@ -143,8 +143,8 @@ export const NotesImportModal: React.FC<NotesImportModalProps> = ({
 
             <div
               style={{
-                background: "#f8fafc",
-                border: "1px solid var(--color-border)",
+                background: "var(--color-surface-inset)",
+                border: "1px solid var(--color-border-subtle)",
                 borderRadius: "8px",
                 padding: "0.65rem 0.85rem",
                 marginBottom: "1rem",
@@ -239,10 +239,10 @@ export const NotesImportModal: React.FC<NotesImportModalProps> = ({
                 >
                   <div
                     style={{
-                      background: "#f8fafc",
+                      background: "var(--color-surface-inset)",
                       padding: "0.65rem",
                       borderRadius: "8px",
-                      border: "1px solid var(--color-border)",
+                      border: "1px solid var(--color-border-subtle)",
                     }}
                   >
                     <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
@@ -260,10 +260,10 @@ export const NotesImportModal: React.FC<NotesImportModalProps> = ({
                   </div>
                   <div
                     style={{
-                      background: "#f8fafc",
+                      background: "var(--color-surface-inset)",
                       padding: "0.65rem",
                       borderRadius: "8px",
-                      border: "1px solid var(--color-border)",
+                      border: "1px solid var(--color-border-subtle)",
                     }}
                   >
                     <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
@@ -281,10 +281,10 @@ export const NotesImportModal: React.FC<NotesImportModalProps> = ({
                   </div>
                   <div
                     style={{
-                      background: "#f8fafc",
+                      background: "var(--color-surface-inset)",
                       padding: "0.65rem",
                       borderRadius: "8px",
-                      border: "1px solid var(--color-border)",
+                      border: "1px solid var(--color-border-subtle)",
                     }}
                   >
                     <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
@@ -298,10 +298,10 @@ export const NotesImportModal: React.FC<NotesImportModalProps> = ({
                   </div>
                   <div
                     style={{
-                      background: "#f8fafc",
+                      background: "var(--color-surface-inset)",
                       padding: "0.65rem",
                       borderRadius: "8px",
-                      border: "1px solid var(--color-border)",
+                      border: "1px solid var(--color-border-subtle)",
                     }}
                   >
                     <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
@@ -321,8 +321,8 @@ export const NotesImportModal: React.FC<NotesImportModalProps> = ({
 
                 <div
                   style={{
-                    background: "#fffbeb",
-                    border: "1px solid #fde68a",
+                    background: "var(--color-warning-surface)",
+                    border: "1px solid var(--color-warning-border)",
                     padding: "0.75rem 1rem",
                     borderRadius: "8px",
                     marginBottom: "0.75rem",
@@ -337,10 +337,10 @@ export const NotesImportModal: React.FC<NotesImportModalProps> = ({
                       marginBottom: "0.5rem",
                     }}
                   >
-                    <span style={{ fontWeight: 600, color: "#92400e" }}>
+                    <span style={{ fontWeight: 600, color: "var(--color-warning-text)" }}>
                       Identifierade kupor/avläggare ({previewResult.detectedHives.length} st):
                     </span>
-                    <span style={{ fontSize: "0.75rem", color: "#b45309" }}>
+                    <span style={{ fontSize: "0.75rem", color: "var(--color-warning-text)", opacity: 0.85 }}>
                       Klicka på kryss för att ta bort, eller lägg till saknad kupa nedan
                     </span>
                   </div>
@@ -362,9 +362,9 @@ export const NotesImportModal: React.FC<NotesImportModalProps> = ({
                           gap: "0.35rem",
                           padding: "0.25rem 0.6rem",
                           borderRadius: "16px",
-                          background: "#fef3c7",
-                          border: "1px solid #f59e0b",
-                          color: "#78350f",
+                          background: "var(--color-surface-bg)",
+                          border: "1px solid var(--color-warning-border)",
+                          color: "var(--color-warning-text)",
                           fontWeight: 500,
                           fontSize: "0.85rem",
                         }}
@@ -381,7 +381,7 @@ export const NotesImportModal: React.FC<NotesImportModalProps> = ({
                             padding: "0 2px",
                             display: "inline-flex",
                             alignItems: "center",
-                            color: "#b45309",
+                            color: "var(--color-warning-text)",
                           }}
                         >
                           <X size={14} />
@@ -421,7 +421,8 @@ export const NotesImportModal: React.FC<NotesImportModalProps> = ({
                 {previewResult.unclassifiedEntries.length > 0 && (
                   <div
                     style={{
-                      background: "#f1f5f9",
+                      background: "var(--color-surface-inset)",
+                      border: "1px solid var(--color-border-subtle)",
                       padding: "0.65rem 0.85rem",
                       borderRadius: "8px",
                       marginBottom: "0.75rem",

@@ -189,8 +189,8 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
           {/* Hive Assignment Section */}
           <div
             style={{
-              background: "#fafdf7",
-              border: "1px solid var(--color-border)",
+              background: "var(--color-surface-inset)",
+              border: "1px solid var(--color-border-subtle)",
               borderRadius: "8px",
               padding: "0.85rem",
               marginBottom: "1rem",
@@ -302,7 +302,7 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
                         maxHeight: "160px",
                         overflowY: "auto",
                         padding: "0.25rem",
-                        background: "#ffffff",
+                        background: "var(--color-surface-bg)",
                         border: "1px solid var(--color-border)",
                         borderRadius: "6px",
                       }}
