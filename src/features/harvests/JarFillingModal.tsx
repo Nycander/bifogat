@@ -142,8 +142,8 @@ export const JarFillingModal: React.FC<JarFillingModalProps> = ({
           {selectedHarvest && (
             <div
               style={{
-                background: "#f0fdf4",
-                border: "1px solid #bbf7d0",
+                background: "var(--color-success-surface)",
+                border: "1px solid var(--color-success-border)",
                 padding: "0.75rem",
                 borderRadius: "8px",
                 marginBottom: "1rem",
@@ -154,7 +154,7 @@ export const JarFillingModal: React.FC<JarFillingModalProps> = ({
                 style={{
                   display: "flex",
                   justifyContent: "space-between",
-                  color: "#166534",
+                  color: "var(--color-success-text)",
                   fontWeight: 600,
                   marginBottom: "0.3rem",
                 }}
@@ -164,7 +164,7 @@ export const JarFillingModal: React.FC<JarFillingModalProps> = ({
                   <span>💧 {selectedHarvest.waterContentPercent}% vattenhalt</span>
                 )}
               </div>
-              <div style={{ color: "#374151" }}>
+              <div style={{ color: "var(--color-text-secondary)" }}>
                 Totalt slungat:{" "}
                 <strong>
                   {totalExtractedGrams > 0
@@ -254,13 +254,13 @@ export const JarFillingModal: React.FC<JarFillingModalProps> = ({
           {/* Dynamic calculation banner */}
           <div
             style={{
-              background: "#fffbeb",
-              border: "1px solid #fde68a",
+              background: "var(--color-honey-surface)",
+              border: "1px solid var(--color-honey-border)",
               padding: "0.65rem 0.85rem",
               borderRadius: "8px",
               marginBottom: "1rem",
               fontSize: "0.85rem",
-              color: "#92400e",
+              color: "var(--color-honey-text)",
             }}
           >
             <div>

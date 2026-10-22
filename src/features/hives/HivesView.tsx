@@ -11,6 +11,7 @@ import {
   Trash2,
   Check,
   AlertCircle,
+  Droplet,
 } from "lucide-react";
 
 interface HivesViewProps {
@@ -25,6 +26,7 @@ interface HivesViewProps {
   onOpenCreateTask: (hiveId?: string) => void;
   onEditTask: (task: Task) => void;
   onDeleteTask: (id: string) => Promise<void>;
+  onOpenHoneySale?: () => void;
 }
 
 export const HivesView: React.FC<HivesViewProps> = ({
@@ -39,6 +41,7 @@ export const HivesView: React.FC<HivesViewProps> = ({
   onOpenCreateTask,
   onEditTask,
   onDeleteTask,
+  onOpenHoneySale,
 }) => {
   const [subTab, setSubTab] = useState<"hives" | "tasks">(initialSubTab);
   const [hiveFilter, setHiveFilter] = useState<"all" | "active" | "inactive">("active");
@@ -122,7 +125,17 @@ export const HivesView: React.FC<HivesViewProps> = ({
             Hantera dina bisamhällen, planerade åtgärder och inspektioner
           </p>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+          {onOpenHoneySale && (
+            <button
+              className="btn btn-honey btn-sm"
+              onClick={onOpenHoneySale}
+              title="Bokför honungsförsäljning"
+            >
+              <Droplet size={16} />
+              <span>Sälj honung</span>
+            </button>
+          )}
           <button
             className="btn btn-secondary btn-sm"
             onClick={() => onOpenCreateTask()}

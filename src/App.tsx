@@ -659,6 +659,7 @@ export default function App() {
               setShowTaskModal(true);
             }}
             onDeleteTask={handleDeleteTask}
+            onOpenHoneySale={() => setShowHoneySaleModal(true)}
           />
         )}
 

@@ -25,9 +25,9 @@ export const SyncStatusBar: React.FC<SyncStatusBarProps> = ({
         onClick={onOpenConflicts}
         className="sync-badge"
         style={{
-          backgroundColor: "var(--color-danger-bg)",
-          color: "var(--color-danger)",
-          borderColor: "#fca5a5",
+          backgroundColor: "var(--color-danger-surface)",
+          color: "var(--color-danger-text)",
+          borderColor: "var(--color-danger-border)",
           cursor: "pointer",
         }}
         title="Klicka för att lösa konflikt mellan lokal och molndata"

@@ -167,10 +167,10 @@ export const CsvImportModal: React.FC<CsvImportModalProps> = ({
                 >
                   <div
                     style={{
-                      background: "#f8fafc",
+                      background: "var(--color-surface-inset)",
                       padding: "0.65rem",
                       borderRadius: "8px",
-                      border: "1px solid var(--color-border)",
+                      border: "1px solid var(--color-border-subtle)",
                     }}
                   >
                     <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
@@ -188,10 +188,10 @@ export const CsvImportModal: React.FC<CsvImportModalProps> = ({
                   </div>
                   <div
                     style={{
-                      background: "#f8fafc",
+                      background: "var(--color-surface-inset)",
                       padding: "0.65rem",
                       borderRadius: "8px",
-                      border: "1px solid var(--color-border)",
+                      border: "1px solid var(--color-border-subtle)",
                     }}
                   >
                     <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
@@ -209,10 +209,10 @@ export const CsvImportModal: React.FC<CsvImportModalProps> = ({
                   </div>
                   <div
                     style={{
-                      background: "#f8fafc",
+                      background: "var(--color-surface-inset)",
                       padding: "0.65rem",
                       borderRadius: "8px",
-                      border: "1px solid var(--color-border)",
+                      border: "1px solid var(--color-border-subtle)",
                     }}
                   >
                     <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
@@ -230,10 +230,10 @@ export const CsvImportModal: React.FC<CsvImportModalProps> = ({
                   </div>
                   <div
                     style={{
-                      background: "#f8fafc",
+                      background: "var(--color-surface-inset)",
                       padding: "0.65rem",
                       borderRadius: "8px",
-                      border: "1px solid var(--color-border)",
+                      border: "1px solid var(--color-border-subtle)",
                     }}
                   >
                     <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
@@ -249,8 +249,9 @@ export const CsvImportModal: React.FC<CsvImportModalProps> = ({
 
                 <div
                   style={{
-                    background: previewResult.balanceMatches ? "#f0fdf4" : "#fffbeb",
-                    border: `1px solid ${previewResult.balanceMatches ? "#bbf7d0" : "#fef08a"}`,
+                    background: previewResult.balanceMatches ? "var(--color-success-surface)" : "var(--color-warning-surface)",
+                    border: `1px solid ${previewResult.balanceMatches ? "var(--color-success-border)" : "var(--color-warning-border)"}`,
+                    color: previewResult.balanceMatches ? "var(--color-success-text)" : "var(--color-warning-text)",
                     padding: "0.75rem",
                     borderRadius: "8px",
                     fontSize: "0.85rem",
@@ -325,10 +326,7 @@ export const CsvImportModal: React.FC<CsvImportModalProps> = ({
                               <span className="badge badge-inactive">Finns redan</span>
                             )}
                             {r.status === "malformed" && (
-                              <span
-                                className="badge"
-                                style={{ background: "#fee2e2", color: "#b91c1c" }}
-                              >
+                              <span className="badge badge-danger">
                                 Fel
                               </span>
                             )}

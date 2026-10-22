@@ -86,17 +86,8 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
           <button
-            className="btn btn-primary btn-sm"
+            className="btn btn-honey btn-sm"
             onClick={onOpenHoneySale}
-            style={{
-              background: "#d97706",
-              borderColor: "#b45309",
-              color: "#ffffff",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.35rem",
-              fontWeight: 700,
-            }}
           >
             <Droplet size={16} />
             <span>Sälj honung</span>
@@ -112,8 +103,8 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
       <div
         className="card"
         style={{
-          background: "linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)",
-          borderColor: "#fde68a",
+          background: "var(--color-honey-gradient)",
+          borderColor: "var(--color-honey-border)",
           marginBottom: "1rem",
         }}
       >
@@ -131,7 +122,7 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
               style={{
                 fontSize: "0.8rem",
                 fontWeight: 700,
-                color: "var(--color-accent-dark)",
+                color: "var(--color-honey-text)",
                 textTransform: "uppercase",
                 letterSpacing: "0.05em",
               }}
@@ -142,7 +133,7 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
               style={{
                 fontSize: "1.75rem",
                 fontWeight: 800,
-                color: totalBalanceOre >= 0 ? "#15803d" : "#b91c1c",
+                color: totalBalanceOre >= 0 ? "var(--color-success-base)" : "var(--color-danger-base)",
               }}
             >
               {formatOreToSEK(totalBalanceOre)}
@@ -153,7 +144,7 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
               style={{
                 fontSize: "0.85rem",
                 color: "var(--color-text-muted)",
-                background: "#fff",
+                background: "var(--color-surface-bg)",
                 padding: "0.5rem 0.75rem",
                 borderRadius: "8px",
                 border: "1px solid var(--color-border)",
@@ -198,21 +189,21 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
             return (
               <div key={yr} className="card" style={{ padding: "0.85rem", marginBottom: 0 }}>
                 <div
-                  style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--color-accent-dark)" }}
+                  style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--color-text-brand)" }}
                 >
                   {yr}
                 </div>
-                <div style={{ fontSize: "0.8rem", color: "#15803d", marginTop: "0.3rem" }}>
+                <div style={{ fontSize: "0.8rem", color: "var(--color-success-base)", marginTop: "0.3rem" }}>
                   In: +{formatOreToSEK(data.incomeOre)}
                 </div>
-                <div style={{ fontSize: "0.8rem", color: "#b91c1c" }}>
+                <div style={{ fontSize: "0.8rem", color: "var(--color-danger-base)" }}>
                   Ut: -{formatOreToSEK(data.expenseOre)}
                 </div>
                 <div
                   style={{
                     fontSize: "0.95rem",
                     fontWeight: 700,
-                    color: data.netOre >= 0 ? "#15803d" : "#b91c1c",
+                    color: data.netOre >= 0 ? "var(--color-success-base)" : "var(--color-danger-base)",
                     marginTop: "0.2rem",
                     borderTop: "1px solid var(--color-border)",
                     paddingTop: "0.2rem",

@@ -605,7 +605,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         <div style={{ borderTop: "1px solid var(--color-border)", paddingTop: "0.75rem" }}>
           <button
             className="btn btn-secondary btn-sm"
-            style={{ color: "var(--color-danger)", borderColor: "#fca5a5" }}
+            style={{ color: "var(--color-danger)", borderColor: "var(--color-danger-border)" }}
             onClick={async () => {
               const ok = window.confirm(
                 "VARNING: Detta rensar den lokala IndexedDB-cachen på denna enhet. Om du har osynkade ändringar kan de förloras. Vill du fortsätta?",

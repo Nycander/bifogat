@@ -85,25 +85,28 @@ export const HarvestFormModal: React.FC<HarvestFormModalProps> = ({
 
   // Water content quality indicator
   const numWater = parseFloat(waterContent.replace(",", "."));
-  let waterQuality: { text: string; color: string; bg: string } | null = null;
+  let waterQuality: { text: string; color: string; bg: string; border: string } | null = null;
   if (!isNaN(numWater)) {
     if (numWater < 18) {
       waterQuality = {
         text: "Utmärkt kvalitet (< 18% vattenhalt, mycket hållbar)",
-        color: "#166534",
-        bg: "#f0fdf4",
+        color: "var(--color-success-text)",
+        bg: "var(--color-success-surface)",
+        border: "var(--color-success-border)",
       };
     } else if (numWater <= 20) {
       waterQuality = {
         text: "Godkänd svensk standard (18–20% vattenhalt)",
-        color: "#854d0e",
-        bg: "#fefce8",
+        color: "var(--color-warning-text)",
+        bg: "var(--color-warning-surface)",
+        border: "var(--color-warning-border)",
       };
     } else {
       waterQuality = {
         text: "Varning: Hög vattenhalt (> 20%). Risk för jäsning!",
-        color: "#991b1b",
-        bg: "#fef2f2",
+        color: "var(--color-danger-text)",
+        bg: "var(--color-danger-surface)",
+        border: "var(--color-danger-border)",
       };
     }
   }
@@ -256,7 +259,7 @@ export const HarvestFormModal: React.FC<HarvestFormModalProps> = ({
               style={{
                 background: waterQuality.bg,
                 color: waterQuality.color,
-                border: `1px solid ${waterQuality.color}33`,
+                border: `1px solid ${waterQuality.border}`,
                 padding: "0.5rem 0.75rem",
                 borderRadius: "6px",
                 marginBottom: "1rem",

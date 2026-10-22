@@ -49,7 +49,7 @@ export const ConflictModal: React.FC<ConflictModalProps> = ({ conflicts, onClose
               <div
                 key={c.id}
                 className="card"
-                style={{ padding: "1rem", border: "1px solid #fca5a5" }}
+                style={{ padding: "1rem", border: "1px solid var(--color-danger-border)" }}
               >
                 <div
                   style={{
@@ -60,8 +60,8 @@ export const ConflictModal: React.FC<ConflictModalProps> = ({ conflicts, onClose
                   }}
                 >
                   <span
-                    className="badge"
-                    style={{ background: "#fee2e2", color: "#b91c1c", textTransform: "uppercase" }}
+                    className="badge badge-danger"
+                    style={{ textTransform: "uppercase" }}
                   >
                     {c.entity} ({c.recordId.substring(0, 8)}...)
                   </span>
@@ -85,10 +85,10 @@ export const ConflictModal: React.FC<ConflictModalProps> = ({ conflicts, onClose
                 >
                   <div
                     style={{
-                      background: "#f8fafc",
+                      background: "var(--color-surface-inset)",
                       padding: "0.75rem",
                       borderRadius: "6px",
-                      border: "1px solid var(--color-border)",
+                      border: "1px solid var(--color-border-subtle)",
                     }}
                   >
                     <div
@@ -115,10 +115,10 @@ export const ConflictModal: React.FC<ConflictModalProps> = ({ conflicts, onClose
 
                   <div
                     style={{
-                      background: "#f8fafc",
+                      background: "var(--color-surface-inset)",
                       padding: "0.75rem",
                       borderRadius: "6px",
-                      border: "1px solid var(--color-border)",
+                      border: "1px solid var(--color-border-subtle)",
                     }}
                   >
                     <div

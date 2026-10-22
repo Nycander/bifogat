@@ -101,20 +101,11 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
           {onOpenHoneySale && (
             <button
-              className="btn btn-primary btn-sm"
+              className="btn btn-honey btn-sm"
               onClick={onOpenHoneySale}
-              style={{
-                background: "#d97706",
-                borderColor: "#b45309",
-                color: "#ffffff",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "0.35rem",
-                fontWeight: 700,
-              }}
             >
               <Droplet size={16} />
-              <span>Sälj burkar</span>
+              <span>Sälj honung</span>
             </button>
           )}
           {harvests.length > 0 && (
@@ -521,7 +512,8 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "space-between",
-                                background: "#f8fafc",
+                                background: "var(--color-surface-inset)",
+                                border: "1px solid var(--color-border-subtle)",
                                 padding: "0.4rem 0.65rem",
                                 borderRadius: "6px",
                                 fontSize: "0.825rem",
