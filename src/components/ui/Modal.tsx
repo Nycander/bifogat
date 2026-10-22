@@ -38,7 +38,12 @@ export const Modal: React.FC<ModalProps> = ({
     };
 
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
+    };
   }, [isOpen, closeOnEscape, onClose]);
 
   if (!isOpen) return null;
@@ -51,6 +56,8 @@ export const Modal: React.FC<ModalProps> = ({
       onClick={closeOnBackdropClick ? onClose : undefined}
       role="dialog"
       aria-modal="true"
+      onWheel={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
     >
       <div
         ref={contentRef}
