@@ -69,9 +69,11 @@ export default function App() {
   const tabOrder: NavTab[] = ["overview", "hives", "harvests", "economy", "settings"];
   const prevIndex = tabOrder.indexOf(prevTab);
   const currentIndex = tabOrder.indexOf(activeTab);
-  const slideDirection = currentIndex > prevIndex ? "view-transition-right" : "view-transition-left";
+  const isMovingRight = currentIndex > prevIndex;
+  const slideDirection = isMovingRight ? "view-transition-right-in" : "view-transition-left-in";
 
   const handleSelectTab = (tab: NavTab) => {
+    if (tab === activeTab) return;
     setPrevTab(activeTab);
     setActiveTab(tab);
   };
