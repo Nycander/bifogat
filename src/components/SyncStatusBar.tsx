@@ -56,9 +56,9 @@ export const SyncStatusBar: React.FC<SyncStatusBarProps> = ({
 
   if (state === "syncing") {
     return (
-      <div className="sync-badge sync-syncing">
+      <div className="sync-badge sync-syncing" title={status.syncMessage || "Synkroniserar..."}>
         <RefreshCw size={14} className="spin" style={{ animation: "spin 1s linear infinite" }} />
-        <span>Synkar...</span>
+        <span>{status.syncMessage || "Synkar..."}</span>
       </div>
     );
   }
