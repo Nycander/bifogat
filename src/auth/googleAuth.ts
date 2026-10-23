@@ -172,6 +172,20 @@ export const getAccessToken = async (): Promise<string | null> => {
   if (typeof window !== "undefined") {
     cachedAccessToken = localStorage.getItem(STORAGE_KEY_TOKEN);
   }
+  if (!cachedAccessToken && auth?.currentUser) {
+    try {
+      // Attempt to retrieve a fresh ID token or credential if available
+      const tokenResult = await auth.currentUser.getIdTokenResult();
+      // If we have Google auth provider credential
+      const credential = GoogleAuthProvider.credentialFromResult(anyResult => anyResult as any);
+      if (tokenResult.token) {
+        cachedAccessToken = tokenResult.token;
+        localStorage.setItem(STORAGE_KEY_TOKEN, cachedAccessToken);
+      }
+    } catch (e) {
+      console.warn("Kunde inte hämta uppdaterad token:", e);
+    }
+  }
   return cachedAccessToken;
 };
 
