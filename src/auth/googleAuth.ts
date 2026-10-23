@@ -168,24 +168,31 @@ export const signInWithGoogle = async (): Promise<{
 };
 
 export const getAccessToken = async (): Promise<string | null> => {
-  if (cachedAccessToken) return cachedAccessToken;
+  if (cachedAccessToken && isTokenFresh()) return cachedAccessToken;
   if (typeof window !== "undefined") {
-    cachedAccessToken = localStorage.getItem(STORAGE_KEY_TOKEN);
-  }
-  if (!cachedAccessToken && auth?.currentUser) {
-    try {
-      // Attempt to retrieve a fresh ID token or credential if available
-      const tokenResult = await auth.currentUser.getIdTokenResult();
-      // If we have Google auth provider credential
-      const credential = GoogleAuthProvider.credentialFromResult(anyResult => anyResult as any);
-      if (tokenResult.token) {
-        cachedAccessToken = tokenResult.token;
-        localStorage.setItem(STORAGE_KEY_TOKEN, cachedAccessToken);
-      }
-    } catch (e) {
-      console.warn("Kunde inte hämta uppdaterad token:", e);
+    const stored = localStorage.getItem(STORAGE_KEY_TOKEN);
+    if (stored && isTokenFresh()) {
+      cachedAccessToken = stored;
+      return cachedAccessToken;
     }
   }
+
+  // If token is expired or missing, re-trigger popup to get fresh Google OAuth access token
+  if (auth) {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      if (credential?.accessToken) {
+        cachedAccessToken = credential.accessToken;
+        localStorage.setItem(STORAGE_KEY_TOKEN, cachedAccessToken);
+        localStorage.setItem(STORAGE_KEY_TOKEN_TIME, Date.now().toString());
+        return cachedAccessToken;
+      }
+    } catch (err) {
+      console.error("Kunde inte förnya Google OAuth-token:", err);
+    }
+  }
+
   return cachedAccessToken;
 };
 
