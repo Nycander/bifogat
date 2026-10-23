@@ -30,6 +30,7 @@ export interface SyncEngineStatus {
   pendingCount: number;
   conflictCount: number;
   lastError: string | null;
+  syncMessage?: string | null;
 }
 
 type SyncListener = (status: SyncEngineStatus) => void;
@@ -37,6 +38,7 @@ type SyncListener = (status: SyncEngineStatus) => void;
 class SyncEngine {
   private state: SyncState = "idle";
   private lastError: string | null = null;
+  private syncMessage: string | null = null;
   private listeners: Set<SyncListener> = new Set();
   private isRunning = false;
 
@@ -72,10 +74,11 @@ class SyncEngine {
   getStatusSync(): SyncEngineStatus {
     return {
       state: this.state,
-      lastSyncTime: null, // will be populated asynchronously in getStatus()
+      lastSyncTime: null,
       pendingCount: 0,
       conflictCount: 0,
       lastError: this.lastError,
+      syncMessage: this.syncMessage,
     };
   }
 
@@ -97,6 +100,7 @@ class SyncEngine {
       pendingCount,
       conflictCount: conflicts.length,
       lastError: this.lastError,
+      syncMessage: this.syncMessage,
     };
   }
 
@@ -130,18 +134,25 @@ class SyncEngine {
     this.isRunning = true;
     this.state = "syncing";
     this.lastError = null;
+    this.syncMessage = "Kontrollerar kalkylark...";
     this.notify();
 
     try {
       // 1. Ensure spreadsheet schema
+      this.syncMessage = "Verifierar kalkylarksstruktur...";
+      this.notify();
       await sheetsClient.ensureSchema(token, meta.spreadsheetId);
 
       // 2. Pull remote records and detect conflicts (READ ONLY)
+      this.syncMessage = "Hämtar molndata & kontrollerar ändringar...";
+      this.notify();
       await this.pullRemoteAndDetectConflicts(token, meta.spreadsheetId);
 
       // 3. Flush pending outbox operations to Google Sheets ONLY if allowed
       const shouldWrite = options?.allowWrite === true || !meta.requireManualWriteConfirmation;
       if (shouldWrite) {
+        this.syncMessage = "Synkroniserar ändringar till Google Sheets...";
+        this.notify();
         await this.flushOutbox(token, meta.spreadsheetId);
       }
 
@@ -151,6 +162,7 @@ class SyncEngine {
 
       this.state = "idle";
       this.lastError = null;
+      this.syncMessage = null;
       this.notify();
       return { success: true };
     } catch (err: any) {
@@ -348,16 +360,26 @@ class SyncEngine {
   }
 
   /**
-   * Flush local outbox mutations to Google Sheets
+   * Flush local outbox mutations to Google Sheets with rate limiting delay
    */
   private async flushOutbox(token: string, spreadsheetId: string) {
     const ops = await outboxRepository.getAll();
+    const total = ops.length;
 
-    for (const op of ops) {
+    for (let i = 0; i < total; i++) {
+      const op = ops[i];
       try {
+        this.syncMessage = `Synar ändring ${i + 1} av ${total} till Sheets...`;
+        this.notify();
+
         await this.executeOutboxOp(token, spreadsheetId, op);
         // Successful write: remove from outbox
         await outboxRepository.remove(op.id);
+
+        // Add small delay every 10 ops to respect Google Sheets API read/write rate limits (60 requests/min per user)
+        if (i > 0 && i % 10 === 0) {
+          await new Promise((resolve) => setTimeout(resolve, 1200));
+        }
       } catch (err: any) {
         // Record failure and stop further outbox items to preserve order
         op.retryCount += 1;

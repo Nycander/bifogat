@@ -305,6 +305,25 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </div>
         )}
 
+        {sheetMessage && sheetMessage.includes("Google Sheets API has not been used") && (
+          <div className="box-warning" style={{ marginTop: "0.75rem", padding: "0.75rem" }}>
+            <div style={{ fontWeight: 600, marginBottom: "4px" }}>Google Sheets API behöver aktiveras:</div>
+            <p style={{ fontSize: "0.8rem", marginBottom: "6px" }}>
+              Projektet har ännu inte aktiverat Google Sheets API i Google Cloud Console. Klicka på länken nedan för att aktivera API:et för ditt projekt:
+            </p>
+            <a
+              href="https://console.developers.google.com/apis/api/sheets.googleapis.com/overview?project=377725350344"
+              target="_blank"
+              rel="noreferrer"
+              className="btn btn-secondary btn-sm"
+              style={{ display: "inline-flex", gap: "6px" }}
+            >
+              <span>Aktivera Google Sheets API</span>
+              <ExternalLink size={13} />
+            </a>
+          </div>
+        )}
+
         <div className="form-group" style={{ marginTop: "0.5rem" }}>
           <label className="form-label">Eller ange befintligt kalkylarks-ID:</label>
           <div style={{ display: "flex", gap: "0.5rem" }}>
