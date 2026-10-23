@@ -92,6 +92,32 @@ export const ConflictModal: React.FC<ConflictModalProps> = ({ conflicts, onClose
                     }}
                   >
                     <div
+                      style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-info)" }}
+                    >
+                      Molnversion (Google Sheets)
+                    </div>
+                    <pre
+                      style={{
+                        fontSize: "0.75rem",
+                        marginTop: "0.35rem",
+                        whiteSpace: "pre-wrap",
+                        maxHeight: "120px",
+                        overflowY: "auto",
+                      }}
+                    >
+                      {JSON.stringify(c.remoteVersion, null, 2)}
+                    </pre>
+                  </div>
+
+                  <div
+                    style={{
+                      background: "var(--color-surface-inset)",
+                      padding: "0.75rem",
+                      borderRadius: "6px",
+                      border: "1px solid var(--color-border-subtle)",
+                    }}
+                  >
+                    <div
                       style={{
                         fontSize: "0.75rem",
                         fontWeight: 700,
@@ -110,32 +136,6 @@ export const ConflictModal: React.FC<ConflictModalProps> = ({ conflicts, onClose
                       }}
                     >
                       {JSON.stringify(c.localVersion, null, 2)}
-                    </pre>
-                  </div>
-
-                  <div
-                    style={{
-                      background: "var(--color-surface-inset)",
-                      padding: "0.75rem",
-                      borderRadius: "6px",
-                      border: "1px solid var(--color-border-subtle)",
-                    }}
-                  >
-                    <div
-                      style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-info)" }}
-                    >
-                      Molnversion (Google Sheets)
-                    </div>
-                    <pre
-                      style={{
-                        fontSize: "0.75rem",
-                        marginTop: "0.35rem",
-                        whiteSpace: "pre-wrap",
-                        maxHeight: "120px",
-                        overflowY: "auto",
-                      }}
-                    >
-                      {JSON.stringify(c.remoteVersion, null, 2)}
                     </pre>
                   </div>
                 </div>
