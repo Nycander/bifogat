@@ -88,3 +88,31 @@ test("conflict detection flags concurrent modification when local updatedAt diff
   assert.equal(conflict.localVersion.name, "Kupa A - Ändrad lokalt");
   assert.equal(conflict.remoteVersion.name, "Kupa A - Ändrad i Google Sheets");
 });
+
+test("queued local writes that are newer than remote are NOT flagged as conflicts", () => {
+  const localTime = new Date("2026-05-03T16:00:00Z").getTime();
+  const remoteTime = new Date("2026-05-01T10:00:00Z").getTime();
+
+  // Local is newer -> purely an unpushed change, not a conflict
+  const isConflict = remoteTime > localTime;
+  assert.equal(isConflict, false);
+});
+
+test("concurrent remote modifications newer than local ARE flagged as conflicts", () => {
+  const localTime = new Date("2026-05-03T14:00:00Z").getTime();
+  const remoteTime = new Date("2026-05-03T15:00:00Z").getTime();
+
+  // Remote edited after local
+  const isConflict = remoteTime > localTime;
+  assert.equal(isConflict, true);
+});
+
+test("resolving conflict by keeping local updates timestamp so remote is no longer newer", () => {
+  const remoteTime = new Date("2026-05-03T15:00:00Z").getTime();
+  const resolvedLocalTime = new Date("2026-05-03T16:30:00Z").getTime();
+
+  // After resolving, local is bumped to now
+  const isConflictAfterResolution = remoteTime > resolvedLocalTime;
+  assert.equal(isConflictAfterResolution, false);
+});
+

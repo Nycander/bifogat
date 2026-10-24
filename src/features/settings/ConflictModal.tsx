@@ -6,9 +6,10 @@ interface ConflictModalProps {
   conflicts: SyncConflict[];
   onClose: () => void;
   onResolve: (conflictId: string, keepLocal: boolean) => Promise<void>;
+  onResolveAll?: (keepLocal: boolean) => Promise<void>;
 }
 
-export const ConflictModal: React.FC<ConflictModalProps> = ({ conflicts, onClose, onResolve }) => {
+export const ConflictModal: React.FC<ConflictModalProps> = ({ conflicts, onClose, onResolve, onResolveAll }) => {
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
@@ -21,9 +22,45 @@ export const ConflictModal: React.FC<ConflictModalProps> = ({ conflicts, onClose
             <AlertTriangle size={20} color="var(--color-danger)" />
             <h2 className="modal-title">Synkroniseringskonflikter ({conflicts.length})</h2>
           </div>
-          <button className="modal-close-btn" onClick={onClose} aria-label="Stäng">
-            <X size={20} />
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            {conflicts.length > 1 && (
+              <>
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={async () => {
+                    if (onResolveAll) {
+                      await onResolveAll(false);
+                    } else {
+                      for (const c of conflicts) {
+                        await onResolve(c.id, false);
+                      }
+                    }
+                  }}
+                  title="Acceptera molnversion för alla konflikter"
+                >
+                  Använd alla från moln
+                </button>
+                <button
+                  className="btn btn-primary btn-sm"
+                  onClick={async () => {
+                    if (onResolveAll) {
+                      await onResolveAll(true);
+                    } else {
+                      for (const c of conflicts) {
+                        await onResolve(c.id, true);
+                      }
+                    }
+                  }}
+                  title="Behåll lokal version för alla konflikter"
+                >
+                  Behåll alla lokala
+                </button>
+              </>
+            )}
+            <button className="modal-close-btn" onClick={onClose} aria-label="Stäng">
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         <p
