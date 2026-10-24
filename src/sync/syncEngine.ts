@@ -35,6 +35,12 @@ export interface SyncEngineStatus {
 
 type SyncListener = (status: SyncEngineStatus) => void;
 
+function parseTimestamp(ts?: string): number {
+  if (!ts) return 0;
+  const t = new Date(ts).getTime();
+  return isNaN(t) ? 0 : t;
+}
+
 class SyncEngine {
   private state: SyncState = "idle";
   private lastError: string | null = null;
@@ -206,6 +212,17 @@ class SyncEngine {
     const existingConflicts = await conflictRepository.getAll();
     const existingConflictIds = new Set(existingConflicts.map((c) => c.recordId));
 
+    // Pre-clean any stale or invalid conflicts:
+    // If a conflict no longer has a pending outbox write or if local timestamp is >= remote, clear it
+    for (const c of existingConflicts) {
+      const remoteTime = parseTimestamp(c.remoteVersion?.updatedAt);
+      const localTime = parseTimestamp(c.localVersion?.updatedAt);
+      if (!pendingRecordIds.has(c.recordId) || localTime >= remoteTime) {
+        await deleteFromStore("conflicts", c.id);
+        existingConflictIds.delete(c.recordId);
+      }
+    }
+
     // Batch read all 5 tabs in a single HTTP request (reducing read request quota usage by 80%)
     const allTabsData = await sheetsClient.readBatchTabs(token, spreadsheetId, [
       SHEET_TABS.HIVES,
@@ -229,8 +246,12 @@ class SyncEngine {
       };
 
       const local = await hiveRepository.getById(r.id);
+      const remoteTime = parseTimestamp(remoteHive.updatedAt);
+      const localTime = local ? parseTimestamp(local.updatedAt) : 0;
+
       if (pendingRecordIds.has(r.id)) {
-        if (local && local.updatedAt !== remoteHive.updatedAt && !existingConflictIds.has(r.id)) {
+        // True conflict ONLY if remote was edited AFTER local's update
+        if (local && remoteTime > localTime && !existingConflictIds.has(r.id)) {
           await conflictRepository.addConflict({
             entity: "hive",
             recordId: r.id,
@@ -242,17 +263,7 @@ class SyncEngine {
         continue;
       }
 
-      if (local) {
-        if (local.updatedAt !== remoteHive.updatedAt && !existingConflictIds.has(r.id)) {
-          await conflictRepository.addConflict({
-            entity: "hive",
-            recordId: r.id,
-            localVersion: local,
-            remoteVersion: remoteHive,
-          });
-          existingConflictIds.add(r.id);
-        }
-      } else {
+      if (!local || remoteTime >= localTime) {
         await putInStore("hives", remoteHive);
       }
     }
@@ -273,8 +284,11 @@ class SyncEngine {
       };
 
       const local = await eventRepository.getById(r.id);
+      const remoteTime = parseTimestamp(remoteEvent.updatedAt);
+      const localTime = local ? parseTimestamp(local.updatedAt) : 0;
+
       if (pendingRecordIds.has(r.id)) {
-        if (local && local.updatedAt !== remoteEvent.updatedAt && !existingConflictIds.has(r.id)) {
+        if (local && remoteTime > localTime && !existingConflictIds.has(r.id)) {
           await conflictRepository.addConflict({
             entity: "event",
             recordId: r.id,
@@ -286,17 +300,7 @@ class SyncEngine {
         continue;
       }
 
-      if (local) {
-        if (local.updatedAt !== remoteEvent.updatedAt && !existingConflictIds.has(r.id)) {
-          await conflictRepository.addConflict({
-            entity: "event",
-            recordId: r.id,
-            localVersion: local,
-            remoteVersion: remoteEvent,
-          });
-          existingConflictIds.add(r.id);
-        }
-      } else {
+      if (!local || remoteTime >= localTime) {
         await putInStore("events", remoteEvent);
       }
     }
@@ -318,8 +322,11 @@ class SyncEngine {
       };
 
       const local = await taskRepository.getById(r.id);
+      const remoteTime = parseTimestamp(remoteTask.updatedAt);
+      const localTime = local ? parseTimestamp(local.updatedAt) : 0;
+
       if (pendingRecordIds.has(r.id)) {
-        if (local && local.updatedAt !== remoteTask.updatedAt && !existingConflictIds.has(r.id)) {
+        if (local && remoteTime > localTime && !existingConflictIds.has(r.id)) {
           await conflictRepository.addConflict({
             entity: "task",
             recordId: r.id,
@@ -331,17 +338,7 @@ class SyncEngine {
         continue;
       }
 
-      if (local) {
-        if (local.updatedAt !== remoteTask.updatedAt && !existingConflictIds.has(r.id)) {
-          await conflictRepository.addConflict({
-            entity: "task",
-            recordId: r.id,
-            localVersion: local,
-            remoteVersion: remoteTask,
-          });
-          existingConflictIds.add(r.id);
-        }
-      } else {
+      if (!local || remoteTime >= localTime) {
         await putInStore("tasks", remoteTask);
       }
     }
@@ -363,8 +360,11 @@ class SyncEngine {
       };
 
       const local = await harvestRepository.getById(r.id);
+      const remoteTime = parseTimestamp(remoteHarvest.updatedAt);
+      const localTime = local ? parseTimestamp(local.updatedAt) : 0;
+
       if (pendingRecordIds.has(r.id)) {
-        if (local && local.updatedAt !== remoteHarvest.updatedAt && !existingConflictIds.has(r.id)) {
+        if (local && remoteTime > localTime && !existingConflictIds.has(r.id)) {
           await conflictRepository.addConflict({
             entity: "harvest",
             recordId: r.id,
@@ -376,17 +376,7 @@ class SyncEngine {
         continue;
       }
 
-      if (local) {
-        if (local.updatedAt !== remoteHarvest.updatedAt && !existingConflictIds.has(r.id)) {
-          await conflictRepository.addConflict({
-            entity: "harvest",
-            recordId: r.id,
-            localVersion: local,
-            remoteVersion: remoteHarvest,
-          });
-          existingConflictIds.add(r.id);
-        }
-      } else {
+      if (!local || remoteTime >= localTime) {
         await putInStore("harvests", remoteHarvest);
       }
     }
@@ -409,8 +399,11 @@ class SyncEngine {
       };
 
       const local = await transactionRepository.getById(r.id);
+      const remoteTime = parseTimestamp(remoteItem.updatedAt);
+      const localTime = local ? parseTimestamp(local.updatedAt) : 0;
+
       if (pendingRecordIds.has(r.id)) {
-        if (local && local.updatedAt !== remoteItem.updatedAt && !existingConflictIds.has(r.id)) {
+        if (local && remoteTime > localTime && !existingConflictIds.has(r.id)) {
           await conflictRepository.addConflict({
             entity: "transaction",
             recordId: r.id,
@@ -422,17 +415,7 @@ class SyncEngine {
         continue;
       }
 
-      if (local) {
-        if (local.updatedAt !== remoteItem.updatedAt && !existingConflictIds.has(r.id)) {
-          await conflictRepository.addConflict({
-            entity: "transaction",
-            recordId: r.id,
-            localVersion: local,
-            remoteVersion: remoteItem,
-          });
-          existingConflictIds.add(r.id);
-        }
-      } else {
+      if (!local || remoteTime >= localTime) {
         await putInStore("transactions", remoteItem);
       }
     }
@@ -466,14 +449,15 @@ class SyncEngine {
 
     for (let i = 0; i < total; i++) {
       const op = ops[i];
+      if (!op) continue;
       const { entity, operation, recordId } = op;
-      const { tabTitle, rowValues } = this.getTabAndRowValues(entity, op.payload);
+      const { tabTitle, rowValues } = this.getTabAndRowValues(entity, op.payload, recordId);
 
       const knownRows = colACache[tabTitle] || [];
       let rowIndex = knownRows.indexOf(recordId);
 
       if (operation === "delete") {
-        if (rowIndex !== -1) {
+        if (rowIndex > 0) {
           const sheetRowIndex = rowIndex + 1;
           clearsBatch.push(`${tabTitle}!A${sheetRowIndex}:Z${sheetRowIndex}`);
           knownRows[rowIndex] = "";
@@ -481,7 +465,7 @@ class SyncEngine {
         successfulOpIds.push(op.id);
       } else {
         // create or update
-        if (rowIndex !== -1) {
+        if (rowIndex > 0) {
           // Existing row: batch update that row range
           const sheetRowIndex = rowIndex + 1;
           updatesBatch.push({
@@ -549,71 +533,69 @@ class SyncEngine {
     }
   }
 
-  private getTabAndRowValues(entity: EntityType, payload: any): { tabTitle: string; rowValues: any[] } {
+  private getTabAndRowValues(entity: EntityType, payload: any, fallbackId?: string): { tabTitle: string; rowValues: any[] } {
     let tabTitle: string;
     let rowValues: any[] = [];
+    const p = payload || {};
+    const recordId = p.id || fallbackId || "";
 
     switch (entity) {
       case "hive": {
         tabTitle = SHEET_TABS.HIVES;
-        const h: Hive = payload;
-        rowValues = [h.id, h.name, h.status, h.notes || "", h.createdAt, h.updatedAt];
+        rowValues = [recordId, p.name || "", p.status || "active", p.notes || "", p.createdAt || new Date().toISOString(), p.updatedAt || new Date().toISOString()];
         break;
       }
       case "event": {
         tabTitle = SHEET_TABS.EVENTS;
-        const e: HiveEvent = payload;
-        rowValues = [e.id, e.hiveId, e.date, e.type, e.title, e.notes, e.createdAt, e.updatedAt];
+        rowValues = [recordId, p.hiveId || "", p.date || "", p.type || "other", p.title || "", p.notes || "", p.createdAt || new Date().toISOString(), p.updatedAt || new Date().toISOString()];
         break;
       }
       case "task": {
         tabTitle = SHEET_TABS.TASKS;
-        const t: Task = payload;
         rowValues = [
-          t.id,
-          t.title,
-          t.notes || "",
-          t.hiveId || "",
-          t.dueDate || "",
-          t.status,
-          t.createdAt,
-          t.updatedAt,
-          t.completedAt || "",
+          recordId,
+          p.title || "",
+          p.notes || "",
+          p.hiveId || "",
+          p.dueDate || "",
+          p.status || "open",
+          p.createdAt || new Date().toISOString(),
+          p.updatedAt || new Date().toISOString(),
+          p.completedAt || "",
         ];
         break;
       }
       case "harvest": {
         tabTitle = SHEET_TABS.HARVESTS;
-        const h: Harvest = payload;
         rowValues = [
-          h.id,
-          h.date,
-          h.hiveId || "",
-          h.honeyWeightGrams !== undefined ? h.honeyWeightGrams : "",
-          h.jarSizeGrams !== undefined ? h.jarSizeGrams : "",
-          h.jarCount !== undefined ? h.jarCount : "",
-          h.notes || "",
-          h.createdAt,
-          h.updatedAt,
+          recordId,
+          p.date || "",
+          p.hiveId || "",
+          p.honeyWeightGrams !== undefined ? p.honeyWeightGrams : "",
+          p.jarSizeGrams !== undefined ? p.jarSizeGrams : "",
+          p.jarCount !== undefined ? p.jarCount : "",
+          p.notes || "",
+          p.createdAt || new Date().toISOString(),
+          p.updatedAt || new Date().toISOString(),
         ];
         break;
       }
       case "transaction": {
         tabTitle = SHEET_TABS.TRANSACTIONS;
-        const tx: Transaction = payload;
-        const sekStr = (tx.amountOre / 100).toFixed(2).replace(".", ",");
+        const amountOre = typeof p.amountOre === "number" ? p.amountOre : 0;
+        const sekStr = (amountOre / 100).toFixed(2).replace(".", ",");
         rowValues = [
-          tx.id,
-          tx.date,
-          tx.description,
+          recordId,
+          p.date || "",
+          p.description || "",
           sekStr,
-          tx.amountOre,
-          tx.counterparty || "",
-          tx.category || "",
-          tx.source,
-          tx.externalReference || "",
-          tx.createdAt,
-          tx.updatedAt,
+          amountOre,
+          p.counterparty || "",
+          p.category || "",
+          p.source || "manual",
+          p.externalReference || "",
+          p.createdAt || new Date().toISOString(),
+          p.updatedAt || new Date().toISOString(),
         ];
         break;
       }

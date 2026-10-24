@@ -494,14 +494,26 @@ export const conflictRepository = {
     };
     const store = storeMap[conflict.entity];
 
+    // Clear any existing outbox entries for this recordId
+    const existingOps = await outboxRepository.getAll();
+    for (const op of existingOps) {
+      if (op.recordId === conflict.recordId) {
+        await deleteFromStore("outbox", op.id);
+      }
+    }
+
     if (keepLocal) {
-      // Keep local version, create an outbox op to push to Sheets
-      await putInStore(store, conflict.localVersion);
+      // Keep local version: bump updatedAt so it is definitively newer than remote
+      const resolvedLocal = {
+        ...conflict.localVersion,
+        updatedAt: new Date().toISOString(),
+      };
+      await putInStore(store, resolvedLocal);
       const op = createOutboxOp(
         conflict.entity,
         "update",
         conflict.recordId,
-        conflict.localVersion,
+        resolvedLocal,
       );
       await putInStore("outbox", op);
     } else {
@@ -511,6 +523,13 @@ export const conflictRepository = {
 
     // Delete resolved conflict completely so it does not persist or re-trigger
     await deleteFromStore("conflicts", conflict.id);
+  },
+
+  async resolveAll(keepLocal: boolean): Promise<void> {
+    const conflicts = await this.getAll();
+    for (const c of conflicts) {
+      await this.resolveConflict(c.id, keepLocal);
+    }
   },
 };
 

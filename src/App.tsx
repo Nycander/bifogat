@@ -454,7 +454,22 @@ export default function App() {
   const handleResolveConflict = async (conflictId: string, keepLocal: boolean) => {
     await conflictRepository.resolveConflict(conflictId, keepLocal);
     await reloadData();
-    await syncEngine.triggerSync();
+    if (keepLocal) {
+      await syncEngine.pushPendingOutbox();
+    } else {
+      await syncEngine.triggerSync();
+    }
+    await reloadData();
+  };
+
+  const handleResolveAllConflicts = async (keepLocal: boolean) => {
+    await conflictRepository.resolveAll(keepLocal);
+    await reloadData();
+    if (keepLocal) {
+      await syncEngine.pushPendingOutbox();
+    } else {
+      await syncEngine.triggerSync();
+    }
     await reloadData();
   };
 
@@ -875,6 +890,7 @@ export default function App() {
           conflicts={conflicts}
           onClose={() => setShowConflictModal(false)}
           onResolve={handleResolveConflict}
+          onResolveAll={handleResolveAllConflicts}
         />
       )}
 
