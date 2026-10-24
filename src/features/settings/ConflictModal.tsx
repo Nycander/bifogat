@@ -97,11 +97,18 @@ export const ConflictModal: React.FC<ConflictModalProps> = ({ conflicts, onClose
                       Molnversion (Google Sheets)
                     </div>
                     <pre
+                      id={`conflict-cloud-${c.id}`}
+                      onScroll={(e) => {
+                        const localEl = document.getElementById(`conflict-local-${c.id}`);
+                        if (localEl && Math.abs(localEl.scrollTop - e.currentTarget.scrollTop) > 1) {
+                          localEl.scrollTop = e.currentTarget.scrollTop;
+                        }
+                      }}
                       style={{
                         fontSize: "0.75rem",
                         marginTop: "0.35rem",
                         whiteSpace: "pre-wrap",
-                        maxHeight: "120px",
+                        maxHeight: "140px",
                         overflowY: "auto",
                       }}
                     >
@@ -127,11 +134,18 @@ export const ConflictModal: React.FC<ConflictModalProps> = ({ conflicts, onClose
                       Lokal version (på enheten)
                     </div>
                     <pre
+                      id={`conflict-local-${c.id}`}
+                      onScroll={(e) => {
+                        const cloudEl = document.getElementById(`conflict-cloud-${c.id}`);
+                        if (cloudEl && Math.abs(cloudEl.scrollTop - e.currentTarget.scrollTop) > 1) {
+                          cloudEl.scrollTop = e.currentTarget.scrollTop;
+                        }
+                      }}
                       style={{
                         fontSize: "0.75rem",
                         marginTop: "0.35rem",
                         whiteSpace: "pre-wrap",
-                        maxHeight: "120px",
+                        maxHeight: "140px",
                         overflowY: "auto",
                       }}
                     >

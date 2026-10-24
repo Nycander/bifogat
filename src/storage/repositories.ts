@@ -509,8 +509,8 @@ export const conflictRepository = {
       await putInStore(store, conflict.remoteVersion);
     }
 
-    conflict.status = "resolved";
-    await putInStore("conflicts", conflict);
+    // Delete resolved conflict completely so it does not persist or re-trigger
+    await deleteFromStore("conflicts", conflict.id);
   },
 };
 

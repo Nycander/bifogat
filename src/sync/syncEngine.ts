@@ -198,14 +198,25 @@ class SyncEngine {
   }
 
   /**
-   * Pull remote changes from all Sheets tabs and merge into local IndexedDB
+   * Pull remote changes from all Sheets tabs using a SINGLE batchGet and merge into local IndexedDB
    */
   private async pullRemoteAndDetectConflicts(token: string, spreadsheetId: string) {
     const outboxOps = await outboxRepository.getAll();
     const pendingRecordIds = new Set(outboxOps.map((op) => op.recordId));
+    const existingConflicts = await conflictRepository.getAll();
+    const existingConflictIds = new Set(existingConflicts.map((c) => c.recordId));
+
+    // Batch read all 5 tabs in a single HTTP request (reducing read request quota usage by 80%)
+    const allTabsData = await sheetsClient.readBatchTabs(token, spreadsheetId, [
+      SHEET_TABS.HIVES,
+      SHEET_TABS.EVENTS,
+      SHEET_TABS.TASKS,
+      SHEET_TABS.HARVESTS,
+      SHEET_TABS.TRANSACTIONS,
+    ]);
 
     // A. Hives
-    const remoteHives = await sheetsClient.readTab(token, spreadsheetId, SHEET_TABS.HIVES);
+    const remoteHives = allTabsData[SHEET_TABS.HIVES] || [];
     for (const r of remoteHives) {
       if (!r.id) continue;
       const remoteHive: Hive = {
@@ -219,40 +230,35 @@ class SyncEngine {
 
       const local = await hiveRepository.getById(r.id);
       if (pendingRecordIds.has(r.id)) {
-        // If there are pending local writes for this record, do not overwrite local state with remote yet.
-        // Instead, only check if remote differs to raise a conflict if both changed independently.
-        if (local && local.updatedAt !== remoteHive.updatedAt) {
-          const existingConflicts = await conflictRepository.getAll();
-          const alreadyExists = existingConflicts.some(c => c.recordId === r.id);
-          if (!alreadyExists) {
-            await conflictRepository.addConflict({
-              entity: "hive",
-              recordId: r.id,
-              localVersion: local,
-              remoteVersion: remoteHive,
-            });
-          }
-        }
-        continue;
-      }
-
-      if (local) {
-        if (local.updatedAt !== remoteHive.updatedAt) {
+        if (local && local.updatedAt !== remoteHive.updatedAt && !existingConflictIds.has(r.id)) {
           await conflictRepository.addConflict({
             entity: "hive",
             recordId: r.id,
             localVersion: local,
             remoteVersion: remoteHive,
           });
+          existingConflictIds.add(r.id);
+        }
+        continue;
+      }
+
+      if (local) {
+        if (local.updatedAt !== remoteHive.updatedAt && !existingConflictIds.has(r.id)) {
+          await conflictRepository.addConflict({
+            entity: "hive",
+            recordId: r.id,
+            localVersion: local,
+            remoteVersion: remoteHive,
+          });
+          existingConflictIds.add(r.id);
         }
       } else {
-        // Safe to merge
         await putInStore("hives", remoteHive);
       }
     }
 
     // B. Events
-    const remoteEvents = await sheetsClient.readTab(token, spreadsheetId, SHEET_TABS.EVENTS);
+    const remoteEvents = allTabsData[SHEET_TABS.EVENTS] || [];
     for (const r of remoteEvents) {
       if (!r.id) continue;
       const remoteEvent: HiveEvent = {
@@ -267,14 +273,28 @@ class SyncEngine {
       };
 
       const local = await eventRepository.getById(r.id);
-      if (pendingRecordIds.has(r.id) && local) {
-        if (local.updatedAt !== remoteEvent.updatedAt) {
+      if (pendingRecordIds.has(r.id)) {
+        if (local && local.updatedAt !== remoteEvent.updatedAt && !existingConflictIds.has(r.id)) {
           await conflictRepository.addConflict({
             entity: "event",
             recordId: r.id,
             localVersion: local,
             remoteVersion: remoteEvent,
           });
+          existingConflictIds.add(r.id);
+        }
+        continue;
+      }
+
+      if (local) {
+        if (local.updatedAt !== remoteEvent.updatedAt && !existingConflictIds.has(r.id)) {
+          await conflictRepository.addConflict({
+            entity: "event",
+            recordId: r.id,
+            localVersion: local,
+            remoteVersion: remoteEvent,
+          });
+          existingConflictIds.add(r.id);
         }
       } else {
         await putInStore("events", remoteEvent);
@@ -282,7 +302,7 @@ class SyncEngine {
     }
 
     // C. Tasks
-    const remoteTasks = await sheetsClient.readTab(token, spreadsheetId, SHEET_TABS.TASKS);
+    const remoteTasks = allTabsData[SHEET_TABS.TASKS] || [];
     for (const r of remoteTasks) {
       if (!r.id) continue;
       const remoteTask: Task = {
@@ -298,14 +318,28 @@ class SyncEngine {
       };
 
       const local = await taskRepository.getById(r.id);
-      if (pendingRecordIds.has(r.id) && local) {
-        if (local.updatedAt !== remoteTask.updatedAt) {
+      if (pendingRecordIds.has(r.id)) {
+        if (local && local.updatedAt !== remoteTask.updatedAt && !existingConflictIds.has(r.id)) {
           await conflictRepository.addConflict({
             entity: "task",
             recordId: r.id,
             localVersion: local,
             remoteVersion: remoteTask,
           });
+          existingConflictIds.add(r.id);
+        }
+        continue;
+      }
+
+      if (local) {
+        if (local.updatedAt !== remoteTask.updatedAt && !existingConflictIds.has(r.id)) {
+          await conflictRepository.addConflict({
+            entity: "task",
+            recordId: r.id,
+            localVersion: local,
+            remoteVersion: remoteTask,
+          });
+          existingConflictIds.add(r.id);
         }
       } else {
         await putInStore("tasks", remoteTask);
@@ -313,7 +347,7 @@ class SyncEngine {
     }
 
     // D. Harvests
-    const remoteHarvests = await sheetsClient.readTab(token, spreadsheetId, SHEET_TABS.HARVESTS);
+    const remoteHarvests = allTabsData[SHEET_TABS.HARVESTS] || [];
     for (const r of remoteHarvests) {
       if (!r.id) continue;
       const remoteHarvest: Harvest = {
@@ -329,14 +363,28 @@ class SyncEngine {
       };
 
       const local = await harvestRepository.getById(r.id);
-      if (pendingRecordIds.has(r.id) && local) {
-        if (local.updatedAt !== remoteHarvest.updatedAt) {
+      if (pendingRecordIds.has(r.id)) {
+        if (local && local.updatedAt !== remoteHarvest.updatedAt && !existingConflictIds.has(r.id)) {
           await conflictRepository.addConflict({
             entity: "harvest",
             recordId: r.id,
             localVersion: local,
             remoteVersion: remoteHarvest,
           });
+          existingConflictIds.add(r.id);
+        }
+        continue;
+      }
+
+      if (local) {
+        if (local.updatedAt !== remoteHarvest.updatedAt && !existingConflictIds.has(r.id)) {
+          await conflictRepository.addConflict({
+            entity: "harvest",
+            recordId: r.id,
+            localVersion: local,
+            remoteVersion: remoteHarvest,
+          });
+          existingConflictIds.add(r.id);
         }
       } else {
         await putInStore("harvests", remoteHarvest);
@@ -344,7 +392,7 @@ class SyncEngine {
     }
 
     // E. Transactions
-    const remoteTx = await sheetsClient.readTab(token, spreadsheetId, SHEET_TABS.TRANSACTIONS);
+    const remoteTx = allTabsData[SHEET_TABS.TRANSACTIONS] || [];
     for (const r of remoteTx) {
       if (!r.id) continue;
       const remoteItem: Transaction = {
@@ -361,14 +409,28 @@ class SyncEngine {
       };
 
       const local = await transactionRepository.getById(r.id);
-      if (pendingRecordIds.has(r.id) && local) {
-        if (local.updatedAt !== remoteItem.updatedAt) {
+      if (pendingRecordIds.has(r.id)) {
+        if (local && local.updatedAt !== remoteItem.updatedAt && !existingConflictIds.has(r.id)) {
           await conflictRepository.addConflict({
             entity: "transaction",
             recordId: r.id,
             localVersion: local,
             remoteVersion: remoteItem,
           });
+          existingConflictIds.add(r.id);
+        }
+        continue;
+      }
+
+      if (local) {
+        if (local.updatedAt !== remoteItem.updatedAt && !existingConflictIds.has(r.id)) {
+          await conflictRepository.addConflict({
+            entity: "transaction",
+            recordId: r.id,
+            localVersion: local,
+            remoteVersion: remoteItem,
+          });
+          existingConflictIds.add(r.id);
         }
       } else {
         await putInStore("transactions", remoteItem);
@@ -377,39 +439,117 @@ class SyncEngine {
   }
 
   /**
-   * Flush local outbox mutations to Google Sheets with rate limiting delay
+   * Flush local outbox mutations to Google Sheets using high-performance BULK batch writes
    */
   private async flushOutbox(token: string, spreadsheetId: string) {
     const ops = await outboxRepository.getAll();
     const total = ops.length;
+    if (total === 0) return;
+
+    this.syncMessage = `Förbereder massynkronisering (${total} ändringar)...`;
+    this.notify();
+
+    // 1. Pre-fetch column A for all tabs in a single batch read
+    const colACache = await sheetsClient.readBatchColumnA(token, spreadsheetId, [
+      SHEET_TABS.HIVES,
+      SHEET_TABS.EVENTS,
+      SHEET_TABS.TASKS,
+      SHEET_TABS.HARVESTS,
+      SHEET_TABS.TRANSACTIONS,
+    ]);
+
+    // Group outbox mutations into appends, batch updates, and batch clears
+    const appendsByTab: Record<string, { ops: OutboxOp[]; rows: any[][] }> = {};
+    const updatesBatch: Array<{ range: string; values: any[][] }> = [];
+    const clearsBatch: string[] = [];
+    const successfulOpIds: string[] = [];
 
     for (let i = 0; i < total; i++) {
       const op = ops[i];
-      try {
-        this.syncMessage = `Synar ändring ${i + 1} av ${total} till Sheets...`;
-        this.notify();
+      const { entity, operation, recordId } = op;
+      const { tabTitle, rowValues } = this.getTabAndRowValues(entity, op.payload);
 
-        await this.executeOutboxOp(token, spreadsheetId, op);
-        // Successful write: remove from outbox
-        await outboxRepository.remove(op.id);
+      const knownRows = colACache[tabTitle] || [];
+      let rowIndex = knownRows.indexOf(recordId);
 
-        // Add small delay every 10 ops to respect Google Sheets API read/write rate limits (60 requests/min per user)
-        if (i > 0 && i % 10 === 0) {
-          await new Promise((resolve) => setTimeout(resolve, 1200));
+      if (operation === "delete") {
+        if (rowIndex !== -1) {
+          const sheetRowIndex = rowIndex + 1;
+          clearsBatch.push(`${tabTitle}!A${sheetRowIndex}:Z${sheetRowIndex}`);
+          knownRows[rowIndex] = "";
         }
-      } catch (err: any) {
-        // Record failure and stop further outbox items to preserve order
-        op.retryCount += 1;
-        op.lastError = err.message || "Fel vid skrivning till Google Sheets";
-        await outboxRepository.updateOp(op);
-        throw err;
+        successfulOpIds.push(op.id);
+      } else {
+        // create or update
+        if (rowIndex !== -1) {
+          // Existing row: batch update that row range
+          const sheetRowIndex = rowIndex + 1;
+          updatesBatch.push({
+            range: `${tabTitle}!A${sheetRowIndex}:Z${sheetRowIndex}`,
+            values: [rowValues],
+          });
+          successfulOpIds.push(op.id);
+        } else {
+          // New row: queue for batch append
+          if (!appendsByTab[tabTitle]) {
+            appendsByTab[tabTitle] = { ops: [], rows: [] };
+          }
+          appendsByTab[tabTitle].ops.push(op);
+          appendsByTab[tabTitle].rows.push(rowValues);
+          knownRows.push(recordId);
+        }
       }
+    }
+
+    try {
+      // 2. Execute bulk updates in chunks of 50 via values:batchUpdate
+      if (updatesBatch.length > 0) {
+        this.syncMessage = `Uppdaterar ${updatesBatch.length} befintliga rader i molnet...`;
+        this.notify();
+        const chunkSize = 50;
+        for (let i = 0; i < updatesBatch.length; i += chunkSize) {
+          const chunk = updatesBatch.slice(i, i + chunkSize);
+          await sheetsClient.batchUpdateValues(token, spreadsheetId, chunk);
+          if (i + chunkSize < updatesBatch.length) {
+            await new Promise((resolve) => setTimeout(resolve, 800));
+          }
+        }
+      }
+
+      // 3. Execute bulk appends per tab in single HTTP requests via values:append
+      for (const [tabTitle, group] of Object.entries(appendsByTab)) {
+        if (group.rows.length > 0) {
+          this.syncMessage = `Skriver ${group.rows.length} nya rader till fliken ${tabTitle}...`;
+          this.notify();
+          await sheetsClient.appendRowsBatch(token, spreadsheetId, tabTitle, group.rows);
+          for (const op of group.ops) {
+            successfulOpIds.push(op.id);
+          }
+        }
+      }
+
+      // 4. Execute bulk clears in single HTTP request via values:batchClear
+      if (clearsBatch.length > 0) {
+        this.syncMessage = `Rensar ${clearsBatch.length} borttagna rader i Sheets...`;
+        this.notify();
+        await sheetsClient.batchClearValues(token, spreadsheetId, clearsBatch);
+      }
+
+      // 5. Remove all successfully committed outbox entries
+      for (const opId of successfulOpIds) {
+        await outboxRepository.remove(opId);
+      }
+    } catch (err: any) {
+      console.error("Bulk sync error:", err);
+      // Clean up whatever succeeded so far
+      for (const opId of successfulOpIds) {
+        await outboxRepository.remove(opId).catch(() => {});
+      }
+      throw err;
     }
   }
 
-  private async executeOutboxOp(token: string, spreadsheetId: string, op: OutboxOp) {
-    const { entity, operation, recordId, payload } = op;
-
+  private getTabAndRowValues(entity: EntityType, payload: any): { tabTitle: string; rowValues: any[] } {
     let tabTitle: string;
     let rowValues: any[] = [];
 
@@ -481,12 +621,7 @@ class SyncEngine {
         throw new Error(`Okänd entitet: ${entity}`);
     }
 
-    if (operation === "delete") {
-      await sheetsClient.deleteRowById(token, spreadsheetId, tabTitle, recordId);
-    } else {
-      // create or update are both idempotent through updateRowById (which updates if present or appends if new)
-      await sheetsClient.updateRowById(token, spreadsheetId, tabTitle, recordId, rowValues);
-    }
+    return { tabTitle, rowValues };
   }
 }
 

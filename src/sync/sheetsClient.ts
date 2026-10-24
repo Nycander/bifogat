@@ -189,6 +189,123 @@ export const sheetsClient = {
   },
 
   /**
+   * Read multiple tabs at once using Google Sheets batchGet
+   */
+  async readBatchTabs(
+    accessToken: string,
+    spreadsheetId: string,
+    tabTitles: string[],
+  ): Promise<Record<string, Record<string, string>[]>> {
+    if (tabTitles.length === 0) return {};
+    const queryRanges = tabTitles.map((t) => `ranges=${encodeURIComponent(`${t}!A:Z`)}`).join("&");
+    const data = await sheetsFetch(accessToken, `/${spreadsheetId}/values:batchGet?${queryRanges}`);
+    const valueRanges: Array<{ range: string; values?: string[][] }> = data.valueRanges || [];
+
+    const result: Record<string, Record<string, string>[]> = {};
+
+    tabTitles.forEach((tabTitle, idx) => {
+      const vr = valueRanges[idx] || valueRanges.find((v) => v.range?.startsWith(`'${tabTitle}'!`) || v.range?.startsWith(`${tabTitle}!`));
+      const rows: string[][] = vr?.values || [];
+      if (rows.length <= 1) {
+        result[tabTitle] = [];
+        return;
+      }
+      const headers = rows[0];
+      const records: Record<string, string>[] = [];
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        if (!row || row.length === 0 || !row[0]) continue;
+        const record: Record<string, string> = {};
+        headers.forEach((h, colIndex) => {
+          record[h] = row[colIndex] !== undefined ? String(row[colIndex]) : "";
+        });
+        records.push(record);
+      }
+      result[tabTitle] = records;
+    });
+
+    return result;
+  },
+
+  /**
+   * Read column A for multiple tabs in a single batchGet request
+   */
+  async readBatchColumnA(
+    accessToken: string,
+    spreadsheetId: string,
+    tabTitles: string[],
+  ): Promise<Record<string, string[]>> {
+    if (tabTitles.length === 0) return {};
+    const queryRanges = tabTitles.map((t) => `ranges=${encodeURIComponent(`${t}!A:A`)}`).join("&");
+    const data = await sheetsFetch(accessToken, `/${spreadsheetId}/values:batchGet?${queryRanges}`);
+    const valueRanges: Array<{ range: string; values?: string[][] }> = data.valueRanges || [];
+
+    const result: Record<string, string[]> = {};
+    tabTitles.forEach((tabTitle, idx) => {
+      const vr = valueRanges[idx] || valueRanges.find((v) => v.range?.startsWith(`'${tabTitle}'!`) || v.range?.startsWith(`${tabTitle}!`));
+      const rows: string[][] = vr?.values || [];
+      result[tabTitle] = rows.map((r) => (r && r[0] ? String(r[0]) : ""));
+    });
+    return result;
+  },
+
+  /**
+   * Batch update multiple ranges in a single HTTP request
+   */
+  async batchUpdateValues(
+    accessToken: string,
+    spreadsheetId: string,
+    data: Array<{ range: string; values: any[][] }>,
+  ): Promise<void> {
+    if (data.length === 0) return;
+    await sheetsFetch(accessToken, `/${spreadsheetId}/values:batchUpdate`, {
+      method: "POST",
+      body: JSON.stringify({
+        valueInputOption: "USER_ENTERED",
+        data,
+      }),
+    });
+  },
+
+  /**
+   * Batch clear multiple ranges in a single HTTP request
+   */
+  async batchClearValues(
+    accessToken: string,
+    spreadsheetId: string,
+    ranges: string[],
+  ): Promise<void> {
+    if (ranges.length === 0) return;
+    await sheetsFetch(accessToken, `/${spreadsheetId}/values:batchClear`, {
+      method: "POST",
+      body: JSON.stringify({
+        ranges,
+      }),
+    });
+  },
+
+  /**
+   * Append multiple rows to a tab in a single HTTP request
+   */
+  async appendRowsBatch(
+    accessToken: string,
+    spreadsheetId: string,
+    tabTitle: string,
+    rowsValues: any[][],
+  ): Promise<void> {
+    if (rowsValues.length === 0) return;
+    const range = encodeURIComponent(`${tabTitle}!A:Z`);
+    await sheetsFetch(
+      accessToken,
+      `/${spreadsheetId}/values/${range}:append?valueInputOption=USER_ENTERED`,
+      {
+        method: "POST",
+        body: JSON.stringify({ values: rowsValues }),
+      },
+    );
+  },
+
+  /**
    * Append a row to a tab
    */
   async appendRow(
@@ -217,22 +334,33 @@ export const sheetsClient = {
     tabTitle: string,
     id: string,
     rowValues: any[],
+    knownColA?: string[],
   ): Promise<boolean> {
-    // 1. Fetch column A to find the row index
-    const colARange = encodeURIComponent(`${tabTitle}!A:A`);
-    const colAData = await sheetsFetch(accessToken, `/${spreadsheetId}/values/${colARange}`);
-    const rows = colAData.values || [];
     let rowIndex = -1;
-    for (let i = 0; i < rows.length; i++) {
-      if (rows[i] && rows[i][0] === id) {
-        rowIndex = i + 1; // 1-indexed for Sheets
-        break;
+    if (knownColA) {
+      rowIndex = knownColA.indexOf(id);
+      if (rowIndex !== -1) {
+        rowIndex += 1; // 1-indexed for Sheets
+      }
+    }
+
+    if (rowIndex === -1) {
+      // 1. Fetch column A if not provided
+      const colARange = encodeURIComponent(`${tabTitle}!A:A`);
+      const colAData = await sheetsFetch(accessToken, `/${spreadsheetId}/values/${colARange}`);
+      const rows = colAData.values || [];
+      for (let i = 0; i < rows.length; i++) {
+        if (rows[i] && rows[i][0] === id) {
+          rowIndex = i + 1; // 1-indexed for Sheets
+          break;
+        }
       }
     }
 
     if (rowIndex === -1) {
       // Row not found, append instead
       await this.appendRow(accessToken, spreadsheetId, tabTitle, rowValues);
+      if (knownColA) knownColA.push(id);
       return true;
     }
 
