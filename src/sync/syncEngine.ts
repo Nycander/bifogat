@@ -218,8 +218,25 @@ class SyncEngine {
       };
 
       const local = await hiveRepository.getById(r.id);
-      if (pendingRecordIds.has(r.id) && local) {
-        // If both modified and updatedAt differs
+      if (pendingRecordIds.has(r.id)) {
+        // If there are pending local writes for this record, do not overwrite local state with remote yet.
+        // Instead, only check if remote differs to raise a conflict if both changed independently.
+        if (local && local.updatedAt !== remoteHive.updatedAt) {
+          const existingConflicts = await conflictRepository.getAll();
+          const alreadyExists = existingConflicts.some(c => c.recordId === r.id);
+          if (!alreadyExists) {
+            await conflictRepository.addConflict({
+              entity: "hive",
+              recordId: r.id,
+              localVersion: local,
+              remoteVersion: remoteHive,
+            });
+          }
+        }
+        continue;
+      }
+
+      if (local) {
         if (local.updatedAt !== remoteHive.updatedAt) {
           await conflictRepository.addConflict({
             entity: "hive",

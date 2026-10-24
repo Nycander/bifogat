@@ -34,6 +34,7 @@ interface SettingsViewProps {
   onOpenCsvImport: () => void;
   onOpenNotesImport: () => void;
   onExportBackup: () => void;
+  onRestoreBackup: (file: File) => Promise<void>;
   onClearLocalData: () => Promise<void>;
 }
 
@@ -592,12 +593,30 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           }}
         >
           Exportera all lokal data från IndexedDB till en JSON-fil som kan sparas på din dator eller
-          telefon.
+          telefon, eller återställ en tidigare sparad säkerhetskopia.
         </p>
-        <button className="btn btn-secondary" onClick={onExportBackup}>
-          <Download size={16} />
-          <span>Ladda ner komplett säkerhetskopia (JSON)</span>
-        </button>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+          <button className="btn btn-secondary" onClick={onExportBackup}>
+            <Download size={16} />
+            <span>Ladda ner säkerhetskopia (JSON)</span>
+          </button>
+          <label className="btn btn-primary" style={{ cursor: "pointer", marginBottom: 0 }}>
+            <Upload size={16} />
+            <span>Återställ från fil</span>
+            <input
+              type="file"
+              accept=".json"
+              style={{ display: "none" }}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  onRestoreBackup(file);
+                  e.target.value = "";
+                }
+              }}
+            />
+          </label>
+        </div>
       </div>
 
 
