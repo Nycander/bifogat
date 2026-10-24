@@ -572,6 +572,22 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
+  // Full Data Restore
+  const handleRestoreBackup = async (file: File) => {
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (!data || typeof data !== "object") {
+        throw new Error("Ogiltig säkerhetskopia (ej giltigt JSON-format)");
+      }
+      await restoreAllData(data);
+      await reloadData();
+      alert("Säkerhetskopian har återställts framgångsrikt!");
+    } catch (err: any) {
+      alert(`Kunde inte återställa säkerhetskopia: ${err.message}`);
+    }
+  };
+
   // Clear Local Data
   const handleClearLocalData = async () => {
     await clearStore("hives");
@@ -733,6 +749,7 @@ export default function App() {
             onOpenCsvImport={() => setShowCsvImportModal(true)}
             onOpenNotesImport={() => setShowNotesImportModal(true)}
             onExportBackup={handleExportBackup}
+            onRestoreBackup={handleRestoreBackup}
             onClearLocalData={handleClearLocalData}
           />
         )}
