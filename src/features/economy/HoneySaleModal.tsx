@@ -1,10 +1,23 @@
-import React, { useState } from "react";
-import { Harvest } from "../../domain/types";
+import React, { useState, useMemo, useRef, useEffect } from "react";
+import { Harvest, Transaction } from "../../domain/types";
 import { formatDate } from "../../domain/validation";
-import { X, Check, Droplet, Plus, Minus, CreditCard, Banknote, FileText, Smartphone } from "lucide-react";
+import { extractUniqueCustomers, filterCustomerSuggestions } from "../../domain/customers";
+import {
+  X,
+  Check,
+  Droplet,
+  Plus,
+  Minus,
+  CreditCard,
+  Banknote,
+  FileText,
+  Smartphone,
+  User,
+} from "lucide-react";
 
 interface HoneySaleModalProps {
   harvests: Harvest[];
+  transactions?: Transaction[];
   onClose: () => void;
   onSaveSale: (data: {
     date: string;
@@ -20,6 +33,7 @@ interface HoneySaleModalProps {
 
 export const HoneySaleModal: React.FC<HoneySaleModalProps> = ({
   harvests,
+  transactions = [],
   onClose,
   onSaveSale,
 }) => {
@@ -34,6 +48,27 @@ export const HoneySaleModal: React.FC<HoneySaleModalProps> = ({
   const [customTotalSek, setCustomTotalSek] = useState<string>("");
   const [paymentMethod, setPaymentMethod] = useState<"Swish" | "Kontant" | "Faktura" | "Övrigt">("Swish");
   const [counterparty, setCounterparty] = useState<string>("");
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+  const customerDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Extract past unique customers from transactions ranked by frequency and recency
+  const allCustomers = useMemo(() => extractUniqueCustomers(transactions), [transactions]);
+  const customerSuggestions = useMemo(
+    () => filterCustomerSuggestions(allCustomers, counterparty, 6),
+    [allCustomers, counterparty],
+  );
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (customerDropdownRef.current && !customerDropdownRef.current.contains(e.target as Node)) {
+        setShowCustomerDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, []);
+
   const [selectedHarvestId, setSelectedHarvestId] = useState<string>("");
   const [date, setDate] = useState<string>(formatDate(new Date()));
   const [notes, setNotes] = useState<string>("");
@@ -396,18 +431,156 @@ export const HoneySaleModal: React.FC<HoneySaleModalProps> = ({
               />
             </div>
 
-            <div className="form-group">
-              <label className="form-label" htmlFor="sale-counterparty">
-                Köpare / Kund (valfritt)
-              </label>
-              <input
-                id="sale-counterparty"
-                type="text"
-                className="form-input"
-                placeholder="t.ex. Anna Svensson, Grannen"
-                value={counterparty}
-                onChange={(e) => setCounterparty(e.target.value)}
-              />
+            <div className="form-group" style={{ position: "relative" }} ref={customerDropdownRef}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <label className="form-label" htmlFor="sale-counterparty" style={{ display: "flex", alignItems: "center", gap: "0.3rem", margin: 0 }}>
+                  <User size={13} color="var(--color-primary-base)" />
+                  Köpare / Kund (valfritt)
+                </label>
+                {allCustomers.length > 0 && (
+                  <span style={{ fontSize: "0.68rem", color: "var(--color-text-muted)" }}>
+                    {allCustomers.length} tidigare {allCustomers.length === 1 ? "kund" : "kunder"}
+                  </span>
+                )}
+              </div>
+              <div style={{ position: "relative", marginTop: "0.25rem" }}>
+                <input
+                  id="sale-counterparty"
+                  type="text"
+                  list="sale-counterparty-datalist"
+                  className="form-input"
+                  placeholder="t.ex. Anna Svensson, Grannen"
+                  value={counterparty}
+                  onChange={(e) => {
+                    setCounterparty(e.target.value);
+                    setShowCustomerDropdown(true);
+                  }}
+                  onFocus={() => {
+                    if (allCustomers.length > 0) {
+                      setShowCustomerDropdown(true);
+                    }
+                  }}
+                  autoComplete="off"
+                />
+
+                {/* Native browser datalist */}
+                <datalist id="sale-counterparty-datalist">
+                  {allCustomers.map((c) => (
+                    <option key={c} value={c} />
+                  ))}
+                </datalist>
+
+                {/* Interactive Autocomplete Dropdown */}
+                {showCustomerDropdown && customerSuggestions.length > 0 && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "calc(100% + 4px)",
+                      left: 0,
+                      right: 0,
+                      background: "var(--color-surface)",
+                      border: "1px solid var(--color-border-subtle)",
+                      borderRadius: "8px",
+                      boxShadow: "0 8px 24px rgba(0,0,0,0.18)",
+                      zIndex: 60,
+                      maxHeight: "180px",
+                      overflowY: "auto",
+                      padding: "0.25rem 0",
+                    }}
+                  >
+                    <div
+                      style={{
+                        padding: "0.3rem 0.6rem",
+                        fontSize: "0.68rem",
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.05em",
+                        color: "var(--color-text-muted)",
+                        borderBottom: "1px solid var(--color-border-subtle)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.35rem",
+                      }}
+                    >
+                      <User size={11} />
+                      {counterparty.trim() ? "Matchande kunder" : "Tidigare kunder"}
+                    </div>
+                    {customerSuggestions.map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        style={{
+                          width: "100%",
+                          textAlign: "left",
+                          padding: "0.45rem 0.75rem",
+                          fontSize: "0.85rem",
+                          fontWeight: 500,
+                          background: "transparent",
+                          border: "none",
+                          color: "var(--color-text-primary)",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = "var(--color-surface-hover)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = "transparent";
+                        }}
+                        onMouseDown={(e) => {
+                          // onMouseDown prevents blur before click
+                          e.preventDefault();
+                          setCounterparty(c);
+                          setShowCustomerDropdown(false);
+                        }}
+                      >
+                        <span>{c}</span>
+                        <span style={{ fontSize: "0.7rem", color: "var(--color-primary-base)", fontWeight: 600 }}>
+                          Välj
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Quick-tap pills for top previous customers when input is empty */}
+              {allCustomers.length > 0 && !counterparty && (
+                <div
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    alignItems: "center",
+                    gap: "0.3rem",
+                    marginTop: "0.35rem",
+                  }}
+                >
+                  <span style={{ fontSize: "0.68rem", color: "var(--color-text-muted)" }}>
+                    Vanliga:
+                  </span>
+                  {allCustomers.slice(0, 3).map((cust) => (
+                    <button
+                      key={cust}
+                      type="button"
+                      onClick={() => setCounterparty(cust)}
+                      style={{
+                        background: "var(--color-surface-inset)",
+                        border: "1px solid var(--color-border-subtle)",
+                        borderRadius: "12px",
+                        padding: "0.15rem 0.45rem",
+                        fontSize: "0.725rem",
+                        color: "var(--color-text-secondary)",
+                        cursor: "pointer",
+                      }}
+                      title="Klicka för att välja kund"
+                    >
+                      {cust}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 

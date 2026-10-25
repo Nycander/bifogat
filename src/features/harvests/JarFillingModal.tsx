@@ -40,13 +40,13 @@ export const JarFillingModal: React.FC<JarFillingModalProps> = ({
   const selectedHarvest = harvests.find((h) => h.id === selectedHarvestId);
 
   // Auto-detect default honey type based on harvest slungningsdatum:
-  // If tapped within 3 days of slungning, default to "nyslungad", else "rörd"
+  // If tapped within 30 days of slungning, default to "nyslungad", else "rörd"
   useEffect(() => {
     if (selectedHarvest?.date && date) {
       const harvestTime = new Date(selectedHarvest.date).getTime();
       const fillingTime = new Date(date).getTime();
       const diffDays = Math.round((fillingTime - harvestTime) / (1000 * 60 * 60 * 24));
-      if (diffDays <= 3 && diffDays >= 0) {
+      if (diffDays <= 30 && diffDays >= 0) {
         setHoneyType("nyslungad");
       } else {
         setHoneyType("rörd");
@@ -345,30 +345,49 @@ export const JarFillingModal: React.FC<JarFillingModalProps> = ({
             {/* Jar Size Selector */}
             <div className="form-group" style={{ marginBottom: "0.75rem" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.35rem" }}>
-                <label className="form-label" style={{ margin: 0 }}>
+                <label className="form-label" style={{ margin: 0, fontWeight: 700 }}>
                   Burkstorlek
                 </label>
                 <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
                   Denna tappning: <strong>{((count * effectiveJarSize) / 1000).toFixed(1)} kg</strong>
                 </span>
               </div>
-              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "0.5rem" }}>
-                {commonSizes.map((sz) => (
-                  <button
-                    key={sz}
-                    type="button"
-                    onClick={() => setJarSizeGrams(sz)}
-                    className={`btn btn-sm ${jarSizeGrams === sz ? "btn-primary" : "btn-secondary"}`}
-                  >
-                    {sz} g
-                  </button>
-                ))}
+              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center", marginBottom: "0.5rem" }}>
+                <button
+                  type="button"
+                  onClick={() => setJarSizeGrams(500)}
+                  className={`btn ${jarSizeGrams === 500 ? "btn-primary" : "btn-secondary"}`}
+                  style={{ fontWeight: 700, padding: "0.45rem 1rem" }}
+                >
+                  ⭐ 500 g (Standard)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setJarSizeGrams(350)}
+                  className={`btn btn-sm ${jarSizeGrams === 350 ? "btn-primary" : "btn-secondary"}`}
+                >
+                  350 g
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setJarSizeGrams(250)}
+                  className={`btn btn-sm ${jarSizeGrams === 250 ? "btn-primary" : "btn-secondary"}`}
+                >
+                  250 g
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setJarSizeGrams(700)}
+                  className={`btn btn-sm ${jarSizeGrams === 700 ? "btn-primary" : "btn-secondary"}`}
+                >
+                  700 g
+                </button>
                 <button
                   type="button"
                   onClick={() => setJarSizeGrams(-1)}
                   className={`btn btn-sm ${jarSizeGrams === -1 ? "btn-primary" : "btn-secondary"}`}
                 >
-                  Annan storlek...
+                  Annan...
                 </button>
               </div>
               {jarSizeGrams === -1 && (
@@ -379,6 +398,7 @@ export const JarFillingModal: React.FC<JarFillingModalProps> = ({
                   placeholder="Ange burkstorlek i gram, t.ex. 400"
                   value={customJarSize}
                   onChange={(e) => setCustomJarSize(e.target.value)}
+                  style={{ marginTop: "0.3rem" }}
                   required
                 />
               )}

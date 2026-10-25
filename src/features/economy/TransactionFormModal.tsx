@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Transaction } from "../../domain/types";
-import { formatDate, parseSwedishCurrencyToOre, formatOreToSEK } from "../../domain/validation";
+import { formatDate, parseSwedishCurrencyToOre } from "../../domain/validation";
+import { extractUniqueCustomers } from "../../domain/customers";
 import { X, Check } from "lucide-react";
 
 interface TransactionFormModalProps {
   transaction?: Transaction;
+  transactions?: Transaction[];
   onClose: () => void;
   onSave: (data: {
     date: string;
@@ -17,6 +19,7 @@ interface TransactionFormModalProps {
 
 export const TransactionFormModal: React.FC<TransactionFormModalProps> = ({
   transaction,
+  transactions = [],
   onClose,
   onSave,
 }) => {
@@ -33,6 +36,8 @@ export const TransactionFormModal: React.FC<TransactionFormModalProps> = ({
   const [category, setCategory] = useState(transaction?.category || "Utrustning");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const uniqueCounterparties = useMemo(() => extractUniqueCustomers(transactions), [transactions]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -159,11 +164,17 @@ export const TransactionFormModal: React.FC<TransactionFormModalProps> = ({
               <input
                 id="tx-counterparty"
                 type="text"
+                list="tx-counterparty-datalist"
                 className="form-input"
                 placeholder="t.ex. Granngården, Grannen Lisa"
                 value={counterparty}
                 onChange={(e) => setCounterparty(e.target.value)}
               />
+              <datalist id="tx-counterparty-datalist">
+                {uniqueCounterparties.map((c) => (
+                  <option key={c} value={c} />
+                ))}
+              </datalist>
             </div>
 
             <div className="form-group">

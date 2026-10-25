@@ -1,11 +1,11 @@
 import React, { useState, useMemo } from "react";
 import { Harvest, Hive } from "../../domain/types";
 import { formatDate } from "../../domain/validation";
-import { X, Check, Droplet, Calendar, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import { X, Check, Droplet, Calendar, ChevronDown } from "lucide-react";
 
 interface HarvestFormModalProps {
   harvest?: Harvest;
-  hives: Hive[];
+  hives?: Hive[];
   harvests?: Harvest[];
   onClose: () => void;
   onSave: (data: {
@@ -51,7 +51,6 @@ function formatSwedishDateNice(dateStr: string): string {
 
 export const HarvestFormModal: React.FC<HarvestFormModalProps> = ({
   harvest,
-  hives,
   harvests = [],
   onClose,
   onSave,
@@ -61,7 +60,7 @@ export const HarvestFormModal: React.FC<HarvestFormModalProps> = ({
 
   const [batchName, setBatchName] = useState(defaultBatchName);
   const [date, setDate] = useState(harvest?.date || formatDate(new Date()));
-  const [hiveId, setHiveId] = useState(harvest?.hiveId || "");
+  const [hiveId] = useState(harvest?.hiveId || "");
   const [customDragPeriod, setCustomDragPeriod] = useState(
     harvest?.dragPeriod || harvest?.collectedDates || "",
   );
@@ -290,40 +289,24 @@ export const HarvestFormModal: React.FC<HarvestFormModalProps> = ({
               </div>
             </div>
 
-            {/* Slungningsdatum and Kupa */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
-              <div className="form-group">
-                <label className="form-label" htmlFor="harvest-date">
+            {/* Slungningsdatum (hela bigården som standard) */}
+            <div className="form-group">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.25rem" }}>
+                <label className="form-label" htmlFor="harvest-date" style={{ margin: 0, fontWeight: 700 }}>
                   Slungningsdatum *
                 </label>
-                <input
-                  id="harvest-date"
-                  type="date"
-                  className="form-input"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  required
-                />
+                <span style={{ fontSize: "0.75rem", color: "var(--color-primary-base)", fontWeight: 600 }}>
+                  Gemensam skörd för hela bigården
+                </span>
               </div>
-
-              <div className="form-group">
-                <label className="form-label" htmlFor="harvest-hive">
-                  Bigård / Kupa
-                </label>
-                <select
-                  id="harvest-hive"
-                  className="form-select"
-                  value={hiveId}
-                  onChange={(e) => setHiveId(e.target.value)}
-                >
-                  <option value="">Gemensam skörd / hela bigården</option>
-                  {hives.map((h) => (
-                    <option key={h.id} value={h.id}>
-                      {h.name} {h.status !== "active" ? `(${h.status})` : ""}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <input
+                id="harvest-date"
+                type="date"
+                className="form-input"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                required
+              />
             </div>
 
             {/* 1. Auto-calculated Dragperiod */}
