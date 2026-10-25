@@ -9,6 +9,7 @@ import {
   OutboxOp,
   SyncConflict,
   EventType,
+  HoneyPreparationType,
 } from "./domain/types";
 import {
   hiveRepository,
@@ -370,6 +371,7 @@ export default function App() {
     batchName?: string;
     date: string;
     collectedDates?: string;
+    dragPeriod?: string;
     hiveId?: string;
     honeyWeightGrams?: number;
     waterContentPercent?: number;
@@ -395,6 +397,7 @@ export default function App() {
       date: string;
       jarCount: number;
       jarSizeGrams: number;
+      honeyType?: HoneyPreparationType;
       notes?: string;
     },
   ) => {
@@ -852,6 +855,7 @@ export default function App() {
         <HarvestFormModal
           harvest={editingHarvest}
           hives={hives}
+          harvests={harvests}
           onClose={() => setShowHarvestModal(false)}
           onSave={handleSaveHarvest}
         />
