@@ -11,13 +11,13 @@
   - **2) Tappning på burk**: Registrera burkfyllning (antal burkar och storlek) vid flera tillfällen mot batchen, även parallellt från flera partier, med automatisk beräkning av kvarvarande honungsmängd i mognadskärl.
 - **Uppgiftshantering**: Håll koll på att-göra för enskilda kupor eller allmänna sysslor i bigården.
 - **Ekonomi & Kassa**: Intäkter (honungsförsäljning) och utgifter (ramar, foder, redskap) med import från svenskt bank-CSV.
-- **Lokal lagring & Synk**: Data sparas lokalt i IndexedDB (fungerar helt utan internet). Valfri molnsynk mot Google Sheets via OAuth eller Firebase Firestore.
+- **Lokal lagring & Synk**: Data sparas lokalt i IndexedDB (fungerar helt utan internet). Valfri molnsynk till Google Sheets via Google-inloggning med Firebase Authentication.
 
 ---
 
 ## Snabbstart lokalt
 
-Projektet använder **pnpm**:
+Projektet kräver **Node.js 24 eller senare** och använder **pnpm**:
 
 ```bash
 # Installera beroenden
@@ -51,10 +51,17 @@ git push -u origin main
 2. Under **Build and deployment > Source**, välj **GitHub Actions**.
 3. Arbetsflödet `.github/workflows/deploy.yml` bygger automatiskt applikationen med `pnpm` och distribuerar till GitHub Pages vid varje push till `main`.
 
-### 3. Google OAuth & Firebase Secrets (om du vill ha molnsynk)
-Om du använder Google Sheets-synk eller Firebase på din egen Pages-domän (`https://<användare>.github.io/bifogat/`):
-- Lägg till din GitHub Pages-URL under **Authorized JavaScript origins** i Google Cloud Console för ditt OAuth Client ID.
-- Om du använder GitHub Secrets, lägg till `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN` etc. under **Settings > Secrets and variables > Actions**.
+### 3. Firebase- och Google-konfiguration (om du vill ha molnsynk)
+Firebase används för Google-inloggning, inte för att lagra appdata: molnsynken använder Google Sheets. För att aktivera den på din Pages-domän (`https://<användare>.github.io/bifogat/`):
+- Aktivera Google som inloggningsleverantör i Firebase Authentication och lägg till din Pages-domän under **Authorized domains**.
+- Aktivera Google Sheets API i det kopplade Google Cloud-projektet.
+- Lägg till följande Actions-secrets under **Settings > Secrets and variables > Actions**. Arbetsflödet använder dem när klienten byggs; utan dem fungerar appens lokala lagring fortfarande, men Google-inloggning och molnsynk gör det inte.
+  - `VITE_FIREBASE_API_KEY`
+  - `VITE_FIREBASE_AUTH_DOMAIN`
+  - `VITE_FIREBASE_PROJECT_ID`
+  - `VITE_FIREBASE_STORAGE_BUCKET`
+  - `VITE_FIREBASE_MESSAGING_SENDER_ID`
+  - `VITE_FIREBASE_APP_ID`
 
 ---
 
