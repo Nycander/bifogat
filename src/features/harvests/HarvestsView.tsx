@@ -10,10 +10,8 @@ import {
   ChevronDown,
   ChevronUp,
   BarChart2,
-  Layers,
-  Award,
-  Sparkles,
   TrendingUp,
+  Clock,
 } from "lucide-react";
 
 interface HarvestsViewProps {
@@ -45,74 +43,64 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
     setExpandedBatchIds((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const getHiveName = (hiveId?: string) => {
-    if (!hiveId) return "Gemensam / hela bigården";
-    const hive = hives.find((h) => h.id === hiveId);
-    return hive ? hive.name : "Okänd kupa";
-  };
+  const activeHivesCount = useMemo(() => {
+    const active = hives.filter((h) => h.status === "active").length;
+    return active > 0 ? active : hives.length > 0 ? hives.length : 1;
+  }, [hives]);
 
-  // Comprehensive harvest statistics calculation
+  // Bigårdens samlade skördestatistik över tid
   const stats = useMemo(() => {
     const yearsSet = new Set<string>();
     let totalHarvestGrams = 0;
     let totalJarredGrams = 0;
     let totalJarsCount = 0;
+    let count500gJars = 0;
+    let otherJarsCount = 0;
+
     let nyslungadGrams = 0;
     let nyslungadJars = 0;
     let rordGrams = 0;
     let rordJars = 0;
 
-    const jarSizesMap: Record<number, number> = {};
     const yearStatsMap: Record<
       string,
-      { totalGrams: number; jarredGrams: number; jars: number; batchesCount: number }
-    > = {};
-    const hiveStatsMap: Record<
-      string,
       {
-        hiveId: string;
-        hiveName: string;
         totalGrams: number;
-        jarCount: number;
-        batchesCount: number;
-        years: Record<string, number>;
+        jarredGrams: number;
+        jars: number;
+        jars500g: number;
+        batches: Array<{
+          id: string;
+          name: string;
+          date: string;
+          dragPeriod?: string;
+          grams: number;
+          jars: number;
+        }>;
       }
     > = {};
-
-    // Initialize all known hives
-    for (const h of hives) {
-      hiveStatsMap[h.id] = {
-        hiveId: h.id,
-        hiveName: h.name,
-        totalGrams: 0,
-        jarCount: 0,
-        batchesCount: 0,
-        years: {},
-      };
-    }
-    // Apiary common
-    hiveStatsMap["common"] = {
-      hiveId: "common",
-      hiveName: "Gemensam / hela bigården",
-      totalGrams: 0,
-      jarCount: 0,
-      batchesCount: 0,
-      years: {},
-    };
 
     for (const h of harvests) {
       const year = h.date.substring(0, 4) || "Okänt år";
       yearsSet.add(year);
 
-      // Calculate jarred grams for this harvest
       let batchJarredGrams = 0;
       let batchJars = 0;
+      let batch500gJars = 0;
 
       if (h.fillings && h.fillings.length > 0) {
         for (const f of h.fillings) {
-          const fGrams = (f.jarCount || 0) * (f.jarSizeGrams || 500);
+          const sz = f.jarSizeGrams || 500;
+          const fGrams = (f.jarCount || 0) * sz;
           batchJarredGrams += fGrams;
           batchJars += f.jarCount || 0;
+
+          if (sz === 500) {
+            batch500gJars += f.jarCount || 0;
+            count500gJars += f.jarCount || 0;
+          } else {
+            otherJarsCount += f.jarCount || 0;
+          }
 
           // Track honey type
           if (f.honeyType === "nyslungad") {
@@ -122,18 +110,20 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
             rordGrams += fGrams;
             rordJars += f.jarCount || 0;
           }
-
-          // Track jar sizes
-          const sz = f.jarSizeGrams || 500;
-          jarSizesMap[sz] = (jarSizesMap[sz] || 0) + (f.jarCount || 0);
         }
-      } else if (h.jarCount !== undefined && h.jarSizeGrams !== undefined) {
-        const legacyGrams = h.jarCount * h.jarSizeGrams;
+      } else if (h.jarCount !== undefined) {
+        const sz = h.jarSizeGrams || 500;
+        const legacyGrams = h.jarCount * sz;
         batchJarredGrams += legacyGrams;
         batchJars += h.jarCount;
+        if (sz === 500) {
+          batch500gJars += h.jarCount;
+          count500gJars += h.jarCount;
+        } else {
+          otherJarsCount += h.jarCount;
+        }
         rordGrams += legacyGrams;
         rordJars += h.jarCount;
-        jarSizesMap[h.jarSizeGrams] = (jarSizesMap[h.jarSizeGrams] || 0) + h.jarCount;
       }
 
       // Effective yield: use scale weight if known, otherwise sum of jar fillings!
@@ -144,55 +134,59 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
       totalJarredGrams += batchJarredGrams;
       totalJarsCount += batchJars;
 
-      // Year stats
       if (!yearStatsMap[year]) {
-        yearStatsMap[year] = { totalGrams: 0, jarredGrams: 0, jars: 0, batchesCount: 0 };
+        yearStatsMap[year] = {
+          totalGrams: 0,
+          jarredGrams: 0,
+          jars: 0,
+          jars500g: 0,
+          batches: [],
+        };
       }
+
       yearStatsMap[year].totalGrams += effectiveBatchGrams;
       yearStatsMap[year].jarredGrams += batchJarredGrams;
       yearStatsMap[year].jars += batchJars;
-      yearStatsMap[year].batchesCount += 1;
-
-      // Hive stats
-      const targetHiveKey = h.hiveId && hiveStatsMap[h.hiveId] ? h.hiveId : "common";
-      const targetHive = hiveStatsMap[targetHiveKey];
-      if (targetHive) {
-        targetHive.totalGrams += effectiveBatchGrams;
-        targetHive.jarCount += batchJars;
-        targetHive.batchesCount += 1;
-        targetHive.years[year] = (targetHive.years[year] || 0) + effectiveBatchGrams;
-      }
+      yearStatsMap[year].jars500g += batch500gJars;
+      yearStatsMap[year].batches.push({
+        id: h.id,
+        name: h.batchName || `Skörd ${h.date}`,
+        date: h.date,
+        dragPeriod: h.dragPeriod || h.collectedDates,
+        grams: effectiveBatchGrams,
+        jars: batchJars,
+      });
     }
 
     const sortedYears = Array.from(yearsSet).sort((a, b) => b.localeCompare(a));
-    const hiveList = Object.values(hiveStatsMap)
-      .filter((h) => h.totalGrams > 0 || h.hiveId !== "common")
-      .sort((a, b) => b.totalGrams - a.totalGrams);
 
-    // Best producing hive (excluding common)
-    const topHive = hiveList.find((h) => h.hiveId !== "common" && h.totalGrams > 0) || null;
-
-    // Average per active hive
-    const producingHivesCount = hiveList.filter((h) => h.hiveId !== "common" && h.totalGrams > 0).length;
-    const avgGramsPerHive = producingHivesCount > 0 ? totalHarvestGrams / producingHivesCount : 0;
+    // Best year
+    let bestYear = "";
+    let bestYearGrams = 0;
+    for (const [yr, yData] of Object.entries(yearStatsMap)) {
+      if (yData.totalGrams > bestYearGrams) {
+        bestYearGrams = yData.totalGrams;
+        bestYear = yr;
+      }
+    }
 
     return {
       years: sortedYears,
       totalHarvestKg: totalHarvestGrams / 1000,
       totalJarredKg: totalJarredGrams / 1000,
       totalJarsCount,
+      count500gJars,
+      otherJarsCount,
       nyslungadKg: nyslungadGrams / 1000,
       nyslungadJars,
       rordKg: rordGrams / 1000,
       rordJars,
-      jarSizesMap,
       yearStatsMap,
-      hiveList,
-      topHive,
-      producingHivesCount,
-      avgKgPerHive: avgGramsPerHive / 1000,
+      bestYear,
+      bestYearKg: bestYearGrams / 1000,
+      avgKgPerHive: activeHivesCount > 0 ? totalHarvestGrams / 1000 / activeHivesCount : 0,
     };
-  }, [harvests, hives]);
+  }, [harvests, activeHivesCount]);
 
   // Filtered harvest batches
   const filteredHarvests = useMemo(() => {
@@ -216,7 +210,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
         <div>
           <h1>Skörd & honungsproduktion</h1>
           <p style={{ fontSize: "0.875rem", color: "var(--color-text-muted)" }}>
-            Slungning, automatisk dragperiod, nyslungad/rörd honung och kupstatistik
+            Bigårdens slungningar, automatisk dragperiod, nyslungad/rörd honung och årsstatistik
           </p>
         </div>
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
@@ -233,7 +227,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
               style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
             >
               <PackageCheck size={16} color="var(--color-primary-base)" />
-              <span>Tappa burkar</span>
+              <span>Tappa burkar (500g)</span>
             </button>
           )}
           <button className="btn btn-primary btn-sm" onClick={onOpenCreateHarvest}>
@@ -262,13 +256,13 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
         >
           <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
             <BarChart2 size={15} />
-            <span>Skördestatistik & kupjämförelse</span>
+            <span>Bigårdens skördestatistik & årsutveckling</span>
           </span>
         </button>
       </div>
 
       {/* =========================================================================
-          TAB 1: SKÖRDESTATISTIK & KUPJÄMFÖRELSE
+          TAB 1: BIGÅRDENS SKÖRDESTATISTIK & ÅRSUTVECKLING
           ========================================================================= */}
       {activeTab === "statistics" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
@@ -280,17 +274,17 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                 {stats.totalHarvestKg.toFixed(1).replace(".", ",")} kg
               </span>
               <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
-                {stats.totalJarsCount} burkar upptappade
+                {stats.totalJarsCount} st burkar ({stats.count500gJars} st 500g)
               </span>
             </div>
 
             <div className="stat-card">
-              <span className="stat-label">Snitt per kupa</span>
+              <span className="stat-label">Snitt per bisamhälle</span>
               <span className="stat-value" style={{ color: "var(--color-primary-base)" }}>
                 {stats.avgKgPerHive > 0 ? `${stats.avgKgPerHive.toFixed(1).replace(".", ",")} kg` : "—"}
               </span>
               <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
-                {stats.producingHivesCount} producerande kupor
+                Baserat på {activeHivesCount} aktiva kupor i bigården
               </span>
             </div>
 
@@ -300,7 +294,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                 {stats.nyslungadKg.toFixed(1).replace(".", ",")} kg
               </span>
               <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
-                {stats.nyslungadJars} st burkar ({stats.totalJarredKg > 0 ? Math.round((stats.nyslungadKg / stats.totalJarredKg) * 100) : 0}%)
+                {stats.nyslungadJars} burkar ({stats.totalJarredKg > 0 ? Math.round((stats.nyslungadKg / stats.totalJarredKg) * 100) : 0}%)
               </span>
             </div>
 
@@ -310,46 +304,48 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                 {stats.rordKg.toFixed(1).replace(".", ",")} kg
               </span>
               <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
-                {stats.rordJars} st burkar ({stats.totalJarredKg > 0 ? Math.round((stats.rordKg / stats.totalJarredKg) * 100) : 0}%)
+                {stats.rordJars} burkar ({stats.totalJarredKg > 0 ? Math.round((stats.rordKg / stats.totalJarredKg) * 100) : 0}%)
               </span>
             </div>
           </div>
 
-          {/* 1. Skörd per kupa över tid (HIVE COMPARISON) */}
+          {/* 1. Årsjämförelse & Historik (APIARY OVER TIME) */}
           <div className="card">
             <div className="card-header">
               <h3 className="card-title">
-                <Award size={18} color="var(--color-primary-base)" />
-                <span>Skörd per kupa över tid</span>
+                <TrendingUp size={18} color="var(--color-primary-base)" />
+                <span>Bigårdens skörd över tid (Årsjämförelse)</span>
               </h3>
-              {stats.topHive && (
+              {stats.bestYear && (
                 <span className="badge badge-success" style={{ fontSize: "0.75rem" }}>
-                  🏆 Toppkupa: {stats.topHive.hiveName} ({(stats.topHive.totalGrams / 1000).toFixed(1).replace(".", ",")} kg)
+                  🏆 Rekordår: {stats.bestYear} ({stats.bestYearKg.toFixed(1).replace(".", ",")} kg)
                 </span>
               )}
             </div>
 
             <p style={{ fontSize: "0.825rem", color: "var(--color-text-muted)", marginBottom: "1rem" }}>
-              Jämför honungsproduktion mellan kupor och se vilka kolonier som ger bäst skörd.
+              Total skördemängd och genomsnittlig avkastning per bisamhälle för hela bigården.
             </p>
 
-            {stats.hiveList.length === 0 || stats.totalHarvestKg === 0 ? (
+            {stats.years.length === 0 ? (
               <div style={{ textAlign: "center", padding: "2rem", color: "var(--color-text-muted)" }}>
                 Inga skördar registrerade än. Klicka på "Ny skördedag" för att lägga till din första skörd.
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
-                {stats.hiveList.map((hItem, idx) => {
-                  const kg = hItem.totalGrams / 1000;
-                  const pct = stats.totalHarvestKg > 0 ? Math.round((kg / stats.totalHarvestKg) * 100) : 0;
-                  const isTop = stats.topHive?.hiveId === hItem.hiveId && kg > 0;
+                {stats.years.map((year) => {
+                  const y = stats.yearStatsMap[year];
+                  const yKg = y ? y.totalGrams / 1000 : 0;
+                  const pct = stats.bestYearKg > 0 ? Math.round((yKg / stats.bestYearKg) * 100) : 0;
+                  const isRecord = stats.bestYear === year && yKg > 0;
+                  const avgPerHiveYear = activeHivesCount > 0 ? yKg / activeHivesCount : 0;
 
                   return (
                     <div
-                      key={hItem.hiveId}
+                      key={year}
                       style={{
-                        background: isTop ? "var(--color-primary-surface)" : "var(--color-surface-inset)",
-                        border: `1px solid ${isTop ? "var(--color-primary-border)" : "var(--color-border-subtle)"}`,
+                        background: isRecord ? "var(--color-primary-surface)" : "var(--color-surface-inset)",
+                        border: `1px solid ${isRecord ? "var(--color-primary-border)" : "var(--color-border-subtle)"}`,
                         borderRadius: "10px",
                         padding: "0.85rem",
                       }}
@@ -363,74 +359,78 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                         }}
                       >
                         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                          <span style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--color-text-primary)" }}>
-                            {hItem.hiveName}
+                          <span style={{ fontWeight: 800, fontSize: "1.05rem", color: "var(--color-text-primary)" }}>
+                            Säsong {year}
                           </span>
-                          {isTop && (
+                          {isRecord && (
                             <span className="badge badge-warning" style={{ fontSize: "0.7rem", padding: "1px 6px" }}>
-                              Bästa skörd
+                              Bästa år
                             </span>
                           )}
                         </div>
                         <div style={{ textAlign: "right" }}>
-                          <strong style={{ fontSize: "1.05rem", color: "var(--color-accent-dark)" }}>
-                            {kg.toFixed(1).replace(".", ",")} kg
+                          <strong style={{ fontSize: "1.1rem", color: "var(--color-accent-dark)" }}>
+                            {yKg.toFixed(1).replace(".", ",")} kg
                           </strong>{" "}
                           <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
-                            ({hItem.jarCount} burkar · {pct}%)
+                            ({y ? y.jars : 0} burkar · {avgPerHiveYear.toFixed(1).replace(".", ",")} kg/kupa)
                           </span>
                         </div>
                       </div>
 
-                      {/* Proportional visual bar */}
+                      {/* Visual Progress Bar */}
                       <div
                         style={{
-                          height: "8px",
+                          height: "9px",
                           width: "100%",
                           background: "var(--color-border-default)",
                           borderRadius: "4px",
                           overflow: "hidden",
-                          marginBottom: "0.5rem",
+                          marginBottom: "0.6rem",
                         }}
                       >
                         <div
                           style={{
                             height: "100%",
                             width: `${Math.min(100, pct)}%`,
-                            background: isTop ? "var(--color-honey-base)" : "var(--color-primary-base)",
+                            background: isRecord ? "var(--color-honey-base)" : "var(--color-primary-base)",
                             borderRadius: "4px",
                             transition: "width 0.4s ease",
                           }}
                         />
                       </div>
 
-                      {/* Annual breakdown for this hive */}
-                      {Object.keys(hItem.years).length > 0 && (
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "0.6rem",
-                            fontSize: "0.75rem",
-                            color: "var(--color-text-secondary)",
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          <span style={{ fontWeight: 600 }}>Årsfördelning:</span>
-                          {Object.entries(hItem.years)
-                            .sort(([a], [b]) => b.localeCompare(a))
-                            .map(([yr, grams]) => (
-                              <span
-                                key={yr}
+                      {/* Batches in this year */}
+                      {y?.batches && y.batches.length > 0 && (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", marginTop: "0.4rem" }}>
+                          <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-text-secondary)" }}>
+                            Slungningar under {year}:
+                          </div>
+                          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                            {y.batches.map((b) => (
+                              <div
+                                key={b.id}
                                 style={{
                                   background: "var(--color-surface-bg)",
-                                  padding: "1px 6px",
-                                  borderRadius: "4px",
                                   border: "1px solid var(--color-border-subtle)",
+                                  borderRadius: "6px",
+                                  padding: "0.3rem 0.6rem",
+                                  fontSize: "0.75rem",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "0.4rem",
                                 }}
                               >
-                                {yr}: <strong>{(grams / 1000).toFixed(1).replace(".", ",")} kg</strong>
-                              </span>
+                                <span style={{ fontWeight: 600 }}>{b.name}:</span>
+                                <strong>{(b.grams / 1000).toFixed(1).replace(".", ",")} kg</strong>
+                                {b.dragPeriod && (
+                                  <span style={{ color: "var(--color-text-muted)", fontSize: "0.7rem" }}>
+                                    ({b.dragPeriod})
+                                  </span>
+                                )}
+                              </div>
                             ))}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -440,51 +440,9 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
             )}
           </div>
 
-          {/* 2. Årlig utveckling & Beredningsform */}
+          {/* 2. Honungstyp & Standardförpackning (500g) */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1rem" }}>
-            {/* Årlig utveckling */}
-            <div className="card">
-              <div className="card-header">
-                <h3 className="card-title">
-                  <TrendingUp size={18} color="var(--color-primary-base)" />
-                  <span>Årsutveckling</span>
-                </h3>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                {stats.years.map((year) => {
-                  const y = stats.yearStatsMap[year];
-                  const yKg = y ? y.totalGrams / 1000 : 0;
-                  return (
-                    <div
-                      key={year}
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        padding: "0.6rem 0.75rem",
-                        background: "var(--color-surface-inset)",
-                        borderRadius: "8px",
-                        border: "1px solid var(--color-border-subtle)",
-                      }}
-                    >
-                      <div>
-                        <strong style={{ fontSize: "1rem" }}>{year}</strong>
-                        <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
-                          {y?.batchesCount || 0} slungningar · {y?.jars || 0} burkar
-                        </div>
-                      </div>
-                      <div style={{ textAlign: "right" }}>
-                        <strong style={{ fontSize: "1.1rem", color: "var(--color-accent-dark)" }}>
-                          {yKg.toFixed(1).replace(".", ",")} kg
-                        </strong>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Beredning: Nyslungad vs Rörd */}
+            {/* Nyslungad vs Rörd honung */}
             <div className="card">
               <div className="card-header">
                 <h3 className="card-title">
@@ -495,7 +453,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
 
               <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
                 <p style={{ fontSize: "0.825rem", color: "var(--color-text-muted)" }}>
-                  Fördelning av upptappad honung mellan flytande nyslungad och mognad rörd honung.
+                  Fördelning mellan flytande nyslungad (tappad inom 30 dagar) och rörd/ympad mognad honung.
                 </p>
 
                 {/* Split bar */}
@@ -530,7 +488,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.6rem" }}>
                   <div
                     style={{
-                      padding: "0.6rem",
+                      padding: "0.65rem",
                       background: "var(--color-honey-surface)",
                       borderRadius: "8px",
                       border: "1px solid var(--color-honey-border)",
@@ -539,7 +497,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                     <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-honey-text)" }}>
                       🍯 Nyslungad
                     </div>
-                    <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--color-honey-text)" }}>
+                    <div style={{ fontSize: "1.15rem", fontWeight: 800, color: "var(--color-honey-text)" }}>
                       {stats.nyslungadKg.toFixed(1).replace(".", ",")} kg
                     </div>
                     <div style={{ fontSize: "0.75rem", color: "var(--color-honey-text)", opacity: 0.85 }}>
@@ -549,7 +507,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
 
                   <div
                     style={{
-                      padding: "0.6rem",
+                      padding: "0.65rem",
                       background: "var(--color-success-surface)",
                       borderRadius: "8px",
                       border: "1px solid var(--color-success-border)",
@@ -558,7 +516,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                     <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-success-text)" }}>
                       🥄 Rörd honung
                     </div>
-                    <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--color-success-text)" }}>
+                    <div style={{ fontSize: "1.15rem", fontWeight: 800, color: "var(--color-success-text)" }}>
                       {stats.rordKg.toFixed(1).replace(".", ",")} kg
                     </div>
                     <div style={{ fontSize: "0.75rem", color: "var(--color-success-text)", opacity: 0.85 }}>
@@ -566,26 +524,65 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
 
-                {/* Jar sizes summary */}
-                {Object.keys(stats.jarSizesMap).length > 0 && (
-                  <div style={{ marginTop: "0.5rem" }}>
-                    <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-text-secondary)", marginBottom: "0.3rem" }}>
-                      Mest använda burkstorlekar:
+            {/* Standardförpackning: 500g burkar */}
+            <div className="card">
+              <div className="card-header">
+                <h3 className="card-title">
+                  <PackageCheck size={18} color="var(--color-primary-base)" />
+                  <span>Burkstorlekar & Lager</span>
+                </h3>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                <p style={{ fontSize: "0.825rem", color: "var(--color-text-muted)" }}>
+                  500g är standardburken i svensk biodling.
+                </p>
+
+                <div
+                  style={{
+                    padding: "0.75rem",
+                    background: "var(--color-surface-inset)",
+                    borderRadius: "8px",
+                    border: "1px solid var(--color-border-subtle)",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: "0.95rem" }}>⭐ 500 g standardburk</div>
+                    <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
+                      {stats.totalJarsCount > 0 ? Math.round((stats.count500gJars / stats.totalJarsCount) * 100) : 100}% av all upptappning
                     </div>
-                    <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
-                      {Object.entries(stats.jarSizesMap)
-                        .sort(([, a], [, b]) => b - a)
-                        .map(([sz, count]) => (
-                          <span
-                            key={sz}
-                            className="badge badge-neutral"
-                            style={{ fontSize: "0.75rem", padding: "2px 8px" }}
-                          >
-                            {sz}g: <strong>{count} burkar</strong>
-                          </span>
-                        ))}
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "var(--color-accent-dark)" }}>
+                      {stats.count500gJars} st
                     </div>
+                    <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
+                      {(stats.count500gJars * 0.5).toFixed(1).replace(".", ",")} kg
+                    </div>
+                  </div>
+                </div>
+
+                {stats.otherJarsCount > 0 && (
+                  <div
+                    style={{
+                      padding: "0.5rem 0.75rem",
+                      background: "var(--color-surface-bg)",
+                      borderRadius: "6px",
+                      border: "1px solid var(--color-border-subtle)",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      fontSize: "0.8rem",
+                      color: "var(--color-text-secondary)",
+                    }}
+                  >
+                    <span>Övriga burkstorlekar:</span>
+                    <strong>{stats.otherJarsCount} st</strong>
                   </div>
                 )}
               </div>
@@ -636,7 +633,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
               <h3 style={{ marginBottom: "0.5rem" }}>Inga skördepartier registrerade än</h3>
               <p style={{ fontSize: "0.875rem", maxWidth: "420px", margin: "0 auto 1.5rem" }}>
                 Registrera din första slungningsdag. Dragperiod beräknas automatiskt och du kan tappa på
-                burk direkt eller löpande.
+                500g-burk direkt eller löpande.
               </p>
               <button className="btn btn-primary" onClick={onOpenCreateHarvest}>
                 <Plus size={16} />
@@ -647,18 +644,21 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               {filteredHarvests.map((harvest) => {
                 const isExpanded = expandedBatchIds[harvest.id] ?? false;
-                const hiveName = getHiveName(harvest.hiveId);
 
                 // Calculate jarred totals
                 let jarredGrams = 0;
                 let totalJars = 0;
+                let jars500g = 0;
                 let nyslungadBatchJars = 0;
                 let rordBatchJars = 0;
 
                 if (harvest.fillings && harvest.fillings.length > 0) {
                   for (const f of harvest.fillings) {
-                    jarredGrams += (f.jarCount || 0) * (f.jarSizeGrams || 500);
+                    const sz = f.jarSizeGrams || 500;
+                    jarredGrams += (f.jarCount || 0) * sz;
                     totalJars += f.jarCount || 0;
+                    if (sz === 500) jars500g += f.jarCount || 0;
+
                     if (f.honeyType === "nyslungad") {
                       nyslungadBatchJars += f.jarCount || 0;
                     } else {
@@ -667,7 +667,9 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                   }
                 } else if (harvest.jarCount !== undefined) {
                   totalJars = harvest.jarCount;
-                  jarredGrams = harvest.jarCount * (harvest.jarSizeGrams || 500);
+                  const sz = harvest.jarSizeGrams || 500;
+                  jarredGrams = harvest.jarCount * sz;
+                  if (sz === 500) jars500g = harvest.jarCount;
                   rordBatchJars = harvest.jarCount;
                 }
 
@@ -712,7 +714,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                           >
                             {harvest.batchName || `Skörd ${harvest.date}`}
                           </h3>
-                          <span className="badge badge-event-harvest">{hiveName}</span>
+                          <span className="badge badge-event-harvest">Hela bigården</span>
                           {harvest.waterContentPercent !== undefined && (
                             <span
                               style={{
@@ -844,7 +846,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                             <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--color-success-text)" }}>
                               {jarredKg.toFixed(1).replace(".", ",")} kg{" "}
                               <span style={{ fontSize: "0.8rem", fontWeight: 500, color: "var(--color-text-secondary)" }}>
-                                ({totalJars} st)
+                                ({totalJars} st, {jars500g} st 500g)
                               </span>
                             </div>
                           </div>
@@ -873,7 +875,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                             <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--color-success-text)" }}>
                               {jarredKg.toFixed(1).replace(".", ",")} kg{" "}
                               <span style={{ fontSize: "0.8rem", fontWeight: 500, color: "var(--color-text-secondary)" }}>
-                                ({totalJars} burkar)
+                                ({totalJars} burkar, varav {jars500g} st 500g)
                               </span>
                             </div>
                           </div>
@@ -972,7 +974,8 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                             }}
                           >
                             {harvest.fillings.map((filling) => {
-                              const fillingKg = ((filling.jarCount * filling.jarSizeGrams) / 1000)
+                              const sz = filling.jarSizeGrams || 500;
+                              const fillingKg = ((filling.jarCount * sz) / 1000)
                                 .toFixed(1)
                                 .replace(".", ",");
                               const isNyslungad = filling.honeyType === "nyslungad";
@@ -996,7 +999,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                                       {filling.date}:
                                     </span>
                                     <span>
-                                      {filling.jarCount} st × {filling.jarSizeGrams} g ={" "}
+                                      {filling.jarCount} st × {sz} g ={" "}
                                       <strong>{fillingKg} kg</strong>
                                     </span>
                                     <span

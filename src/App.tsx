@@ -876,6 +876,7 @@ export default function App() {
       {showHoneySaleModal && (
         <HoneySaleModal
           harvests={harvests}
+          transactions={transactions}
           onClose={() => setShowHoneySaleModal(false)}
           onSaveSale={handleSaveHoneySale}
         />
@@ -884,6 +885,7 @@ export default function App() {
       {showTxModal && (
         <TransactionFormModal
           transaction={editingTx}
+          transactions={transactions}
           onClose={() => setShowTxModal(false)}
           onSave={handleSaveTransaction}
         />
