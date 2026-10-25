@@ -44,11 +44,14 @@ export interface Task {
   completedAt?: string; // ISO 8601
 }
 
+export type HoneyPreparationType = "nyslungad" | "rörd";
+
 export interface JarFilling {
   id: string; // UUID
   date: string; // YYYY-MM-DD (filling date)
   jarCount: number; // integer count of jars
   jarSizeGrams: number; // e.g. 500, 350, 250, 700
+  honeyType?: HoneyPreparationType; // "nyslungad" (flytande) eller "rörd" (krämig/ympad)
   notes?: string;
   createdAt: string; // ISO 8601
 }
@@ -58,6 +61,7 @@ export interface Harvest {
   batchName?: string; // e.g. "Vårskörd 2026", "Sensommarskörd 2026", "Parti 1"
   date: string; // YYYY-MM-DD (slungningsdatum / harvest date)
   collectedDates?: string; // e.g. "2026-06-08 – 2026-06-10" (dates frames were pulled)
+  dragPeriod?: string; // e.g. "2026-05-01 – 2026-06-15 (45 dagar)"
   hiveId?: string; // optional hive reference (blank = whole apiary)
   waterContentPercent?: number; // e.g. 17.5 (%) measured with refractometer
   honeyWeightGrams?: number; // integer grams extracted, undefined if unknown

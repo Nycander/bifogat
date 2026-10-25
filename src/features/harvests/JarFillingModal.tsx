@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Harvest } from "../../domain/types";
+import React, { useState, useEffect } from "react";
+import { Harvest, HoneyPreparationType } from "../../domain/types";
 import { formatDate } from "../../domain/validation";
 import { X, Check, Droplet, PackageCheck } from "lucide-react";
 
@@ -13,6 +13,7 @@ interface JarFillingModalProps {
       date: string;
       jarCount: number;
       jarSizeGrams: number;
+      honeyType?: HoneyPreparationType;
       notes?: string;
     },
   ) => Promise<void>;
@@ -31,11 +32,27 @@ export const JarFillingModal: React.FC<JarFillingModalProps> = ({
   const [jarCount, setJarCount] = useState("24");
   const [jarSizeGrams, setJarSizeGrams] = useState(500);
   const [customJarSize, setCustomJarSize] = useState("");
+  const [honeyType, setHoneyType] = useState<HoneyPreparationType>("rörd");
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const selectedHarvest = harvests.find((h) => h.id === selectedHarvestId);
+
+  // Auto-detect default honey type based on harvest slungningsdatum:
+  // If tapped within 3 days of slungning, default to "nyslungad", else "rörd"
+  useEffect(() => {
+    if (selectedHarvest?.date && date) {
+      const harvestTime = new Date(selectedHarvest.date).getTime();
+      const fillingTime = new Date(date).getTime();
+      const diffDays = Math.round((fillingTime - harvestTime) / (1000 * 60 * 60 * 24));
+      if (diffDays <= 3 && diffDays >= 0) {
+        setHoneyType("nyslungad");
+      } else {
+        setHoneyType("rörd");
+      }
+    }
+  }, [selectedHarvest?.date, date]);
 
   // Calculate current jarred and remaining for selected batch
   const effectiveJarSize = jarSizeGrams === -1 ? parseInt(customJarSize, 10) || 500 : jarSizeGrams;
@@ -43,18 +60,24 @@ export const JarFillingModal: React.FC<JarFillingModalProps> = ({
   const thisFillingGrams = count * effectiveJarSize;
 
   let previousJarredGrams = 0;
+  let previousJarCount = 0;
   if (selectedHarvest?.fillings && selectedHarvest.fillings.length > 0) {
-    previousJarredGrams = selectedHarvest.fillings.reduce(
-      (sum, f) => sum + f.jarCount * f.jarSizeGrams,
-      0,
-    );
+    for (const f of selectedHarvest.fillings) {
+      previousJarredGrams += (f.jarCount || 0) * (f.jarSizeGrams || 500);
+      previousJarCount += f.jarCount || 0;
+    }
   } else if (selectedHarvest?.jarCount && selectedHarvest?.jarSizeGrams) {
     previousJarredGrams = selectedHarvest.jarCount * selectedHarvest.jarSizeGrams;
+    previousJarCount = selectedHarvest.jarCount;
   }
 
+  const hasScaleEstimate = Boolean(selectedHarvest?.honeyWeightGrams && selectedHarvest.honeyWeightGrams > 0);
   const totalExtractedGrams = selectedHarvest?.honeyWeightGrams || 0;
   const remainingBeforeGrams = Math.max(0, totalExtractedGrams - previousJarredGrams);
   const remainingAfterGrams = Math.max(0, remainingBeforeGrams - thisFillingGrams);
+
+  const newTotalJarredGrams = previousJarredGrams + thisFillingGrams;
+  const newTotalJarCount = previousJarCount + count;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,6 +105,7 @@ export const JarFillingModal: React.FC<JarFillingModalProps> = ({
         date,
         jarCount: count,
         jarSizeGrams: effectiveJarSize,
+        honeyType,
         notes: notes.trim() || undefined,
       });
       onClose();
@@ -98,201 +122,294 @@ export const JarFillingModal: React.FC<JarFillingModalProps> = ({
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <PackageCheck size={20} color="var(--color-primary)" />
-            <h2 className="modal-title">Tappa honung på burk</h2>
+            <div
+              style={{
+                width: "32px",
+                height: "32px",
+                borderRadius: "8px",
+                background: "var(--color-honey-surface)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--color-honey-base)",
+              }}
+            >
+              <PackageCheck size={18} />
+            </div>
+            <div>
+              <h2 className="modal-title" style={{ fontSize: "1.15rem", margin: 0 }}>
+                Tappa honung på burk
+              </h2>
+              <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
+                Registrera antal burkar och honungstyp (nyslungad eller rörd)
+              </span>
+            </div>
           </div>
           <button className="modal-close-btn" onClick={onClose} aria-label="Stäng">
             <X size={20} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          {error && (
-            <div className="form-error" style={{ marginBottom: "1rem" }}>
-              {error}
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden" }}
+        >
+          <div className="modal-scroll-body">
+            {error && (
+              <div className="form-error" style={{ marginBottom: "1rem" }}>
+                {error}
+              </div>
+            )}
+
+            {/* Select batch */}
+            <div className="form-group">
+              <label className="form-label" htmlFor="filling-harvest">
+                Skördeparti / Batch att tappa från *
+              </label>
+              <select
+                id="filling-harvest"
+                className="form-select"
+                value={selectedHarvestId}
+                onChange={(e) => setSelectedHarvestId(e.target.value)}
+                required
+              >
+                {harvests.map((h) => {
+                  const title =
+                    h.batchName ||
+                    `Skörd ${h.date} (${h.honeyWeightGrams ? (h.honeyWeightGrams / 1000).toFixed(1) + " kg" : "löpande tappning"})`;
+                  return (
+                    <option key={h.id} value={h.id}>
+                      {title}
+                    </option>
+                  );
+                })}
+              </select>
             </div>
-          )}
 
-          {/* Select batch */}
-          <div className="form-group">
-            <label className="form-label" htmlFor="filling-harvest">
-              Skördeparti / Batch att tappa från *
-            </label>
-            <select
-              id="filling-harvest"
-              className="form-select"
-              value={selectedHarvestId}
-              onChange={(e) => setSelectedHarvestId(e.target.value)}
-              required
-            >
-              {harvests.map((h) => {
-                const title =
-                  h.batchName ||
-                  `Skörd ${h.date} (${h.honeyWeightGrams ? (h.honeyWeightGrams / 1000).toFixed(1) + " kg" : "okänd vikt"})`;
-                return (
-                  <option key={h.id} value={h.id}>
-                    {title}
-                  </option>
-                );
-              })}
-            </select>
-          </div>
-
-          {/* Batch Status Card */}
-          {selectedHarvest && (
-            <div
-              style={{
-                background: "var(--color-success-surface)",
-                border: "1px solid var(--color-success-border)",
-                padding: "0.75rem",
-                borderRadius: "8px",
-                marginBottom: "1rem",
-                fontSize: "0.85rem",
-              }}
-            >
+            {/* Batch Status Card */}
+            {selectedHarvest && (
               <div
                 style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  color: "var(--color-success-text)",
-                  fontWeight: 600,
-                  marginBottom: "0.3rem",
+                  background: "var(--color-surface-inset)",
+                  border: "1px solid var(--color-border-subtle)",
+                  padding: "0.85rem",
+                  borderRadius: "10px",
+                  marginBottom: "1rem",
+                  fontSize: "0.85rem",
                 }}
               >
-                <span>Status för {selectedHarvest.batchName || "valt parti"}:</span>
-                {selectedHarvest.waterContentPercent && (
-                  <span>💧 {selectedHarvest.waterContentPercent}% vattenhalt</span>
-                )}
-              </div>
-              <div style={{ color: "var(--color-text-secondary)" }}>
-                Totalt slungat:{" "}
-                <strong>
-                  {totalExtractedGrams > 0
-                    ? `${(totalExtractedGrams / 1000).toFixed(1).replace(".", ",")} kg`
-                    : "Ej angivet"}
-                </strong>
-                {totalExtractedGrams > 0 && (
-                  <span>
-                    {" · "}
-                    Kvar i kärl före denna tappning:{" "}
-                    <strong>
-                      {(remainingBeforeGrams / 1000).toFixed(1).replace(".", ",")} kg
-                    </strong>
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
-            <div className="form-group">
-              <label className="form-label" htmlFor="filling-date">
-                Tappningsdatum *
-              </label>
-              <input
-                id="filling-date"
-                type="date"
-                className="form-input"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label" htmlFor="filling-count">
-                Antal burkar *
-              </label>
-              <input
-                id="filling-count"
-                type="number"
-                min="1"
-                className="form-input"
-                value={jarCount}
-                onChange={(e) => setJarCount(e.target.value)}
-                required
-                autoFocus
-              />
-            </div>
-          </div>
-
-          {/* Jar Size Selector */}
-          <div className="form-group">
-            <label className="form-label">Burkstorlek</label>
-            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "0.5rem" }}>
-              {commonSizes.map((sz) => (
-                <button
-                  key={sz}
-                  type="button"
-                  onClick={() => setJarSizeGrams(sz)}
-                  className={`btn btn-sm ${jarSizeGrams === sz ? "btn-primary" : "btn-secondary"}`}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    color: "var(--color-accent-dark)",
+                    fontWeight: 700,
+                    marginBottom: "0.3rem",
+                  }}
                 >
-                  {sz} g
-                </button>
-              ))}
-              <button
-                type="button"
-                onClick={() => setJarSizeGrams(-1)}
-                className={`btn btn-sm ${jarSizeGrams === -1 ? "btn-primary" : "btn-secondary"}`}
-              >
-                Annan storlek...
-              </button>
-            </div>
-            {jarSizeGrams === -1 && (
-              <input
-                type="number"
-                min="50"
-                className="form-input"
-                placeholder="Ange burkstorlek i gram, t.ex. 400"
-                value={customJarSize}
-                onChange={(e) => setCustomJarSize(e.target.value)}
-                required
-              />
+                  <span>{selectedHarvest.batchName || "Valt parti"}</span>
+                  {selectedHarvest.waterContentPercent && (
+                    <span style={{ color: "var(--color-primary-base)" }}>💧 {selectedHarvest.waterContentPercent}% vattenhalt</span>
+                  )}
+                </div>
+
+                <div style={{ color: "var(--color-text-secondary)", lineHeight: 1.5 }}>
+                  {hasScaleEstimate ? (
+                    <>
+                      <div>
+                        Grovt estimat vid slungning:{" "}
+                        <strong>{(totalExtractedGrams / 1000).toFixed(1).replace(".", ",")} kg</strong>
+                      </div>
+                      <div>
+                        Kvar i kärl före denna tappning:{" "}
+                        <strong>{(remainingBeforeGrams / 1000).toFixed(1).replace(".", ",")} kg</strong>
+                        {thisFillingGrams > 0 && (
+                          <span style={{ color: "var(--color-text-muted)" }}>
+                            {" "}→ efter tappning: {(remainingAfterGrams / 1000).toFixed(1).replace(".", ",")} kg
+                          </span>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <div>
+                      Hittills upptappat:{" "}
+                      <strong>
+                        {(previousJarredGrams / 1000).toFixed(1).replace(".", ",")} kg ({previousJarCount} burkar)
+                      </strong>
+                      {count > 0 && (
+                        <div style={{ color: "var(--color-success-text)", fontWeight: 600, marginTop: "0.2rem" }}>
+                          ✓ Efter denna tappning: {(newTotalJarredGrams / 1000).toFixed(1).replace(".", ",")} kg ({newTotalJarCount} burkar)
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
+
+            {/* 2. Honey Type Selector (Nyslungad vs Rörd) */}
+            <div className="form-group" style={{ marginBottom: "1rem" }}>
+              <label className="form-label" style={{ fontWeight: 700 }}>
+                Honungstyp / Beredning *
+              </label>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.6rem" }}>
+                <button
+                  type="button"
+                  onClick={() => setHoneyType("nyslungad")}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.6rem",
+                    padding: "0.75rem",
+                    borderRadius: "10px",
+                    border: `2px solid ${honeyType === "nyslungad" ? "var(--color-honey-base)" : "var(--color-border)"}`,
+                    background: honeyType === "nyslungad" ? "var(--color-honey-surface)" : "var(--color-surface)",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    transition: "all 0.15s ease",
+                  }}
+                >
+                  <span style={{ fontSize: "1.4rem" }}>🍯</span>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: "0.9rem", color: honeyType === "nyslungad" ? "var(--color-honey-text)" : "var(--color-text-primary)" }}>
+                      Nyslungad
+                    </div>
+                    <div style={{ fontSize: "0.725rem", color: "var(--color-text-muted)" }}>
+                      Flytande, färsk
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setHoneyType("rörd")}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.6rem",
+                    padding: "0.75rem",
+                    borderRadius: "10px",
+                    border: `2px solid ${honeyType === "rörd" ? "var(--color-primary-base)" : "var(--color-border)"}`,
+                    background: honeyType === "rörd" ? "var(--color-primary-surface)" : "var(--color-surface)",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    transition: "all 0.15s ease",
+                  }}
+                >
+                  <span style={{ fontSize: "1.4rem" }}>🥄</span>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: "0.9rem", color: honeyType === "rörd" ? "var(--color-accent-dark)" : "var(--color-text-primary)" }}>
+                      Rörd honung
+                    </div>
+                    <div style={{ fontSize: "0.725rem", color: "var(--color-text-muted)" }}>
+                      Krämig, ympad & mognad
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Date and Jar count */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginBottom: "0.75rem" }}>
+              <div className="form-group">
+                <label className="form-label" htmlFor="filling-date">
+                  Tappningsdatum *
+                </label>
+                <input
+                  id="filling-date"
+                  type="date"
+                  className="form-input"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" htmlFor="filling-count">
+                  Antal burkar *
+                </label>
+                <input
+                  id="filling-count"
+                  type="number"
+                  min="1"
+                  className="form-input"
+                  value={jarCount}
+                  onChange={(e) => setJarCount(e.target.value)}
+                  required
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            {/* Jar Size Selector */}
+            <div className="form-group" style={{ marginBottom: "0.75rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.35rem" }}>
+                <label className="form-label" style={{ margin: 0 }}>
+                  Burkstorlek
+                </label>
+                <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
+                  Denna tappning: <strong>{((count * effectiveJarSize) / 1000).toFixed(1)} kg</strong>
+                </span>
+              </div>
+              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "0.5rem" }}>
+                {commonSizes.map((sz) => (
+                  <button
+                    key={sz}
+                    type="button"
+                    onClick={() => setJarSizeGrams(sz)}
+                    className={`btn btn-sm ${jarSizeGrams === sz ? "btn-primary" : "btn-secondary"}`}
+                  >
+                    {sz} g
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setJarSizeGrams(-1)}
+                  className={`btn btn-sm ${jarSizeGrams === -1 ? "btn-primary" : "btn-secondary"}`}
+                >
+                  Annan storlek...
+                </button>
+              </div>
+              {jarSizeGrams === -1 && (
+                <input
+                  type="number"
+                  min="50"
+                  className="form-input"
+                  placeholder="Ange burkstorlek i gram, t.ex. 400"
+                  value={customJarSize}
+                  onChange={(e) => setCustomJarSize(e.target.value)}
+                  required
+                />
+              )}
+            </div>
+
+            {/* Notes (Optional) */}
+            <div className="form-group">
+              <label className="form-label" htmlFor="filling-notes">
+                Anteckning (valfritt)
+              </label>
+              <input
+                id="filling-notes"
+                type="text"
+                className="form-input"
+                placeholder="t.ex. Parti 1, etiketterade med bäst-före 2028"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+              />
+            </div>
           </div>
 
-          {/* Dynamic calculation banner */}
+          {/* Pinned Modal Actions */}
           <div
+            className="modal-actions"
             style={{
-              background: "var(--color-honey-surface)",
-              border: "1px solid var(--color-honey-border)",
-              padding: "0.65rem 0.85rem",
-              borderRadius: "8px",
-              marginBottom: "1rem",
-              fontSize: "0.85rem",
-              color: "var(--color-honey-text)",
+              marginTop: "0.75rem",
+              paddingTop: "0.75rem",
+              borderTop: "1px solid var(--color-border-subtle)",
+              flexShrink: 0,
             }}
           >
-            <div>
-              <strong>Denna tappning:</strong> {count} st burkar à {effectiveJarSize} g ={" "}
-              <strong>{(thisFillingGrams / 1000).toFixed(1).replace(".", ",")} kg honung</strong>.
-            </div>
-            {totalExtractedGrams > 0 && (
-              <div style={{ marginTop: "0.2rem" }}>
-                Kvar i mognadskärl efter tappning:{" "}
-                <strong>
-                  {(remainingAfterGrams / 1000).toFixed(1).replace(".", ",")} kg
-                </strong>{" "}
-                ({Math.round((remainingAfterGrams / totalExtractedGrams) * 100)}% av partiet).
-              </div>
-            )}
-          </div>
-
-          <div className="form-group">
-            <label className="form-label" htmlFor="filling-notes">
-              Anteckningar / Partikod (frivilligt)
-            </label>
-            <input
-              id="filling-notes"
-              type="text"
-              className="form-input"
-              placeholder="t.ex. Bäst före 2028-08, etiketterad, gåva till grannen..."
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-            />
-          </div>
-
-          <div className="modal-actions">
             <button
               type="button"
               className="btn btn-secondary"
@@ -301,9 +418,18 @@ export const JarFillingModal: React.FC<JarFillingModalProps> = ({
             >
               Avbryt
             </button>
-            <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={isSubmitting}
+              style={{ flex: 1, justifyContent: "center" }}
+            >
               <Check size={16} />
-              <span>{isSubmitting ? "Sparar..." : "Spara burktappning"}</span>
+              <span>
+                {isSubmitting
+                  ? "Sparar..."
+                  : `Spara ${count} st ${effectiveJarSize}g (${honeyType === "nyslungad" ? "nyslungad" : "rörd"})`}
+              </span>
             </button>
           </div>
         </form>

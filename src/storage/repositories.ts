@@ -280,6 +280,7 @@ export const harvestRepository = {
       date: fillingData.date,
       jarCount: fillingData.jarCount,
       jarSizeGrams: fillingData.jarSizeGrams,
+      honeyType: fillingData.honeyType,
       notes: fillingData.notes,
       createdAt: new Date().toISOString(),
     };

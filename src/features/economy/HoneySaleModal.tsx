@@ -142,12 +142,13 @@ export const HoneySaleModal: React.FC<HoneySaleModalProps> = ({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          {error && (
-            <div className="form-error" style={{ marginBottom: "1rem" }}>
-              {error}
-            </div>
-          )}
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden" }}>
+          <div className="modal-scroll-body">
+            {error && (
+              <div className="form-error" style={{ marginBottom: "1rem" }}>
+                {error}
+              </div>
+            )}
 
           {/* Quantity Section with Quick Selectors */}
           <div
@@ -449,8 +450,17 @@ export const HoneySaleModal: React.FC<HoneySaleModalProps> = ({
               onChange={(e) => setNotes(e.target.value)}
             />
           </div>
+          </div>
 
-          <div className="modal-actions" style={{ marginTop: "1.25rem" }}>
+          <div
+            className="modal-actions"
+            style={{
+              marginTop: "0.75rem",
+              paddingTop: "0.75rem",
+              borderTop: "1px solid var(--color-border-subtle)",
+              flexShrink: 0,
+            }}
+          >
             <button
               type="button"
               className="btn btn-secondary"
