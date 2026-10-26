@@ -70,8 +70,8 @@ export default function App() {
   const tabOrder: NavTab[] = ["overview", "hives", "harvests", "economy", "settings"];
   const prevIndex = tabOrder.indexOf(prevTab);
   const currentIndex = tabOrder.indexOf(activeTab);
-  const isMovingRight = currentIndex > prevIndex;
-  const slideDirection = isMovingRight ? "view-transition-right-in" : "view-transition-left-in";
+  const isMovingRight = currentIndex >= prevIndex;
+  const slideDirection = isMovingRight ? "view-slide-from-right" : "view-slide-from-left";
 
   const handleSelectTab = (tab: NavTab) => {
     if (tab === activeTab) return;
@@ -672,7 +672,7 @@ export default function App() {
             onOpenHoneySale={() => setShowHoneySaleModal(true)}
             onToggleTask={handleToggleTask}
             onNavigateToTab={(tab, subTab) => {
-              setActiveTab(tab);
+              handleSelectTab(tab);
               if (subTab) setHivesSubTab(subTab);
             }}
             onSelectHive={(hive) => setSelectedHiveDetail(hive)}

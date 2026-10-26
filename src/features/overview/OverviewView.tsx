@@ -22,7 +22,7 @@ interface OverviewViewProps {
   transactions: Transaction[];
   syncStatus: SyncEngineStatus;
   onOpenLogEvent: () => void;
-  onOpenCreateTask: () => void;
+  onOpenCreateTask?: () => void;
   onOpenHoneySale: () => void;
   onToggleTask: (id: string) => Promise<void>;
   onNavigateToTab: (tab: any, subTab?: "hives" | "tasks") => void;
@@ -81,7 +81,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
       </div>
 
       {/* Quick Action Bar */}
-      <div className="quick-actions">
+      <div className="quick-actions" style={{ gridTemplateColumns: "1fr 1fr" }}>
         <button
           className="btn btn-primary"
           onClick={onOpenLogEvent}
@@ -89,14 +89,6 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         >
           <Plus size={18} />
           <span>Logga kupbesök</span>
-        </button>
-        <button
-          className="btn btn-secondary"
-          onClick={onOpenCreateTask}
-          style={{ padding: "0.75rem", justifyContent: "center" }}
-        >
-          <CheckSquare size={18} color="var(--color-primary)" />
-          <span>Ny uppgift</span>
         </button>
         <button
           className="btn btn-honey"

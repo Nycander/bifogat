@@ -92,7 +92,7 @@ export const HiveDetailModal: React.FC<HiveDetailModalProps> = ({
         style={{ maxWidth: "640px" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="modal-header">
+        <div className="modal-header" style={{ flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
             <h2 className="modal-title">{hive.name}</h2>
             {getStatusBadge(hive.status)}
@@ -112,32 +112,33 @@ export const HiveDetailModal: React.FC<HiveDetailModalProps> = ({
           </div>
         </div>
 
-        {hive.notes && (
-          <div
-            className="box-inset"
-            style={{
-              padding: "0.75rem",
-              marginBottom: "1rem",
-            }}
-          >
-            <div style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-secondary)" }}>
-              ANTECKNING OM KUPAN
-            </div>
+        <div className="modal-scroll-body" style={{ flex: 1, minHeight: 0, overflowY: "auto", paddingRight: "4px" }}>
+          {hive.notes && (
             <div
-              style={{ fontSize: "0.9rem", color: "var(--color-text-primary)", marginTop: "0.2rem" }}
+              className="box-inset"
+              style={{
+                padding: "0.75rem",
+                marginBottom: "1rem",
+              }}
             >
-              {hive.notes}
+              <div style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-secondary)" }}>
+                ANTECKNING OM KUPAN
+              </div>
+              <div
+                style={{ fontSize: "0.9rem", color: "var(--color-text-primary)", marginTop: "0.2rem" }}
+              >
+                {hive.notes}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Tab switcher inside Hive Detail */}
-        <div className="tabs-header" style={{ marginBottom: "1rem" }}>
-          <button
-            className={`tab-btn ${activeTab === "tasks" ? "active" : ""}`}
-            onClick={() => setActiveTab("tasks")}
-          >
-            <CheckSquare size={15} style={{ display: "inline", marginRight: "4px" }} />
+          {/* Tab switcher inside Hive Detail */}
+          <div className="tabs-header" style={{ marginBottom: "1rem" }}>
+            <button
+              className={`tab-btn ${activeTab === "tasks" ? "active" : ""}`}
+              onClick={() => setActiveTab("tasks")}
+            >
+              <CheckSquare size={15} style={{ display: "inline", marginRight: "4px" }} />
             Att göra ({openTasks.length})
           </button>
           <button
@@ -391,8 +392,17 @@ export const HiveDetailModal: React.FC<HiveDetailModalProps> = ({
             )}
           </div>
         )}
+        </div>
 
-        <div className="modal-actions" style={{ marginTop: "1.5rem" }}>
+        <div
+          className="modal-actions"
+          style={{
+            flexShrink: 0,
+            marginTop: "0.75rem",
+            paddingTop: "0.75rem",
+            borderTop: "1px solid var(--color-border-subtle)",
+          }}
+        >
           <button className="btn btn-secondary" onClick={onClose}>
             Stäng
           </button>
