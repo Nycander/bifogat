@@ -29,6 +29,9 @@ export const CRUISE_ALTITUDE_Y = -46;
 export const WATERMARK_RESTING_SCALE = 2.3;
 export const WATERMARK_RESTING_OPACITY = 0.16;
 
+/** Forward pitch angle in degrees so the bee's head leads in flight direction */
+export const CRUISE_FLIGHT_PITCH_DEG = 72;
+
 export interface FlightPhysicsResult {
   durationMs: number;
   effectiveSpeedPercentPerSec: number;
@@ -171,15 +174,40 @@ function quinticEaseInOut(p: number): number {
 
 /**
  * Computes the unified, fully continuous flight state across all phases:
- * Phase 1: Takeoff & morph from resting watermark
+ * Phase 1: Takeoff & morph from resting watermark (head banks forward into flight direction)
  * Phase 2: Active aerial maneuver (cruise, loop, dance, orientation)
- * Phase 3: Touchdown & morph into target watermark
- *
- * Eliminates all CSS transition handover glitches, 14px altitude jumps,
- * and 19-degree rotational snaps.
+ * Phase 3: Touchdown & morph into target watermark (flares upright to 0deg)
  */
-export function computeUnifiedFlightFrame(params: UnifiedFlightParams): UnifiedFlightFrame {
-  const { startPercent, targetPercent, pattern, elapsedMs, totalDurationMs, facing } = params;
+export interface ContinuousFlightParams {
+  startPercent: number;
+  targetPercent: number;
+  startX?: number;
+  startY?: number;
+  startRoll?: number;
+  startScale?: number;
+  startOpacity?: number;
+  wasAirborne?: boolean;
+  pattern: FlightPattern;
+  elapsedMs: number;
+  totalDurationMs: number;
+  facing: 1 | -1;
+}
+
+export function computeContinuousFlightFrame(params: ContinuousFlightParams): UnifiedFlightFrame {
+  const {
+    startPercent,
+    targetPercent,
+    startX = 0,
+    startY = 0,
+    startRoll = 0,
+    startScale = WATERMARK_RESTING_SCALE,
+    startOpacity = WATERMARK_RESTING_OPACITY,
+    wasAirborne = false,
+    pattern,
+    elapsedMs,
+    totalDurationMs,
+    facing,
+  } = params;
 
   if (elapsedMs >= totalDurationMs) {
     return {
@@ -200,21 +228,20 @@ export function computeUnifiedFlightFrame(params: UnifiedFlightParams): UnifiedF
     (startPercent + (targetPercent - startPercent) * horizontalEased).toFixed(3),
   );
 
-  const takeoffDuration = TAKEOFF_DURATION_MS;
+  const takeoffDuration = wasAirborne ? 0 : TAKEOFF_DURATION_MS;
   const landingDuration = LANDING_DURATION_MS;
   const activeDuration = Math.max(1, totalDurationMs - takeoffDuration - landingDuration);
-  const initialFlightTilt = -12 * facing;
 
-  // Phase 1: Takeoff
-  if (elapsedMs < takeoffDuration) {
+  // Phase 1: Takeoff (only when taking off from rest)
+  if (!wasAirborne && elapsedMs < takeoffDuration) {
     const tProgress = elapsedMs / takeoffDuration;
-    // Cubic ease-out
-    const e = 1 - Math.pow(1 - tProgress, 3);
+    // Smoothstep for C1-continuous takeoff from rest
+    const e = tProgress * tProgress * (3 - 2 * tProgress);
 
     const y = CRUISE_ALTITUDE_Y * e;
     const scale = WATERMARK_RESTING_SCALE - (WATERMARK_RESTING_SCALE - 1.0) * e;
     const opacity = WATERMARK_RESTING_OPACITY + (1.0 - WATERMARK_RESTING_OPACITY) * e;
-    const roll = initialFlightTilt * e;
+    const roll = CRUISE_FLIGHT_PITCH_DEG * e;
 
     return {
       trackPercent,
@@ -238,12 +265,13 @@ export function computeUnifiedFlightFrame(params: UnifiedFlightParams): UnifiedF
     const y = CRUISE_ALTITUDE_Y * (1 - e);
     const scale = 1.0 + (WATERMARK_RESTING_SCALE - 1.0) * e;
     const opacity = 1.0 - (1.0 - WATERMARK_RESTING_OPACITY) * e;
+    const roll = CRUISE_FLIGHT_PITCH_DEG * (1 - e);
 
     return {
       trackPercent,
       x: 0,
       y: Number(y.toFixed(2)),
-      roll: 0,
+      roll: Number(roll.toFixed(1)),
       scale: Number(scale.toFixed(3)),
       opacity: Number(opacity.toFixed(3)),
       isComplete: false,
@@ -255,32 +283,53 @@ export function computeUnifiedFlightFrame(params: UnifiedFlightParams): UnifiedF
   const tau = Math.min(1.0, Math.max(0, activeElapsed / activeDuration));
   const theta = tau * 2 * Math.PI;
 
-  let x = 0;
-  let y = CRUISE_ALTITUDE_Y;
-  let roll = 0;
+  let idealX = 0;
+  let idealY = CRUISE_ALTITUDE_Y;
+  let idealRoll = CRUISE_FLIGHT_PITCH_DEG;
 
   if (pattern === "cruise") {
-    // Cruising wave: gentle sinusoidal vertical drift
-    y = CRUISE_ALTITUDE_Y - 7 * Math.sin(theta);
-    // Smoothly blend from initial flight tilt to level zero
-    roll = initialFlightTilt * (1 - tau) + 6 * facing * Math.sin(theta) * Math.sin(Math.PI * tau);
+    // Cruising wave: gentle sinusoidal vertical drift and aerodynamic banking
+    idealY = CRUISE_ALTITUDE_Y - 7 * Math.sin(theta);
+    idealRoll = CRUISE_FLIGHT_PITCH_DEG - 8 * Math.sin(theta) * Math.sin(Math.PI * tau);
   } else if (pattern === "loop") {
     // Grand Aerial Loop-the-loop: climbs in sweeping 360 vertical loop
     const loopHeight = 92;
     const loopWidth = 38;
-    x = loopWidth * Math.sin(theta) * facing;
-    y = CRUISE_ALTITUDE_Y - loopHeight * Math.sin(theta / 2) * Math.sin(theta / 2);
-    roll = initialFlightTilt * (1 - tau) - 65 * facing * Math.sin(theta);
+    idealX = loopWidth * Math.sin(theta) * facing;
+    idealY = CRUISE_ALTITUDE_Y - loopHeight * Math.sin(theta / 2) * Math.sin(theta / 2);
+    idealRoll = CRUISE_FLIGHT_PITCH_DEG - 70 * Math.sin(theta);
   } else if (pattern === "dance") {
     // Playful waggle dance 8
-    x = 18 * Math.sin(theta) * facing;
-    y = CRUISE_ALTITUDE_Y - 18 * Math.sin(2 * theta) * Math.sin(Math.PI * tau);
-    roll = initialFlightTilt * (1 - tau) + 9 * facing * Math.sin(2 * theta) * Math.sin(Math.PI * tau);
+    idealX = 18 * Math.sin(theta) * facing;
+    idealY = CRUISE_ALTITUDE_Y - 18 * Math.sin(2 * theta) * Math.sin(Math.PI * tau);
+    idealRoll = CRUISE_FLIGHT_PITCH_DEG + 10 * Math.sin(2 * theta) * Math.sin(Math.PI * tau);
   } else {
     // Orientation: Grand expansive figure 8 soaring high above navbar
-    x = 38 * Math.sin(theta) * facing;
-    y = CRUISE_ALTITUDE_Y - 65 * Math.sin(theta / 2) * Math.sin(theta / 2) - 22 * Math.sin(2 * theta) * Math.sin(Math.PI * tau);
-    roll = initialFlightTilt * (1 - tau) + 14 * facing * Math.sin(2 * theta) * Math.sin(Math.PI * tau);
+    idealX = 38 * Math.sin(theta) * facing;
+    idealY = CRUISE_ALTITUDE_Y - 65 * Math.sin(theta / 2) * Math.sin(theta / 2) - 22 * Math.sin(2 * theta) * Math.sin(Math.PI * tau);
+    idealRoll = CRUISE_FLIGHT_PITCH_DEG - 25 * Math.sin(theta / 2) * Math.sin(theta / 2) + 12 * Math.sin(2 * theta) * Math.sin(Math.PI * tau);
+  }
+
+  // If retargeted mid-flight, blend smoothly from initial coordinates (startX, startY, startRoll, startScale, startOpacity)
+  // over a short 240ms transition with zero pop!
+  let x = idealX;
+  let y = idealY;
+  let roll = idealRoll;
+  let scale = 1.0;
+  let opacity = 1.0;
+
+  if (wasAirborne) {
+    const blendTimeMs = 240;
+    if (elapsedMs < blendTimeMs) {
+      const bProgress = elapsedMs / blendTimeMs;
+      const b = bProgress * bProgress * (3 - 2 * bProgress); // Smoothstep blend
+
+      x = startX * (1 - b) + idealX * b;
+      y = startY * (1 - b) + idealY * b;
+      roll = startRoll * (1 - b) + idealRoll * b;
+      scale = startScale * (1 - b) + 1.0 * b;
+      opacity = startOpacity * (1 - b) + 1.0 * b;
+    }
   }
 
   return {
@@ -288,8 +337,12 @@ export function computeUnifiedFlightFrame(params: UnifiedFlightParams): UnifiedF
     x: Number(x.toFixed(2)),
     y: Number(y.toFixed(2)),
     roll: Number(roll.toFixed(1)),
-    scale: 1.0,
-    opacity: 1.0,
+    scale: Number(scale.toFixed(3)),
+    opacity: Number(opacity.toFixed(3)),
     isComplete: false,
   };
+}
+
+export function computeUnifiedFlightFrame(params: UnifiedFlightParams): UnifiedFlightFrame {
+  return computeContinuousFlightFrame(params);
 }

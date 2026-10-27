@@ -3,7 +3,9 @@ import { Home, Layers, Droplet, Wallet, Settings } from "lucide-react";
 import {
   FlightPattern,
   calculateFlightPhysics,
-  computeUnifiedFlightFrame,
+  computeContinuousFlightFrame,
+  WATERMARK_RESTING_SCALE,
+  WATERMARK_RESTING_OPACITY,
 } from "../utils/beeFlightPhysics";
 
 export type { FlightPattern };
@@ -44,11 +46,31 @@ export const NavBar: React.FC<NavBarProps> = ({ activeTab, onSelectTab, openTask
   const [flightState, setFlightState] = useState<FlightState>("resting");
   const [facing, setFacing] = useState<1 | -1>(1);
 
-  const currentPercentRef = useRef<number>((activeIndex + 0.5) * tabWidthPercent);
+  // Track the continuous live coordinate state so rapid clicks never snap or reset mid-flight
+  const liveCoordsRef = useRef<{
+    trackPercent: number;
+    x: number;
+    y: number;
+    roll: number;
+    scale: number;
+    opacity: number;
+    facing: 1 | -1;
+    isAirborne: boolean;
+  }>({
+    trackPercent: (activeIndex + 0.5) * tabWidthPercent,
+    x: 0,
+    y: 0,
+    roll: 0,
+    scale: WATERMARK_RESTING_SCALE,
+    opacity: WATERMARK_RESTING_OPACITY,
+    facing: 1,
+    isAirborne: false,
+  });
+
   const animFrameRef = useRef<number | null>(null);
 
-  // Smooth, unified continuous flight loop:
-  // Coordinates horizontal translation, takeoff morph, 3D banking, and touchdown in a single C1-continuous RAF engine
+  // Smooth, continuous flight loop:
+  // Dynamically continues from the live mid-air coordinates if interrupted by rapid clicks
   useEffect(() => {
     const fromIndex = prevIndexRef.current;
     const toIndex = activeIndex;
@@ -61,57 +83,76 @@ export const NavBar: React.FC<NavBarProps> = ({ activeTab, onSelectTab, openTask
 
     if (!navElement || !trackElement || !bodyEl) return;
 
-    if (fromIndex === toIndex && flightState === "resting") {
+    const wasAirborne = liveCoordsRef.current.isAirborne;
+
+    if (fromIndex === toIndex && !wasAirborne) {
       return;
     }
 
-    // Determine exact start position:
-    // If resting, starts exactly from the center of previous tab
-    // If mid-flight from fast repeated clicks, continues seamlessly from current animated position
+    // Determine exact start coordinates:
+    // If airborne from fast continuous clicking, pick up seamlessly from current flight state
+    // (never drop to ground, never reset scale, never reset opacity!)
     let startPercent: number;
-    if (flightState === "resting") {
-      startPercent = (fromIndex + 0.5) * tabWidthPercent;
+    let startX: number;
+    let startY: number;
+    let startRoll: number;
+    let startScale: number;
+    let startOpacity: number;
+    const startFacing = liveCoordsRef.current.facing;
+
+    if (wasAirborne) {
+      startPercent = liveCoordsRef.current.trackPercent;
+      startX = liveCoordsRef.current.x;
+      startY = liveCoordsRef.current.y;
+      startRoll = liveCoordsRef.current.roll;
+      startScale = liveCoordsRef.current.scale;
+      startOpacity = liveCoordsRef.current.opacity;
     } else {
-      startPercent = currentPercentRef.current;
+      startPercent = (fromIndex + 0.5) * tabWidthPercent;
+      startX = 0;
+      startY = 0;
+      startRoll = 0;
+      startScale = WATERMARK_RESTING_SCALE;
+      startOpacity = WATERMARK_RESTING_OPACITY;
     }
 
     const distancePercent = Math.abs(targetPercent - startPercent);
-    if (distancePercent < 0.1) {
+    if (distancePercent < 0.1 && !wasAirborne) {
       return;
     }
 
     const movingRight = targetPercent >= startPercent;
-    const dir: 1 | -1 = movingRight ? 1 : -1;
+    const dir: 1 | -1 = distancePercent < 0.5 ? startFacing : (movingRight ? 1 : -1);
 
-    // Roll flight pattern (or use test pattern if set via test runner):
-    // ~25% chance: grand aerial loop-the-loop (stor ögla med 360°-kurva)
-    // ~25% chance: grand orientation flight (stor åtta)
-    // ~25% chance: playful waggle dance (lemniskat-åtta)
-    // ~25% chance: aerodynamic cruise
     const forcedPattern = typeof window !== "undefined" ? (window as any).__forcedBeePattern : undefined;
     let pattern: FlightPattern = forcedPattern || "cruise";
 
     if (!forcedPattern) {
-      const roll = Math.random();
-      if (roll < 0.25) {
-        pattern = "loop";
-      } else if (roll < 0.50) {
-        pattern = "orientation";
-      } else if (roll < 0.75) {
-        pattern = "dance";
-      } else {
+      // In rapid mid-air redirection, aerodynamic cruise provides the smoothest heading adjustment
+      if (wasAirborne) {
         pattern = "cruise";
+      } else {
+        const roll = Math.random();
+        if (roll < 0.25) {
+          pattern = "loop";
+        } else if (roll < 0.50) {
+          pattern = "orientation";
+        } else if (roll < 0.75) {
+          pattern = "dance";
+        } else {
+          pattern = "cruise";
+        }
       }
     }
 
-    // Physics calculations enforce max speed (30%/s) and maneuver minimum duration
-    const physics = calculateFlightPhysics(distancePercent, pattern);
+    const physics = calculateFlightPhysics(Math.max(distancePercent, 5), pattern);
     const duration = physics.durationMs;
 
     setFacing(dir);
     setFlightState("flying");
+    liveCoordsRef.current.isAirborne = true;
+    liveCoordsRef.current.facing = dir;
 
-    // Cancel any previous in-flight animation frame immediately
     if (animFrameRef.current) {
       cancelAnimationFrame(animFrameRef.current);
       animFrameRef.current = null;
@@ -122,16 +163,40 @@ export const NavBar: React.FC<NavBarProps> = ({ activeTab, onSelectTab, openTask
     const tick = (now: number) => {
       const elapsed = Math.max(0, now - startTime);
 
-      const frame = computeUnifiedFlightFrame({
+      const frame = computeContinuousFlightFrame({
         startPercent,
         targetPercent,
+        startX,
+        startY,
+        startRoll,
+        startScale,
+        startOpacity,
+        wasAirborne,
         pattern,
         elapsedMs: elapsed,
         totalDurationMs: duration,
         facing: dir,
       });
 
-      currentPercentRef.current = frame.trackPercent;
+      // Smooth 3D turn when flipping heading mid-air over 140ms
+      let currentFacingScale: number = dir;
+      if (wasAirborne && startFacing !== dir && elapsed < 140) {
+        const turnProgress = elapsed / 140;
+        const turnSmooth = turnProgress * turnProgress * (3 - 2 * turnProgress);
+        currentFacingScale = Number((startFacing * (1 - turnSmooth) + dir * turnSmooth).toFixed(3));
+      }
+
+      // Keep live coordinates continuously up-to-date
+      liveCoordsRef.current = {
+        trackPercent: frame.trackPercent,
+        x: frame.x,
+        y: frame.y,
+        roll: frame.roll,
+        scale: frame.scale,
+        opacity: frame.opacity,
+        facing: dir,
+        isAirborne: !frame.isComplete,
+      };
 
       if (trackElement) {
         trackElement.style.transition = "none";
@@ -139,7 +204,7 @@ export const NavBar: React.FC<NavBarProps> = ({ activeTab, onSelectTab, openTask
       }
 
       if (bodyEl) {
-        bodyEl.style.transform = `translate(${frame.x}px, ${frame.y}px) scaleX(${dir}) rotate(${frame.roll}deg) scale(${frame.scale})`;
+        bodyEl.style.transform = `translate(${frame.x}px, ${frame.y}px) scaleX(${currentFacingScale}) rotate(${frame.roll}deg) scale(${frame.scale})`;
         bodyEl.style.opacity = `${frame.opacity}`;
       }
 
@@ -149,7 +214,6 @@ export const NavBar: React.FC<NavBarProps> = ({ activeTab, onSelectTab, openTask
         // Flight successfully completed & settled into resting watermark
         animFrameRef.current = null;
         setFlightState("resting");
-        currentPercentRef.current = targetPercent;
         setTrackLeftPercent(targetPercent);
 
         if (trackElement) {

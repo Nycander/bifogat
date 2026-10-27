@@ -28,7 +28,6 @@ import {
   signInWithGoogle,
   logoutGoogle,
   initAuth,
-  getCurrentUser,
   getAccessToken,
   getSavedUser,
 } from "./auth/googleAuth";
@@ -38,7 +37,6 @@ import { PWAInstallButton } from "./pwa/PWAInstallButton";
 import { OfflineIndicator } from "./pwa/OfflineIndicator";
 import { NavBar, NavTab } from "./components/NavBar";
 import { SyncStatusBar } from "./components/SyncStatusBar";
-import { Logo } from "./components/Logo";
 import { useSystemTheme } from "./theme/useTheme";
 
 import { OverviewView } from "./features/overview/OverviewView";
@@ -58,6 +56,7 @@ import { OutboxPreviewModal } from "./features/settings/OutboxPreviewModal";
 import { CsvImportModal } from "./features/settings/CsvImportModal";
 import { NotesImportModal } from "./features/settings/NotesImportModal";
 import { ParsedNotesResult } from "./import/notesParser";
+import { useSwipeNavigation } from "./hooks/useSwipeNavigation";
 
 export default function App() {
   const isOnline = useOnlineStatus();
@@ -145,6 +144,29 @@ export default function App() {
   const [showOutboxPreviewModal, setShowOutboxPreviewModal] = useState(false);
   const [showCsvImportModal, setShowCsvImportModal] = useState(false);
   const [showNotesImportModal, setShowNotesImportModal] = useState(false);
+
+  // Check if any modal is currently visible to prevent swipe gestures while interacting with dialogs
+  const isAnyModalOpen = Boolean(
+    showEventModal ||
+      showHiveModal ||
+      selectedHiveDetail ||
+      showTaskModal ||
+      showHarvestModal ||
+      showJarFillingModal ||
+      showHoneySaleModal ||
+      showTxModal ||
+      showConflictModal ||
+      showOutboxPreviewModal ||
+      showCsvImportModal ||
+      showNotesImportModal,
+  );
+
+  const swipeHandlers = useSwipeNavigation({
+    activeTab,
+    tabOrder,
+    onSelectTab: handleSelectTab,
+    isModalOpen: isAnyModalOpen,
+  });
 
   // Load all local data from IndexedDB
   const reloadData = useCallback(async () => {
@@ -804,8 +826,8 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main View Area with Synchronized Two-Way Slide Transition */}
-      <main className="main-content-viewport">
+      {/* Main View Area with Synchronized Two-Way Slide Transition & Swipe Navigation */}
+      <main className="main-content-viewport" {...swipeHandlers}>
         {exitingTab && (
           <div
             key={`exit-${exitingTab}`}
