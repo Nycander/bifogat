@@ -134,6 +134,8 @@
 
   --header-height: 60px;
   --bottom-nav-height: 64px;
+  --morph-opacity-rest: 0.16;
+  --morph-scale-rest: 2.3;
 }
 
 * {
@@ -481,7 +483,7 @@ a:hover {
   background-color: var(--color-surface);
   border-top: 1px solid var(--color-border);
   box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.06);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .nav-item {
@@ -1841,46 +1843,260 @@ button:active:not(:disabled) {
   transform: scale(0.98);
 }
 
-/* View Scrolling Transitions */
-@keyframes viewSlideFromRight {
-  0% {
-    opacity: 0.15;
-    transform: translateX(38%);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0);
+/* ==========================================================================
+   Two-Way Synchronized View Scrolling Transitions
+   ========================================================================== */
+.main-content-viewport {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr;
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 16px;
+  padding-bottom: calc(var(--bottom-nav-height) + 24px);
+  overflow-x: hidden;
+  position: relative;
+}
+
+@media (min-width: 768px) {
+  .main-content-viewport {
+    padding: 24px 32px;
+    padding-bottom: 48px;
   }
 }
 
-@keyframes viewSlideFromLeft {
+.view-slide-pane {
+  grid-area: 1 / 1 / 2 / 2;
+  width: 100%;
+  min-width: 0;
+  will-change: transform;
+}
+
+/* Moving Right (new tab has higher index, e.g. Overview -> Kupor):
+   - Exiting view slides out to the left beyond container padding (0% -> -100% - 64px) with smooth fade-out
+   - Entering view slides in from the right beyond container padding (100% + 64px -> 0%)
+*/
+@keyframes slideOutToLeft {
   0% {
-    opacity: 0.15;
-    transform: translateX(-38%);
+    transform: translateX(0);
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.7;
   }
   100% {
-    opacity: 1;
-    transform: translateX(0);
+    transform: translateX(calc(-100% - 64px));
+    opacity: 0;
   }
 }
 
+@keyframes slideInFromRight {
+  0% {
+    transform: translateX(calc(100% + 64px));
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Moving Left (new tab has lower index, e.g. Kupor -> Overview):
+   - Exiting view slides out to the right beyond container padding (0% -> 100% + 64px) with smooth fade-out
+   - Entering view slides in from the left beyond container padding (-100% - 64px -> 0%)
+*/
+@keyframes slideOutToRight {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateX(calc(100% + 64px));
+    opacity: 0;
+  }
+}
+
+@keyframes slideInFromLeft {
+  0% {
+    transform: translateX(calc(-100% - 64px));
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Animated Bee Flight & Morphing Watermark System */
+/* High-speed bee wing vibration / shimmer (authentic insect flight) */
+@keyframes beeWingVibrate {
+  0%, 100% {
+    transform: scaleY(0.72) rotate(-8deg);
+    opacity: 0.72;
+  }
+  50% {
+    transform: scaleY(1.08) rotate(14deg);
+    opacity: 0.98;
+  }
+}
+
+/* Resting state: subtle ambient watermark breathing pulse */
+@keyframes beeWatermarkPulse {
+  0%, 100% {
+    transform: translateY(0) scale(var(--morph-scale-rest, 2.3)) rotate(0deg);
+    opacity: var(--morph-opacity-rest, 0.16);
+  }
+  50% {
+    transform: translateY(-1.5px) scale(calc(var(--morph-scale-rest, 2.3) * 1.04)) rotate(1.2deg);
+    opacity: calc(var(--morph-opacity-rest, 0.16) * 1.35);
+  }
+}
+
+/* Takeoff: morphs out from ground watermark to airborne bee */
+@keyframes beeTakeoff {
+  0% {
+    transform: translateY(0) scale(var(--morph-scale-rest, 2.3)) rotate(0deg);
+    opacity: var(--morph-opacity-rest, 0.16);
+  }
+  100% {
+    transform: translateY(-46px) scale(1.0) rotate(var(--flight-tilt, -14deg));
+    opacity: 1;
+  }
+}
+
+/* Airborne cruising: gentle, smooth gliding wave in the air without bird bobbing */
+@keyframes beeAirborneCruise {
+  0%, 100% {
+    transform: translateY(-46px) scale(1.0) rotate(var(--flight-tilt, -12deg));
+  }
+  50% {
+    transform: translateY(-53px) scale(1.03) rotate(calc(var(--flight-tilt, -12deg) + var(--flight-dir, 1) * 8deg));
+  }
+}
+
+/* Figure-eight (lemniscate) waggle dance flight maneuver - silky smooth */
+@keyframes beeFigureEight {
+  0% {
+    transform: translate(0px, -48px) rotate(calc(var(--flight-dir, 1) * -8deg)) scale(1.0);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  12.5% {
+    transform: translate(calc(var(--flight-dir, 1) * 12px), -62px) rotate(calc(var(--flight-dir, 1) * 10deg)) scale(1.03);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  25% {
+    transform: translate(0px, -70px) rotate(0deg) scale(1.05);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  37.5% {
+    transform: translate(calc(var(--flight-dir, 1) * -12px), -62px) rotate(calc(var(--flight-dir, 1) * -10deg)) scale(1.03);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  50% {
+    transform: translate(0px, -48px) rotate(calc(var(--flight-dir, 1) * 8deg)) scale(1.0);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  62.5% {
+    transform: translate(calc(var(--flight-dir, 1) * 12px), -34px) rotate(calc(var(--flight-dir, 1) * 10deg)) scale(1.03);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  75% {
+    transform: translate(0px, -26px) rotate(0deg) scale(1.04);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  87.5% {
+    transform: translate(calc(var(--flight-dir, 1) * -12px), -34px) rotate(calc(var(--flight-dir, 1) * -8deg)) scale(1.02);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  100% {
+    transform: translate(0px, -48px) rotate(calc(var(--flight-dir, 1) * -8deg)) scale(1.0);
+  }
+}
+
+/* Storslagen orienteringsflygning: en stor, vidsträckt och silkeslen åtta högt upp i luften */
+@keyframes beeOrientationFigureEight {
+  0% {
+    transform: translate(0px, -60px) rotate(calc(var(--flight-dir, 1) * -8deg)) scale(1.0);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  12.5% {
+    transform: translate(calc(var(--flight-dir, 1) * 26px), -84px) rotate(calc(var(--flight-dir, 1) * 10deg)) scale(1.04);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  25% {
+    transform: translate(0px, -102px) rotate(0deg) scale(1.08);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  37.5% {
+    transform: translate(calc(var(--flight-dir, 1) * -26px), -84px) rotate(calc(var(--flight-dir, 1) * -12deg)) scale(1.04);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  50% {
+    transform: translate(0px, -60px) rotate(calc(var(--flight-dir, 1) * 8deg)) scale(1.0);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  62.5% {
+    transform: translate(calc(var(--flight-dir, 1) * 26px), -36px) rotate(calc(var(--flight-dir, 1) * 12deg)) scale(1.04);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  75% {
+    transform: translate(0px, -20px) rotate(0deg) scale(1.06);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  87.5% {
+    transform: translate(calc(var(--flight-dir, 1) * -26px), -36px) rotate(calc(var(--flight-dir, 1) * -10deg)) scale(1.02);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  100% {
+    transform: translate(0px, -60px) rotate(calc(var(--flight-dir, 1) * -8deg)) scale(1.0);
+  }
+}
+
+/* Landing: morphs down from airborne bee into ground watermark */
+@keyframes beeLanding {
+  0% {
+    transform: translateY(-46px) scale(1.0) rotate(var(--flight-tilt, 0deg));
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) scale(var(--morph-scale-rest, 2.3)) rotate(0deg);
+    opacity: var(--morph-opacity-rest, 0.16);
+  }
+}
+
+.view-slide-out-to-left {
+  animation: slideOutToLeft 0.35s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+}
+
+.view-slide-in-from-right {
+  animation: slideInFromRight 0.35s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+}
+
+.view-slide-out-to-right {
+  animation: slideOutToRight 0.35s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+}
+
+.view-slide-in-from-left {
+  animation: slideInFromLeft 0.35s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+}
+
+/* Legacy aliases */
 .view-slide-from-right {
-  animation: viewSlideFromRight 0.32s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
-  will-change: transform, opacity;
+  animation: slideInFromRight 0.35s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
 }
 
 .view-slide-from-left {
-  animation: viewSlideFromLeft 0.32s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
-  will-change: transform, opacity;
-}
-
-/* Backwards-compatibility aliases */
-.view-transition-right-in {
-  animation: viewSlideFromRight 0.32s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
-}
-
-.view-transition-left-in {
-  animation: viewSlideFromLeft 0.32s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+  animation: slideInFromLeft 0.35s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
 }
 
 

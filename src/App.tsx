@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   Hive,
   HiveEvent,
@@ -63,21 +63,48 @@ export default function App() {
   const isOnline = useOnlineStatus();
   useSystemTheme();
 
-  // Navigation
+  // Navigation with synchronized two-way push & slide transitions
   const [activeTab, setActiveTab] = useState<NavTab>("overview");
-  const [prevTab, setPrevTab] = useState<NavTab>("overview");
+  const [exitingTab, setExitingTab] = useState<NavTab | null>(null);
+  const [slideDirection, setSlideDirection] = useState<"right" | "left">("right");
+  const transitionTimerRef = useRef<number | null>(null);
 
-  const tabOrder: NavTab[] = ["overview", "hives", "harvests", "economy", "settings"];
-  const prevIndex = tabOrder.indexOf(prevTab);
-  const currentIndex = tabOrder.indexOf(activeTab);
-  const isMovingRight = currentIndex >= prevIndex;
-  const slideDirection = isMovingRight ? "view-slide-from-right" : "view-slide-from-left";
+  const tabOrder = useMemo<NavTab[]>(
+    () => ["overview", "hives", "harvests", "economy", "settings"],
+    [],
+  );
 
-  const handleSelectTab = (tab: NavTab) => {
-    if (tab === activeTab) return;
-    setPrevTab(activeTab);
-    setActiveTab(tab);
-  };
+  const handleSelectTab = useCallback(
+    (newTab: NavTab) => {
+      if (newTab === activeTab) return;
+
+      const prevIndex = tabOrder.indexOf(activeTab);
+      const nextIndex = tabOrder.indexOf(newTab);
+      const movingRight = nextIndex >= prevIndex;
+
+      if (transitionTimerRef.current) {
+        window.clearTimeout(transitionTimerRef.current);
+      }
+
+      setExitingTab(activeTab);
+      setSlideDirection(movingRight ? "right" : "left");
+      setActiveTab(newTab);
+
+      transitionTimerRef.current = window.setTimeout(() => {
+        setExitingTab(null);
+        transitionTimerRef.current = null;
+      }, 370);
+    },
+    [activeTab, tabOrder],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (transitionTimerRef.current) {
+        window.clearTimeout(transitionTimerRef.current);
+      }
+    };
+  }, []);
 
   // Application Data in Local Working Memory
   const [hives, setHives] = useState<Hive[]>([]);
@@ -618,42 +645,10 @@ export default function App() {
     await reloadData();
   };
 
-  return (
-    <div className="app-container">
-      <OfflineIndicator />
-
-      {/* Header */}
-      <header className="app-header">
-        <a
-          href="#home"
-          className="header-brand"
-          onClick={(e) => {
-            e.preventDefault();
-            setActiveTab("overview");
-          }}
-        >
-          <Logo className="header-logo" size={32} />
-          <div className="header-title-group">
-            <span className="header-title">Bifogat</span>
-            <span className="header-subtitle">Biodlingsloggbok</span>
-          </div>
-        </a>
-
-        <div className="header-actions">
-          <PWAInstallButton />
-          <SyncStatusBar
-            status={syncStatus}
-            isOnline={isOnline}
-            onSyncNow={handleSyncNow}
-            onOpenConflicts={() => setShowConflictModal(true)}
-            onOpenOutboxPreview={() => setShowOutboxPreviewModal(true)}
-          />
-        </div>
-      </header>
-
-      {/* Main View Area */}
-      <main className={`main-content ${slideDirection}`} key={activeTab}>
-        {activeTab === "overview" && (
+  const renderTabContent = (tab: NavTab) => {
+    switch (tab) {
+      case "overview":
+        return (
           <OverviewView
             hives={hives}
             events={events}
@@ -665,21 +660,17 @@ export default function App() {
               setPreselectedHiveId(undefined);
               setShowEventModal(true);
             }}
-            onOpenCreateTask={() => {
-              setEditingTask(undefined);
-              setShowTaskModal(true);
-            }}
             onOpenHoneySale={() => setShowHoneySaleModal(true)}
             onToggleTask={handleToggleTask}
-            onNavigateToTab={(tab, subTab) => {
-              handleSelectTab(tab);
+            onNavigateToTab={(navTab, subTab) => {
+              handleSelectTab(navTab);
               if (subTab) setHivesSubTab(subTab);
             }}
             onSelectHive={(hive) => setSelectedHiveDetail(hive)}
           />
-        )}
-
-        {activeTab === "hives" && (
+        );
+      case "hives":
+        return (
           <HivesView
             hives={hives}
             events={events}
@@ -708,9 +699,9 @@ export default function App() {
             onDeleteTask={handleDeleteTask}
             onOpenHoneySale={() => setShowHoneySaleModal(true)}
           />
-        )}
-
-        {activeTab === "harvests" && (
+        );
+      case "harvests":
+        return (
           <HarvestsView
             harvests={harvests}
             hives={hives}
@@ -730,9 +721,9 @@ export default function App() {
             onDeleteFilling={handleDeleteFilling}
             onOpenHoneySale={() => setShowHoneySaleModal(true)}
           />
-        )}
-
-        {activeTab === "economy" && (
+        );
+      case "economy":
+        return (
           <EconomyView
             transactions={transactions}
             importedHistoricalBalanceOre={meta.importedHistoricalBalanceOre}
@@ -747,9 +738,9 @@ export default function App() {
             }}
             onDeleteTransaction={handleDeleteTransaction}
           />
-        )}
-
-        {activeTab === "settings" && (
+        );
+      case "settings":
+        return (
           <SettingsView
             meta={meta}
             currentUser={currentUser}
@@ -770,7 +761,75 @@ export default function App() {
             onRestoreBackup={handleRestoreBackup}
             onClearLocalData={handleClearLocalData}
           />
+        );
+    }
+  };
+
+  return (
+    <div className="app-container">
+      <OfflineIndicator />
+
+      {/* Top Application Bar */}
+      <header className="app-header">
+        <a
+          href="#"
+          className="header-brand"
+          onClick={(e) => {
+            e.preventDefault();
+            handleSelectTab("overview");
+          }}
+        >
+          <img
+            src="/icon.svg"
+            alt="Bifogat Logo"
+            className="header-logo"
+            width={32}
+            height={32}
+          />
+          <div className="header-title-group">
+            <span className="header-title">Bifogat</span>
+            <span className="header-subtitle">Biodlingsloggbok</span>
+          </div>
+        </a>
+
+        <div className="header-actions">
+          <PWAInstallButton />
+          <SyncStatusBar
+            status={syncStatus}
+            isOnline={isOnline}
+            onSyncNow={handleSyncNow}
+            onOpenConflicts={() => setShowConflictModal(true)}
+            onOpenOutboxPreview={() => setShowOutboxPreviewModal(true)}
+          />
+        </div>
+      </header>
+
+      {/* Main View Area with Synchronized Two-Way Slide Transition */}
+      <main className="main-content-viewport">
+        {exitingTab && (
+          <div
+            key={`exit-${exitingTab}`}
+            className={`view-slide-pane ${
+              slideDirection === "right" ? "view-slide-out-to-left" : "view-slide-out-to-right"
+            }`}
+            style={{ pointerEvents: "none" }}
+            aria-hidden="true"
+          >
+            {renderTabContent(exitingTab)}
+          </div>
         )}
+        <div
+          key={`enter-${activeTab}`}
+          className={`view-slide-pane ${
+            exitingTab
+              ? slideDirection === "right"
+                ? "view-slide-in-from-right"
+                : "view-slide-in-from-left"
+              : ""
+          }`}
+        >
+          {renderTabContent(activeTab)}
+        </div>
       </main>
 
       {/* Bottom Navigation for Mobile and Quick Desktop Access */}
