@@ -802,11 +802,17 @@ export default function App() {
           }}
         >
           <img
-            src="/icon.svg"
+            src={`${import.meta.env.BASE_URL}icon-v2.svg`}
             alt="Bifogat Logo"
             className="header-logo"
             width={32}
             height={32}
+            onError={(e) => {
+              const target = e.currentTarget;
+              if (target.src.includes("icon-v2.svg")) {
+                target.src = `${import.meta.env.BASE_URL}icon.svg`;
+              }
+            }}
           />
           <div className="header-title-group">
             <span className="header-title">Bifogat</span>

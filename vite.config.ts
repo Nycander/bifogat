@@ -30,13 +30,18 @@ export default defineConfig(({ command }) => {
           "favicon.ico",
           "favicon-32x32.png",
           "apple-touch-icon.png",
+          "apple-touch-icon-v2.png",
           "icon.svg",
+          "icon-v2.svg",
           "pwa-192x192.png",
+          "pwa-192x192-v2.png",
           "pwa-512x512.png",
+          "pwa-512x512-v2.png",
           "pwa-maskable-512x512.png",
+          "pwa-maskable-512x512-v2.png",
         ],
         manifest: {
-          id: basePath,
+          id: `${basePath}?v=2`,
           name: "Bifogat Biodlingsloggbok",
           short_name: "Bifogat",
           description: "Offline-first beekeeping logbook with Google Sheets synchronization",
@@ -47,19 +52,19 @@ export default defineConfig(({ command }) => {
           scope: basePath,
           icons: [
             {
-              src: "pwa-192x192.png",
+              src: "pwa-192x192-v2.png",
               sizes: "192x192",
               type: "image/png",
               purpose: "any",
             },
             {
-              src: "pwa-512x512.png",
+              src: "pwa-512x512-v2.png",
               sizes: "512x512",
               type: "image/png",
               purpose: "any",
             },
             {
-              src: "pwa-maskable-512x512.png",
+              src: "pwa-maskable-512x512-v2.png",
               sizes: "512x512",
               type: "image/png",
               purpose: "maskable",
@@ -67,6 +72,10 @@ export default defineConfig(({ command }) => {
           ],
         },
         workbox: {
+          cacheId: "bifogat-v2",
+          cleanupOutdatedCaches: true,
+          clientsClaim: true,
+          skipWaiting: true,
           globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
         },
         devOptions: {
