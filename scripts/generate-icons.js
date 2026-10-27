@@ -46,31 +46,39 @@ console.log("Generating PWA icons and favicons...");
 // 1. pwa-512x512.png (purpose: any)
 const pwa512 = renderPng(standardSvg, 512, 512);
 fs.writeFileSync(path.join(publicDir, "pwa-512x512.png"), pwa512);
-console.log("✓ Generated public/pwa-512x512.png (512x512, any)");
+fs.writeFileSync(path.join(publicDir, "pwa-512x512-v2.png"), pwa512);
+console.log("✓ Generated public/pwa-512x512.png & pwa-512x512-v2.png (512x512, any)");
 
 // 2. pwa-192x192.png (purpose: any)
 const pwa192 = renderPng(standardSvg, 192, 192);
 fs.writeFileSync(path.join(publicDir, "pwa-192x192.png"), pwa192);
-console.log("✓ Generated public/pwa-192x192.png (192x192, any)");
+fs.writeFileSync(path.join(publicDir, "pwa-192x192-v2.png"), pwa192);
+console.log("✓ Generated public/pwa-192x192.png & pwa-192x192-v2.png (192x192, any)");
 
 // 3. pwa-maskable-512x512.png (purpose: maskable, full bleed)
 const pwaMaskable = renderPng(fullBleedSvg, 512, 512);
 fs.writeFileSync(path.join(publicDir, "pwa-maskable-512x512.png"), pwaMaskable);
-console.log("✓ Generated public/pwa-maskable-512x512.png (512x512, maskable)");
+fs.writeFileSync(path.join(publicDir, "pwa-maskable-512x512-v2.png"), pwaMaskable);
+console.log("✓ Generated public/pwa-maskable-512x512.png & pwa-maskable-512x512-v2.png (512x512, maskable)");
 
 // 4. apple-touch-icon.png (180x180, full bleed for iOS)
 const appleTouch = renderPng(fullBleedSvg, 180, 180);
 fs.writeFileSync(path.join(publicDir, "apple-touch-icon.png"), appleTouch);
-console.log("✓ Generated public/apple-touch-icon.png (180x180, iOS)");
+fs.writeFileSync(path.join(publicDir, "apple-touch-icon-v2.png"), appleTouch);
+console.log("✓ Generated public/apple-touch-icon.png & apple-touch-icon-v2.png (180x180, iOS)");
 
-// 5. favicon-32x32.png and favicon-16x16.png
+// 5. icon-v2.svg copy
+fs.writeFileSync(path.join(publicDir, "icon-v2.svg"), standardSvg);
+console.log("✓ Generated public/icon-v2.svg");
+
+// 6. favicon-32x32.png and favicon-16x16.png
 const fav32 = renderPng(standardSvg, 32, 32);
 const fav16 = renderPng(standardSvg, 16, 16);
 fs.writeFileSync(path.join(publicDir, "favicon-32x32.png"), fav32);
 fs.writeFileSync(path.join(publicDir, "favicon-16x16.png"), fav16);
 console.log("✓ Generated public/favicon-32x32.png & favicon-16x16.png");
 
-// 6. favicon.ico
+// 7. favicon.ico
 try {
   execSync(`convert ${path.join(publicDir, "favicon-32x32.png")} ${path.join(publicDir, "favicon.ico")}`);
   console.log("✓ Generated public/favicon.ico");
@@ -79,3 +87,4 @@ try {
 }
 
 console.log("All PWA icons and favicons generated successfully!");
+
