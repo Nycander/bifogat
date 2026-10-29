@@ -2,6 +2,8 @@ import React, { useState, useMemo } from "react";
 import { Harvest, Hive } from "../../domain/types";
 import { formatDate } from "../../domain/validation";
 import { X, Check, Droplet, Calendar, ChevronDown } from "lucide-react";
+import { useBottomSheet } from "../../hooks/useBottomSheet";
+import { BottomSheetDragHandle } from "../../components/ui/BottomSheetDragHandle";
 
 interface HarvestFormModalProps {
   harvest?: Harvest;
@@ -206,9 +208,17 @@ export const HarvestFormModal: React.FC<HarvestFormModalProps> = ({
     }
   }
 
+  const { contentRef, bottomSheetHandlers } = useBottomSheet({ onClose });
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div
+        ref={contentRef}
+        className="modal-content"
+        onClick={(e) => e.stopPropagation()}
+        {...bottomSheetHandlers}
+      >
+        <BottomSheetDragHandle />
         <div className="modal-header">
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <div

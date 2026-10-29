@@ -3,6 +3,8 @@ import { Transaction } from "../../domain/types";
 import { formatDate, parseSwedishCurrencyToOre } from "../../domain/validation";
 import { extractUniqueCustomers } from "../../domain/customers";
 import { X, Check } from "lucide-react";
+import { useBottomSheet } from "../../hooks/useBottomSheet";
+import { BottomSheetDragHandle } from "../../components/ui/BottomSheetDragHandle";
 
 interface TransactionFormModalProps {
   transaction?: Transaction;
@@ -71,9 +73,17 @@ export const TransactionFormModal: React.FC<TransactionFormModalProps> = ({
     }
   };
 
+  const { contentRef, bottomSheetHandlers } = useBottomSheet({ onClose });
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div
+        ref={contentRef}
+        className="modal-content"
+        onClick={(e) => e.stopPropagation()}
+        {...bottomSheetHandlers}
+      >
+        <BottomSheetDragHandle />
         <div className="modal-header">
           <h2 className="modal-title">
             {transaction ? "Redigera transaktion" : "Ny ekonomisk post"}

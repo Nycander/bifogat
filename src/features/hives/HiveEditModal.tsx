@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Hive, HiveStatus } from "../../domain/types";
 import { X, Check } from "lucide-react";
+import { useBottomSheet } from "../../hooks/useBottomSheet";
+import { BottomSheetDragHandle } from "../../components/ui/BottomSheetDragHandle";
 
 interface HiveEditModalProps {
   hive?: Hive;
@@ -37,9 +39,17 @@ export const HiveEditModal: React.FC<HiveEditModalProps> = ({ hive, onClose, onS
     }
   };
 
+  const { contentRef, bottomSheetHandlers } = useBottomSheet({ onClose });
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div
+        ref={contentRef}
+        className="modal-content"
+        onClick={(e) => e.stopPropagation()}
+        {...bottomSheetHandlers}
+      >
+        <BottomSheetDragHandle />
         <div className="modal-header">
           <h2 className="modal-title">{hive ? "Redigera kupa" : "Lägg till ny kupa"}</h2>
           <button className="modal-close-btn" onClick={onClose} aria-label="Stäng">
