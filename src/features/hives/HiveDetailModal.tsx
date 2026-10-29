@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { Hive, HiveEvent, Task } from "../../domain/types";
+import { useBottomSheet } from "../../hooks/useBottomSheet";
+import { BottomSheetDragHandle } from "../../components/ui/BottomSheetDragHandle";
 import {
   X,
   Plus,
@@ -85,13 +87,18 @@ export const HiveDetailModal: React.FC<HiveDetailModalProps> = ({
     return dateStr < today;
   };
 
+  const { contentRef, bottomSheetHandlers } = useBottomSheet({ onClose });
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
+        ref={contentRef}
         className="modal-content"
         style={{ maxWidth: "640px" }}
         onClick={(e) => e.stopPropagation()}
+        {...bottomSheetHandlers}
       >
+        <BottomSheetDragHandle />
         <div className="modal-header" style={{ flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
             <h2 className="modal-title">{hive.name}</h2>

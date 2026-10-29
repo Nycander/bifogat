@@ -57,10 +57,21 @@ import { CsvImportModal } from "./features/settings/CsvImportModal";
 import { NotesImportModal } from "./features/settings/NotesImportModal";
 import { ParsedNotesResult } from "./import/notesParser";
 import { useSwipeNavigation } from "./hooks/useSwipeNavigation";
+import { SnackbarProvider, useSnackbar } from "./components/ui/SnackbarContext";
+import { FloatingActionButton } from "./components/FloatingActionButton";
 
 export default function App() {
+  return (
+    <SnackbarProvider>
+      <AppContent />
+    </SnackbarProvider>
+  );
+}
+
+function AppContent() {
   const isOnline = useOnlineStatus();
   useSystemTheme();
+  const { showSnackbar } = useSnackbar();
 
   // Navigation with synchronized two-way push & slide transitions
   const [activeTab, setActiveTab] = useState<NavTab>("overview");
@@ -333,13 +344,16 @@ export default function App() {
     completedTaskIds?: string[];
     newTasks?: Array<{ title: string; dueDate?: string }>;
   }) => {
-    await eventRepository.create({
+    const createdEvent = await eventRepository.create({
       hiveId: data.hiveId,
       date: data.date,
       type: data.type,
       title: data.title,
       notes: data.notes,
     });
+
+    const targetHive = hives.find((h) => h.id === data.hiveId);
+    const createdNewTaskIds: string[] = [];
 
     // Mark any checked tasks as completed
     if (data.completedTaskIds && data.completedTaskIds.length > 0) {
@@ -354,23 +368,60 @@ export default function App() {
     // Create any new tasks for next visit
     if (data.newTasks && data.newTasks.length > 0) {
       for (const nt of data.newTasks) {
-        await taskRepository.create({
+        const createdTask = await taskRepository.create({
           title: nt.title,
           hiveId: data.hiveId,
           dueDate: nt.dueDate,
           status: "open",
           notes: `Planerad under kupbesök ${data.date}`,
         });
+        createdNewTaskIds.push(createdTask.id);
       }
     }
 
     await reloadData();
+
+    showSnackbar({
+      message: `Kupbesök sparat: ${data.title || "Besök"}`,
+      submessage: targetHive ? targetHive.name : undefined,
+      type: "success",
+      actionLabel: "Ångra",
+      onAction: async () => {
+        await eventRepository.delete(createdEvent.id);
+        if (data.completedTaskIds && data.completedTaskIds.length > 0) {
+          for (const taskId of data.completedTaskIds) {
+            await taskRepository.update(taskId, {
+              status: "open",
+              completedAt: undefined,
+            });
+          }
+        }
+        for (const newTid of createdNewTaskIds) {
+          await taskRepository.delete(newTid);
+        }
+        await reloadData();
+        showSnackbar({ message: "Kupbesöket ångrades", type: "info" });
+      },
+    });
   };
 
   // Task Handlers
   const handleToggleTask = async (id: string) => {
+    const existing = tasks.find((t) => t.id === id);
     await taskRepository.toggleComplete(id);
     await reloadData();
+
+    if (existing && existing.status === "open") {
+      showSnackbar({
+        message: `Uppgift markerad som klar: ${existing.title}`,
+        type: "success",
+        actionLabel: "Ångra",
+        onAction: async () => {
+          await taskRepository.toggleComplete(id);
+          await reloadData();
+        },
+      });
+    }
   };
 
   const handleSaveTask = async (data: {
@@ -411,8 +462,29 @@ export default function App() {
   };
 
   const handleDeleteTask = async (id: string) => {
+    const existing = tasks.find((t) => t.id === id);
     await taskRepository.delete(id);
     await reloadData();
+
+    if (existing) {
+      showSnackbar({
+        message: `Uppgift borttagen: ${existing.title}`,
+        type: "info",
+        actionLabel: "Ångra",
+        onAction: async () => {
+          await taskRepository.create({
+            title: existing.title,
+            notes: existing.notes,
+            dueDate: existing.dueDate,
+            hiveId: existing.hiveId,
+            status: existing.status,
+            completedAt: existing.completedAt,
+          });
+          await reloadData();
+          showSnackbar({ message: "Uppgiften återställdes", type: "success" });
+        },
+      });
+    }
   };
 
   // Harvest Handlers
@@ -436,8 +508,32 @@ export default function App() {
   };
 
   const handleDeleteHarvest = async (id: string) => {
+    const existing = harvests.find((h) => h.id === id);
     await harvestRepository.delete(id);
     await reloadData();
+
+    if (existing) {
+      showSnackbar({
+        message: `Skörd borttagen: ${existing.batchName || existing.date}`,
+        type: "info",
+        actionLabel: "Ångra",
+        onAction: async () => {
+          await harvestRepository.create({
+            batchName: existing.batchName,
+            date: existing.date,
+            collectedDates: existing.collectedDates,
+            dragPeriod: existing.dragPeriod,
+            hiveId: existing.hiveId,
+            honeyWeightGrams: existing.honeyWeightGrams,
+            waterContentPercent: existing.waterContentPercent,
+            fillings: existing.fillings,
+            notes: existing.notes,
+          });
+          await reloadData();
+          showSnackbar({ message: "Skörden återställdes", type: "success" });
+        },
+      });
+    }
   };
 
   const handleSaveFilling = async (
@@ -477,8 +573,29 @@ export default function App() {
   };
 
   const handleDeleteTransaction = async (id: string) => {
+    const existing = transactions.find((t) => t.id === id);
     await transactionRepository.delete(id);
     await reloadData();
+
+    if (existing) {
+      showSnackbar({
+        message: `Transaktion borttagen: ${existing.description}`,
+        type: "info",
+        actionLabel: "Ångra",
+        onAction: async () => {
+          await transactionRepository.create({
+            date: existing.date,
+            description: existing.description,
+            amountOre: existing.amountOre,
+            counterparty: existing.counterparty,
+            category: existing.category,
+            source: existing.source,
+          });
+          await reloadData();
+          showSnackbar({ message: "Transaktionen återställdes", type: "success" });
+        },
+      });
+    }
   };
 
   const handleSaveHoneySale = async (data: {
@@ -491,7 +608,7 @@ export default function App() {
     jarSizeGrams: number;
     harvestId?: string;
   }) => {
-    await transactionRepository.create({
+    const createdTx = await transactionRepository.create({
       date: data.date,
       description: data.description,
       amountOre: data.amountOre,
@@ -500,6 +617,19 @@ export default function App() {
       source: "manual",
     });
     await reloadData();
+
+    const sek = (data.amountOre / 100).toFixed(0);
+    showSnackbar({
+      message: `Försäljning bokförd: ${data.jarCount} burkar (${sek} kr)`,
+      submessage: data.counterparty ? `Köpare: ${data.counterparty}` : undefined,
+      type: "success",
+      actionLabel: "Ångra",
+      onAction: async () => {
+        await transactionRepository.delete(createdTx.id);
+        await reloadData();
+        showSnackbar({ message: "Försäljningen ångrades", type: "info" });
+      },
+    });
   };
 
   // Conflict Resolution
@@ -865,6 +995,25 @@ export default function App() {
         activeTab={activeTab}
         onSelectTab={handleSelectTab}
         openTaskCount={tasks.filter((t) => t.status === "open").length}
+      />
+
+      {/* Material 3 Speed Dial Floating Action Button */}
+      <FloatingActionButton
+        onLogVisit={() => {
+          setPreselectedHiveId(undefined);
+          setShowEventModal(true);
+        }}
+        onSellHoney={() => setShowHoneySaleModal(true)}
+        onCreateTask={() => {
+          setTaskInitialHiveId(undefined);
+          setEditingTask(undefined);
+          setShowTaskModal(true);
+        }}
+        onCreateHarvest={() => {
+          setEditingHarvest(undefined);
+          setShowHarvestModal(true);
+        }}
+        isModalOpen={isAnyModalOpen}
       />
 
       {/* Modals */}

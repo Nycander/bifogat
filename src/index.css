@@ -893,24 +893,69 @@ a:hover {
   background-color: var(--color-surface);
   width: 100%;
   max-width: 560px;
-  border-top-left-radius: 20px;
-  border-top-right-radius: 20px;
-  padding: 20px 20px calc(20px + env(safe-area-inset-bottom, 0px)) 20px;
-  max-height: 90vh;
+  border-top-left-radius: 28px;
+  border-top-right-radius: 28px;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  padding: 8px 20px calc(20px + env(safe-area-inset-bottom, 0px)) 20px;
+  max-height: calc(100dvh - 24px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: var(--shadow-lg);
-  animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.24);
+  animation: sheetSlideUp 0.25s cubic-bezier(0.08, 0.82, 0.17, 1);
   will-change: transform;
   pointer-events: auto;
 }
 
+@keyframes sheetSlideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0.9;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.sheet-drag-handle-container {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 0 10px 0;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.sheet-drag-handle {
+  width: 38px;
+  height: 4.5px;
+  border-radius: 9999px;
+  background-color: var(--color-border-strong);
+  opacity: 0.75;
+  transition: opacity 0.15s ease, background-color 0.15s ease, width 0.15s ease;
+}
+
+.sheet-drag-handle-container:hover .sheet-drag-handle,
+.sheet-drag-handle-container:active .sheet-drag-handle {
+  opacity: 1;
+  background-color: var(--color-primary-base);
+  width: 44px;
+}
+
 @media (min-width: 640px) {
+  .sheet-drag-handle-container {
+    display: none;
+  }
   .modal-content {
-    border-radius: var(--radius-lg);
+    border-radius: 24px;
     max-height: 90vh;
     padding: 24px;
+    box-shadow: var(--shadow-lg);
     animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
 }
@@ -2099,6 +2144,866 @@ button:active:not(:disabled) {
 .view-slide-from-left {
   animation: slideInFromLeft 0.35s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
 }
+
+/* ==========================================================================
+   Material 3 Speed Dial Floating Action Button (FAB)
+   ========================================================================== */
+.speed-dial-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(2px);
+  z-index: 44;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.speed-dial-container {
+  position: fixed;
+  bottom: calc(var(--bottom-nav-height) + 16px);
+  right: 16px;
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  pointer-events: auto;
+}
+
+.fab-main-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #e09f3e 0%, #ca8a04 100%);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 4px 14px rgba(202, 138, 4, 0.42), 0 2px 6px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s ease, background 0.2s ease;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+.fab-main-btn:active {
+  transform: scale(0.92);
+}
+
+.fab-main-btn.fab-open {
+  background: #334155;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.fab-icon {
+  transition: transform 0.25s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.fab-icon-rotated {
+  transform: rotate(45deg);
+}
+
+.speed-dial-menu {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.speed-dial-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  animation: speedDialItemIn 0.2s cubic-bezier(0.08, 0.82, 0.17, 1) both;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+@keyframes speedDialItemIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.speed-dial-label-chip {
+  background: var(--color-surface, #ffffff);
+  color: var(--color-text-main, #1e293b);
+  padding: 6px 12px;
+  border-radius: 12px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--color-border-subtle, #e2e8f0);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.speed-dial-label-title {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.speed-dial-label-sub {
+  font-size: 10.5px;
+  color: var(--color-text-muted, #64748b);
+  line-height: 1.2;
+}
+
+.speed-dial-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.speed-dial-btn-visit {
+  background-color: var(--color-primary-surface, #ecfdf5);
+  color: var(--color-primary-base, #16a34a);
+}
+
+.speed-dial-btn-sale {
+  background-color: var(--color-warning-surface, #fffbeb);
+  color: #d97706;
+}
+
+.speed-dial-btn-task {
+  background-color: var(--color-info-surface, #eff6ff);
+  color: #2563eb;
+}
+
+.speed-dial-btn-harvest {
+  background-color: var(--color-secondary-surface, #fefce8);
+  color: #b45309;
+}
+
+.speed-dial-item:hover .speed-dial-btn {
+  transform: scale(1.08);
+}
+
+.speed-dial-item:active .speed-dial-btn {
+  transform: scale(0.94);
+}
+
+/* Dark Mode Speed Dial Overrides */
+[data-theme="dark"] .speed-dial-label-chip {
+  background: var(--color-surface-bg, #1a2219);
+  color: var(--color-text-primary, #edf3eb);
+  border-color: var(--color-border-default, #344432);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
+}
+
+[data-theme="dark"] .speed-dial-label-title {
+  color: var(--color-text-primary, #edf3eb);
+}
+
+[data-theme="dark"] .speed-dial-label-sub {
+  color: var(--color-text-secondary, #a5b7a2);
+}
+
+[data-theme="dark"] .fab-main-btn {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), 0 0 20px rgba(217, 119, 6, 0.25);
+}
+
+[data-theme="dark"] .fab-main-btn.fab-open {
+  background: var(--color-surface-bg, #1a2219);
+  border: 1.5px solid var(--color-border-strong, #485c45);
+  color: var(--color-text-primary, #edf3eb);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="dark"] .speed-dial-btn-visit {
+  background-color: #122718;
+  color: #86efac;
+  border: 1px solid #1c4b27;
+}
+
+[data-theme="dark"] .speed-dial-btn-sale {
+  background-color: #281c0c;
+  color: #fbbf24;
+  border: 1px solid #533913;
+}
+
+[data-theme="dark"] .speed-dial-btn-task {
+  background-color: #0c1e33;
+  color: #93c5fd;
+  border: 1px solid #1e3a5f;
+}
+
+[data-theme="dark"] .speed-dial-btn-harvest {
+  background-color: #26200c;
+  color: #fde047;
+  border: 1px solid #4a3e12;
+}
+
+/* ==========================================================================
+   Zero-Scroll Focused Multi-Step Wizards
+   ========================================================================== */
+.zero-scroll-modal {
+  max-height: 85vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 639px) {
+  .zero-scroll-modal {
+    max-height: calc(100dvh - 28px);
+    padding: 6px 16px calc(16px + env(safe-area-inset-bottom, 0px)) 16px;
+  }
+}
+
+.wizard-header {
+  padding-bottom: 6px;
+  margin-bottom: 4px;
+}
+
+.wizard-icon-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary-surface);
+  color: var(--color-primary-base);
+  flex-shrink: 0;
+}
+
+.wizard-icon-badge.honey-badge {
+  background: var(--color-honey-surface);
+  color: var(--color-honey-base);
+}
+
+.wizard-subtitle {
+  font-size: 11.5px;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  display: block;
+}
+
+.wizard-progress-track {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 2px 0 10px 0;
+}
+
+.wizard-step-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface-inset);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border-default);
+  transition: all 0.2s ease;
+}
+
+.wizard-step-dot.active {
+  background: var(--color-primary-base);
+  color: var(--color-primary-text, #ffffff);
+  border-color: var(--color-primary-base);
+}
+
+.wizard-step-line {
+  height: 2.5px;
+  width: 36px;
+  background: var(--color-border-default);
+  border-radius: 2px;
+  transition: all 0.2s ease;
+}
+
+.wizard-step-line.active {
+  background: var(--color-primary-base);
+}
+
+.wizard-error-alert {
+  margin-bottom: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--color-danger-surface);
+  color: var(--color-danger-text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.wizard-step-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  animation: fadeIn 0.18s ease-out;
+}
+
+.wizard-context-banner {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.wizard-context-pill {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--color-surface-inset);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.wizard-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-border-subtle);
+  flex-shrink: 0;
+}
+
+/* Hive Chips */
+.hive-chip-selector {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.hive-select-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1.5px solid var(--color-border-default);
+  background: var(--color-surface-bg);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+}
+
+.hive-select-chip:hover {
+  border-color: var(--color-primary-base);
+}
+
+.hive-select-chip.selected {
+  border-color: var(--color-primary-base);
+  background: var(--color-primary-surface);
+  color: var(--color-primary-base);
+  box-shadow: 0 0 0 2px rgba(119, 136, 115, 0.2);
+}
+
+.hive-chip-icon {
+  font-size: 15px;
+}
+
+/* Action Type 6-Grid */
+.action-type-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.action-type-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 4px;
+  border-radius: 10px;
+  border: 1.5px solid var(--color-border-default);
+  background: var(--color-surface-bg);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+}
+
+.action-type-card:hover {
+  border-color: var(--color-primary-base);
+}
+
+.action-type-card.selected {
+  border-color: var(--color-primary-base);
+  background: var(--color-primary-base);
+  color: var(--color-primary-text, #ffffff);
+}
+
+/* Quick Observation Cloud */
+.quick-tags-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.quick-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-inset);
+  color: var(--color-text-primary);
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+}
+
+.quick-tag-chip:hover,
+.quick-tag-chip:active {
+  border-color: var(--color-primary-base);
+  background: var(--color-primary-surface);
+  color: var(--color-primary-base);
+  transform: translateY(-1px);
+}
+
+/* Wizard Task List */
+.wizard-tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.wizard-task-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: var(--color-surface-inset);
+  border: 1px solid var(--color-border-subtle);
+  cursor: pointer;
+  font-size: 12.5px;
+  user-select: none;
+}
+
+.wizard-task-item.checked {
+  background: var(--color-primary-surface);
+  border-color: var(--color-primary-border);
+}
+
+.wizard-task-item.checked .wizard-task-text {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+
+.wizard-empty-tasks {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  font-style: italic;
+  padding: 6px 0;
+}
+
+.wizard-new-task-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--color-surface-inset);
+  font-size: 12px;
+}
+
+.btn-save-wizard {
+  font-weight: 700;
+  padding: 8px 18px;
+}
+
+/* Honey Stepper Card */
+.honey-stepper-card {
+  background: var(--color-surface-inset);
+  border: 1px solid var(--color-border-default);
+  border-radius: 14px;
+  padding: 10px 14px;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.honey-stepper-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.honey-stepper-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin-bottom: 8px;
+}
+
+.honey-stepper-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  border: 1.5px solid var(--color-border-default);
+  background: var(--color-surface-bg);
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+}
+
+.honey-stepper-btn:active {
+  transform: scale(0.92);
+}
+
+.honey-stepper-display {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  min-width: 90px;
+}
+
+.honey-stepper-num {
+  font-size: 2.4rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+
+.honey-stepper-unit {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-left: 4px;
+}
+
+.honey-preset-chips {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.honey-preset-chip {
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border-default);
+  background: var(--color-surface-bg);
+  color: var(--color-text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+}
+
+.honey-preset-chip.selected {
+  border-color: #d97706;
+  background: #fef3c7;
+  color: #92400e;
+}
+
+[data-theme="dark"] .honey-preset-chip.selected {
+  border-color: #f59e0b;
+  background: #281c0c;
+  color: #fbbf24;
+}
+
+.jar-size-selector {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.jar-size-chip {
+  padding: 6px 2px;
+  text-align: center;
+  font-size: 11.5px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid var(--color-border-default);
+  background: var(--color-surface-bg);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.jar-size-chip.selected {
+  border-color: #d97706;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+[data-theme="dark"] .jar-size-chip.selected {
+  border-color: #f59e0b;
+  background: #281c0c;
+  color: #fbbf24;
+}
+
+.honey-total-banner {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.12) 0%, rgba(245, 158, 11, 0.18) 100%);
+  border: 1.5px solid rgba(217, 119, 6, 0.35);
+  border-radius: 12px;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.honey-total-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  display: block;
+}
+
+.honey-total-sub {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  display: block;
+}
+
+.honey-total-amount {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #d97706;
+}
+
+[data-theme="dark"] .honey-total-amount {
+  color: #fbbf24;
+}
+
+.payment-method-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.payment-method-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 9px 4px;
+  border-radius: 10px;
+  border: 1.5px solid var(--color-border-default);
+  background: var(--color-surface-bg);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.payment-method-card.selected {
+  border-color: var(--color-primary-base);
+  background: var(--color-primary-surface);
+  color: var(--color-primary-base);
+}
+
+.customer-chips-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.customer-chips-label {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.customer-quick-chip {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-inset);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   Material 3 Snackbar with "Ångra" (Undo)
+   ========================================================================== */
+.snackbar-container {
+  position: fixed;
+  bottom: calc(var(--bottom-nav-height) + 14px);
+  left: 12px;
+  right: 12px;
+  max-width: 460px;
+  margin: 0 auto;
+  z-index: 60;
+  pointer-events: none;
+}
+
+.snackbar-card {
+  pointer-events: auto;
+  background: #0f172a;
+  color: #f8fafc;
+  border-radius: 14px;
+  padding: 11px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.4), 0 4px 10px -2px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  position: relative;
+  overflow: hidden;
+  animation: snackbarSlideIn 0.24s cubic-bezier(0.08, 0.82, 0.17, 1);
+}
+
+@keyframes snackbarSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.snackbar-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.snackbar-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.snackbar-text-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.snackbar-message {
+  font-size: 13.5px;
+  font-weight: 600;
+  margin: 0;
+  color: #f8fafc;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.snackbar-submessage {
+  font-size: 11px;
+  color: #94a3b8;
+  display: block;
+}
+
+.snackbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.snackbar-undo-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.snackbar-undo-btn:hover {
+  background: rgba(251, 191, 36, 0.28);
+  transform: scale(1.02);
+}
+
+.snackbar-undo-btn:active {
+  transform: scale(0.96);
+}
+
+.snackbar-close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.snackbar-close-btn:hover {
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.snackbar-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #fbbf24, #f59e0b);
+  width: 100%;
+  transform-origin: left;
+  animation: snackbarTimer linear forwards;
+}
+
+@keyframes snackbarTimer {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
 
 
 

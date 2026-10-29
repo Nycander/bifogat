@@ -1,5 +1,7 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import { X } from "lucide-react";
+import { useBottomSheet } from "../../hooks/useBottomSheet";
+import { BottomSheetDragHandle } from "./BottomSheetDragHandle";
 
 export interface ModalProps {
   isOpen: boolean;
@@ -12,6 +14,7 @@ export interface ModalProps {
   children: React.ReactNode;
   footer?: React.ReactNode;
   className?: string;
+  showDragHandle?: boolean;
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -25,8 +28,9 @@ export const Modal: React.FC<ModalProps> = ({
   children,
   footer,
   className = "",
+  showDragHandle = true,
 }) => {
-  const contentRef = useRef<HTMLDivElement>(null);
+  const { contentRef, backdropRef, bottomSheetHandlers } = useBottomSheet({ onClose });
 
   useEffect(() => {
     if (!isOpen) return;
@@ -52,19 +56,22 @@ export const Modal: React.FC<ModalProps> = ({
 
   return (
     <div
+      ref={backdropRef}
       className="modal-backdrop"
       onClick={closeOnBackdropClick ? onClose : undefined}
       role="dialog"
       aria-modal="true"
       onWheel={(e) => e.stopPropagation()}
-      onTouchMove={(e) => e.stopPropagation()}
     >
       <div
         ref={contentRef}
         className={`modal-content ${className}`.trim()}
         style={{ maxWidth: styleMaxWidth }}
         onClick={(e) => e.stopPropagation()}
+        {...bottomSheetHandlers}
       >
+        {showDragHandle && <BottomSheetDragHandle />}
+
         {(title || subtitle) && (
           <div className="modal-header">
             <div>
@@ -82,7 +89,7 @@ export const Modal: React.FC<ModalProps> = ({
           </div>
         )}
 
-        <div className="modal-body">{children}</div>
+        <div className="modal-body modal-scroll-body">{children}</div>
 
         {footer && <div className="modal-actions">{footer}</div>}
       </div>

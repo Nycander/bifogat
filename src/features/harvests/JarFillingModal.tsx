@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Harvest, HoneyPreparationType } from "../../domain/types";
 import { formatDate } from "../../domain/validation";
-import { X, Check, Droplet, PackageCheck } from "lucide-react";
+import { X, Check, PackageCheck } from "lucide-react";
+import { useBottomSheet } from "../../hooks/useBottomSheet";
+import { BottomSheetDragHandle } from "../../components/ui/BottomSheetDragHandle";
 
 interface JarFillingModalProps {
   harvests: Harvest[];
@@ -117,9 +119,17 @@ export const JarFillingModal: React.FC<JarFillingModalProps> = ({
 
   const commonSizes = [250, 350, 500, 700];
 
+  const { contentRef, bottomSheetHandlers } = useBottomSheet({ onClose });
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div
+        ref={contentRef}
+        className="modal-content"
+        onClick={(e) => e.stopPropagation()}
+        {...bottomSheetHandlers}
+      >
+        <BottomSheetDragHandle />
         <div className="modal-header">
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <div

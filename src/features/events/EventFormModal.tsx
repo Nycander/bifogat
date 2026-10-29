@@ -1,7 +1,26 @@
 import React, { useState } from "react";
 import { Hive, EventType, Task } from "../../domain/types";
 import { formatDate } from "../../domain/validation";
-import { X, Check, CheckSquare, Square, Plus, Trash2, Calendar, ClipboardList } from "lucide-react";
+import {
+  X,
+  Check,
+  CheckSquare,
+  Square,
+  Plus,
+  Trash2,
+  Calendar,
+  ClipboardList,
+  ArrowRight,
+  ArrowLeft,
+  Search,
+  Droplet,
+  Shield,
+  Layers,
+  Crown,
+  MoreHorizontal,
+} from "lucide-react";
+import { useBottomSheet } from "../../hooks/useBottomSheet";
+import { BottomSheetDragHandle } from "../../components/ui/BottomSheetDragHandle";
 
 interface EventFormModalProps {
   hives: Hive[];
@@ -26,6 +45,8 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
   onClose,
   onSave,
 }) => {
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+
   const [hiveId, setHiveId] = useState(initialHiveId || (hives[0]?.id ?? ""));
   const [date, setDate] = useState(formatDate(new Date()));
   const [type, setType] = useState<EventType>("inspection");
@@ -66,16 +87,51 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
     setNewTasks((prev) => prev.filter((_, idx) => idx !== index));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const addObservationTag = (tag: string) => {
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      navigator.vibrate(8);
+    }
+    if (!title.trim()) {
+      setTitle(tag);
+    } else if (!title.includes(tag)) {
+      setTitle((prev) => `${prev}, ${tag}`);
+    }
+  };
+
+  const handleNextFromStep1 = () => {
+    if (!hiveId) {
+      setError("Vänligen välj en kupa");
+      return;
+    }
+    setError(null);
+    setStep(2);
+  };
+
+  const handleNextFromStep2 = () => {
+    if (!title.trim() && !notes.trim()) {
+      // Default to standard inspection title based on type
+      const defaultLabels: Record<EventType, string> = {
+        inspection: "Kupbesiktning & tillsyn",
+        feeding: "Fodring & foderkontroll",
+        treatment: "Varroabehandling",
+        equipment_change: "Utrustningsbyte / skattlådor",
+        queen_activity: "Drottningtillsyn & yngelkontroll",
+        harvest: "Skördeuttag",
+        other: "Skötsel & tillsyn",
+      };
+      setTitle(defaultLabels[type] || "Kupbesök");
+    }
+    setError(null);
+    setStep(3);
+  };
+
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (isSubmitting) return;
 
     if (!hiveId) {
       setError("Du måste välja en kupa");
-      return;
-    }
-    if (!title.trim() && !notes.trim()) {
-      setError("Fyll i åtminstone en kort sammanfattning eller anteckning");
+      setStep(1);
       return;
     }
 
@@ -98,60 +154,121 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
     }
   };
 
+  const { contentRef, backdropRef, bottomSheetHandlers } = useBottomSheet({ onClose });
+
+  const eventTypes: Array<{ id: EventType; label: string; icon: any; color: string }> = [
+    { id: "inspection", label: "Besiktning", icon: Search, color: "var(--color-primary-base)" },
+    { id: "feeding", label: "Foder", icon: Droplet, color: "var(--color-warning-base)" },
+    { id: "treatment", label: "Behandling", icon: Shield, color: "var(--color-info-base)" },
+    { id: "equipment_change", label: "Skattlåda", icon: Layers, color: "var(--color-secondary-text)" },
+    { id: "queen_activity", label: "Drottning", icon: Crown, color: "#d97706" },
+    { id: "other", label: "Övrigt", icon: MoreHorizontal, color: "var(--color-text-muted)" },
+  ];
+
+  const quickObservationChips = [
+    "👑 Drottning sedd",
+    "🥚 Yngel i alla stadier",
+    "🍯 Gott om foder",
+    "🐝 Lugnt temperament",
+    "📦 Mycket bin / trångt",
+    "⚠️ Drottningcell sedd",
+    "🌸 Nektardrag pågår",
+  ];
+
+  const currentHive = hives.find((h) => h.id === hiveId);
+
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div ref={backdropRef} className="modal-backdrop" onClick={onClose}>
       <div
-        className="modal-content"
-        style={{ maxWidth: "620px" }}
+        ref={contentRef}
+        className="modal-content zero-scroll-modal"
+        style={{ maxWidth: "560px" }}
         onClick={(e) => e.stopPropagation()}
+        {...bottomSheetHandlers}
       >
-        <div className="modal-header">
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <ClipboardList size={20} color="var(--color-primary)" />
-            <h2 className="modal-title">Logga kupbesök & åtgärder</h2>
+        <BottomSheetDragHandle />
+
+        {/* Modal Header & Step Indicator */}
+        <div className="modal-header wizard-header">
+          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+            <div className="wizard-icon-badge">
+              <ClipboardList size={18} />
+            </div>
+            <div>
+              <h2 className="modal-title" style={{ fontSize: "1.1rem", margin: 0 }}>
+                Logga kupbesök
+              </h2>
+              <span className="wizard-subtitle">
+                Steg {step} av 3: {step === 1 ? "Kupa & Typ" : step === 2 ? "Observationer" : "Att göra & Spara"}
+              </span>
+            </div>
           </div>
           <button className="modal-close-btn" onClick={onClose} aria-label="Stäng">
             <X size={20} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          {error && (
-            <div className="form-error" style={{ marginBottom: "1rem" }}>
-              {error}
-            </div>
-          )}
+        {/* Step Progress Dots */}
+        <div className="wizard-progress-track">
+          <div className={`wizard-step-dot ${step >= 1 ? "active" : ""}`}>1</div>
+          <div className={`wizard-step-line ${step >= 2 ? "active" : ""}`} />
+          <div className={`wizard-step-dot ${step >= 2 ? "active" : ""}`}>2</div>
+          <div className={`wizard-step-line ${step >= 3 ? "active" : ""}`} />
+          <div className={`wizard-step-dot ${step >= 3 ? "active" : ""}`}>3</div>
+        </div>
 
-          {/* Hive & Date Selector */}
-          <div style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: "0.75rem" }}>
-            <div className="form-group">
-              <label className="form-label" htmlFor="event-hive">
-                Besökt kupa *
-              </label>
-              <select
-                id="event-hive"
-                className="form-select"
-                value={hiveId}
-                onChange={(e) => {
-                  setHiveId(e.target.value);
-                  setCompletedTaskIds([]);
-                }}
-                required
-              >
+        {error && <div className="form-error wizard-error-alert">{error}</div>}
+
+        {/* STEP 1: Kupa & Åtgärd */}
+        {step === 1 && (
+          <div className="wizard-step-content">
+            <div className="form-group" style={{ marginBottom: "0.85rem" }}>
+              <label className="form-label">Vilken kupa besöker du? *</label>
+              <div className="hive-chip-selector">
                 {hives.map((h) => (
-                  <option key={h.id} value={h.id}>
-                    {h.name} {h.status !== "active" ? `(${h.status})` : ""}
-                  </option>
+                  <button
+                    key={h.id}
+                    type="button"
+                    className={`hive-select-chip ${hiveId === h.id ? "selected" : ""}`}
+                    onClick={() => {
+                      setHiveId(h.id);
+                      setCompletedTaskIds([]);
+                    }}
+                  >
+                    <span className="hive-chip-icon">🐝</span>
+                    <span className="hive-chip-name">{h.name}</span>
+                    {hiveId === h.id && <Check size={16} className="hive-chip-check" />}
+                  </button>
                 ))}
-              </select>
+              </div>
             </div>
 
-            <div className="form-group">
-              <label className="form-label" htmlFor="event-date">
-                Besöksdatum *
-              </label>
+            {/* Date Quick Selector */}
+            <div className="form-group" style={{ marginBottom: "0.85rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                <label className="form-label" style={{ margin: 0 }}>Besöksdatum</label>
+                <div style={{ display: "flex", gap: "6px" }}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-xs"
+                    onClick={() => setDate(formatDate(new Date()))}
+                  >
+                    Idag
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-xs"
+                    onClick={() => {
+                      const y = new Date();
+                      y.setDate(y.getDate() - 1);
+                      setDate(formatDate(y));
+                    }}
+                  >
+                    Igår
+                  </button>
+                </div>
+              </div>
               <input
-                id="event-date"
                 type="date"
                 className="form-input"
                 value={date}
@@ -159,274 +276,227 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
                 required
               />
             </div>
-          </div>
 
-          {/* 1. Att göra inför detta besök */}
-          <div
-            className="box-success"
-            style={{
-              padding: "0.75rem 0.9rem",
-              marginBottom: "1rem",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: "0.4rem",
-              }}
-            >
-              <span style={{ fontWeight: 600, fontSize: "0.875rem", color: "var(--color-success-text)" }}>
-                Att göra inför / under detta besök ({openTasksForThisHive.length} st):
-              </span>
-              <span style={{ fontSize: "0.75rem", color: "var(--color-success-text)", opacity: 0.85 }}>
-                Bocka av det du har utfört
-              </span>
-            </div>
-
-            {openTasksForThisHive.length === 0 ? (
-              <div style={{ fontSize: "0.8rem", color: "var(--color-success-text)", fontStyle: "italic", opacity: 0.85 }}>
-                Inga tidigare planerade uppgifter för denna kupa.
-              </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
-                {openTasksForThisHive.map((task) => {
-                  const isChecked = completedTaskIds.includes(task.id);
+            {/* Action Type 6-Grid */}
+            <div className="form-group" style={{ marginBottom: "0.5rem" }}>
+              <label className="form-label">Typ av åtgärd *</label>
+              <div className="action-type-grid">
+                {eventTypes.map((et) => {
+                  const Icon = et.icon;
+                  const isSelected = type === et.id;
                   return (
-                    <label
-                      key={task.id}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.5rem",
-                        fontSize: "0.85rem",
-                        cursor: "pointer",
-                        background: isChecked ? "var(--color-success-surface)" : "var(--color-surface-bg)",
-                        padding: "0.35rem 0.6rem",
-                        borderRadius: "6px",
-                        border: "1px solid",
-                        borderColor: isChecked ? "var(--color-success-border)" : "var(--color-border-subtle)",
-                        transition: "all 0.15s ease",
-                      }}
+                    <button
+                      key={et.id}
+                      type="button"
+                      className={`action-type-card ${isSelected ? "selected" : ""}`}
+                      onClick={() => setType(et.id)}
                     >
-                      <input
-                        type="checkbox"
-                        checked={isChecked}
-                        onChange={() => toggleTaskCompletion(task.id)}
-                        style={{ display: "none" }}
-                      />
-                      {isChecked ? (
-                        <CheckSquare size={16} color="var(--color-success-base)" />
-                      ) : (
-                        <Square size={16} color="var(--color-text-secondary)" />
-                      )}
-                      <span
-                        style={{
-                          flex: 1,
-                          textDecoration: isChecked ? "line-through" : "none",
-                          color: isChecked ? "var(--color-success-text)" : "var(--color-text-primary)",
-                          fontWeight: isChecked ? 600 : 400,
-                        }}
-                      >
-                        {task.title}
-                      </span>
-                      {!task.hiveId && (
-                        <span
-                          style={{
-                            fontSize: "0.7rem",
-                            background: "var(--color-surface-inset)",
-                            color: "var(--color-text-secondary)",
-                            padding: "0.1rem 0.4rem",
-                            borderRadius: "10px",
-                          }}
-                        >
-                          Allmän
-                        </span>
-                      )}
-                      {isChecked && (
-                        <span style={{ fontSize: "0.7rem", color: "var(--color-success-text)", fontWeight: 600 }}>
-                          Klar!
-                        </span>
-                      )}
-                    </label>
+                      <Icon size={18} color={isSelected ? "var(--color-primary-text, #fff)" : et.color} />
+                      <span>{et.label}</span>
+                    </button>
                   );
                 })}
               </div>
-            )}
-          </div>
-
-          {/* 2. Besökslogg (Typ & Sammanfattning) */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
-            <div className="form-group">
-              <label className="form-label" htmlFor="event-type">
-                Typ av åtgärd
-              </label>
-              <select
-                id="event-type"
-                className="form-select"
-                value={type}
-                onChange={(e) => setType(e.target.value as EventType)}
-              >
-                <option value="inspection">Besiktning / Vårkoll</option>
-                <option value="feeding">Foder / Invintring</option>
-                <option value="treatment">Behandling (t.ex. Varroa)</option>
-                <option value="equipment">Utrustning / Skattlådor</option>
-                <option value="colony_change">Drottning / Avläggare</option>
-                <option value="harvest">Skörd / Tömning</option>
-                <option value="other">Övrigt</option>
-              </select>
             </div>
 
-            <div className="form-group">
-              <label className="form-label" htmlFor="event-title">
-                Kort sammanfattning *
-              </label>
+            <div className="wizard-actions">
+              <button type="button" className="btn btn-secondary" onClick={onClose}>
+                Avbryt
+              </button>
+              <button type="button" className="btn btn-primary" onClick={handleNextFromStep1}>
+                <span>Fortsätt</span>
+                <ArrowRight size={16} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 2: Observationer & Skick */}
+        {step === 2 && (
+          <div className="wizard-step-content">
+            <div className="wizard-context-banner">
+              <span className="wizard-context-pill">🐝 {currentHive?.name || "Kupa"}</span>
+              <span className="wizard-context-pill">📅 {date}</span>
+            </div>
+
+            {/* Quick Apiary Observation Chips */}
+            <div className="form-group" style={{ marginBottom: "0.75rem" }}>
+              <label className="form-label">Snabbval för observationsnotering</label>
+              <div className="quick-tags-cloud">
+                {quickObservationChips.map((chip) => (
+                  <button
+                    key={chip}
+                    type="button"
+                    className="quick-tag-chip"
+                    onClick={() => addObservationTag(chip)}
+                  >
+                    <Plus size={12} />
+                    <span>{chip}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Summary Title */}
+            <div className="form-group" style={{ marginBottom: "0.75rem" }}>
+              <label className="form-label">Kort sammanfattning *</label>
               <input
-                id="event-title"
                 type="text"
                 className="form-input"
-                placeholder="t.ex. Drottning sedd, 5 ramar yngel"
+                placeholder="t.ex. Drottning sedd, 5 ramar yngel, gott om foder"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 autoFocus
               />
             </div>
-          </div>
 
-          <div className="form-group">
-            <label className="form-label" htmlFor="event-notes">
-              Observationer & anteckningar
-            </label>
-            <textarea
-              id="event-notes"
-              className="form-textarea"
-              placeholder="Humör, foderstatus, drönarbygge, skattlådor..."
-              rows={3}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-            />
-          </div>
-
-          {/* 3. Planera till nästa besök */}
-          <div
-            className="box-inset"
-            style={{
-              padding: "0.75rem 0.9rem",
-              marginBottom: "1rem",
-            }}
-          >
-            <div
-              style={{
-                fontWeight: 600,
-                fontSize: "0.875rem",
-                color: "var(--color-text-primary)",
-                marginBottom: "0.4rem",
-              }}
-            >
-              Planera till nästa besök (skapa nya att-göra för denna kupa):
+            {/* Detailed Notes */}
+            <div className="form-group" style={{ marginBottom: "0.5rem" }}>
+              <label className="form-label">Fördjupade anteckningar (valfritt)</label>
+              <textarea
+                className="form-textarea"
+                style={{ minHeight: "68px", resize: "none" }}
+                placeholder="Foderstatus, drönarbygge, skattlådor, bisamhällets humör..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+              />
             </div>
 
-            {newTasks.length > 0 && (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "0.3rem",
-                  marginBottom: "0.6rem",
-                }}
-              >
-                {newTasks.map((nt, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      background: "var(--color-surface-bg)",
-                      border: "1px solid var(--color-border-subtle)",
-                      padding: "0.3rem 0.5rem",
-                      borderRadius: "6px",
-                      fontSize: "0.825rem",
-                    }}
-                  >
-                    <div>
-                      <span>📌 {nt.title}</span>
-                      {nt.dueDate && (
-                        <span style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)", marginLeft: "0.5rem" }}>
-                          (utförs senast: {nt.dueDate})
-                        </span>
-                      )}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveNewTask(idx)}
-                      style={{
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        color: "var(--color-danger-base)",
-                        padding: "0 2px",
-                      }}
-                      title="Ta bort"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-              <input
-                type="text"
-                className="form-input"
-                style={{ flex: 1, padding: "0.35rem 0.6rem", fontSize: "0.85rem" }}
-                placeholder="t.ex. Sätta på skattlåda 2 eller Kolla drottningceller..."
-                value={newTaskTitle}
-                onChange={(e) => setNewTaskTitle(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleAddNewTask();
-                  }
-                }}
-              />
-              <input
-                type="date"
-                className="form-input"
-                style={{ width: "130px", padding: "0.35rem 0.4rem", fontSize: "0.8rem" }}
-                value={newTaskDueDate}
-                onChange={(e) => setNewTaskDueDate(e.target.value)}
-                title="Förfallodatum (valfritt)"
-              />
+            <div className="wizard-actions">
               <button
                 type="button"
-                className="btn btn-secondary btn-sm"
-                onClick={handleAddNewTask}
-                disabled={!newTaskTitle.trim()}
+                className="btn btn-secondary"
+                onClick={() => setStep(1)}
               >
-                <Plus size={14} />
-                <span>Lägg till</span>
+                <ArrowLeft size={16} />
+                <span>Tillbaka</span>
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleNextFromStep2}
+              >
+                <span>Fortsätt till att-göra</span>
+                <ArrowRight size={16} />
               </button>
             </div>
           </div>
+        )}
 
-          <div className="modal-actions">
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={onClose}
-              disabled={isSubmitting}
-            >
-              Avbryt
-            </button>
-            <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-              <Check size={16} />
-              <span>{isSubmitting ? "Sparar..." : "Spara logg & uppgifter"}</span>
-            </button>
+        {/* STEP 3: Att göra & Slutför */}
+        {step === 3 && (
+          <div className="wizard-step-content">
+            <div className="wizard-context-banner">
+              <span className="wizard-context-pill">🐝 {currentHive?.name}</span>
+              <span className="wizard-context-pill">📝 {title || "Besök"}</span>
+            </div>
+
+            {/* Tasks to Complete during this visit */}
+            <div className="form-group" style={{ marginBottom: "0.85rem" }}>
+              <label className="form-label" style={{ display: "flex", justifyContent: "space-between" }}>
+                <span>Uppgifter att bocka av</span>
+                <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
+                  {openTasksForThisHive.length} öppna
+                </span>
+              </label>
+
+              {openTasksForThisHive.length > 0 ? (
+                <div className="wizard-tasks-list">
+                  {openTasksForThisHive.map((t) => {
+                    const isChecked = completedTaskIds.includes(t.id);
+                    return (
+                      <div
+                        key={t.id}
+                        className={`wizard-task-item ${isChecked ? "checked" : ""}`}
+                        onClick={() => toggleTaskCompletion(t.id)}
+                      >
+                        {isChecked ? (
+                          <CheckSquare size={18} color="var(--color-primary-base)" />
+                        ) : (
+                          <Square size={18} color="var(--color-text-muted)" />
+                        )}
+                        <span className="wizard-task-text">{t.title}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="wizard-empty-tasks">
+                  Inga öppna uppgifter låg planerade inför detta besök.
+                </div>
+              )}
+            </div>
+
+            {/* New Task for next visit */}
+            <div className="form-group" style={{ marginBottom: "0.5rem" }}>
+              <label className="form-label">Planera till nästa besök (valfritt)</label>
+              <div style={{ display: "flex", gap: "6px" }}>
+                <input
+                  type="text"
+                  className="form-input"
+                  style={{ flex: 1, fontSize: "0.85rem", padding: "6px 8px" }}
+                  placeholder="t.ex. Sätta på skattlåda 2..."
+                  value={newTaskTitle}
+                  onChange={(e) => setNewTaskTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddNewTask();
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={handleAddNewTask}
+                  disabled={!newTaskTitle.trim()}
+                >
+                  <Plus size={14} />
+                  <span>Lägg till</span>
+                </button>
+              </div>
+
+              {newTasks.length > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginTop: "6px" }}>
+                  {newTasks.map((nt, idx) => (
+                    <div key={idx} className="wizard-new-task-pill">
+                      <span>📌 {nt.title}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveNewTask(idx)}
+                        className="btn-icon-subtle"
+                        title="Ta bort"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="wizard-actions">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setStep(2)}
+                disabled={isSubmitting}
+              >
+                <ArrowLeft size={16} />
+                <span>Tillbaka</span>
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary btn-save-wizard"
+                onClick={() => handleSubmit()}
+                disabled={isSubmitting}
+              >
+                <Check size={18} />
+                <span>{isSubmitting ? "Sparar..." : "Spara kupbesök"}</span>
+              </button>
+            </div>
           </div>
-        </form>
+        )}
       </div>
     </div>
   );
