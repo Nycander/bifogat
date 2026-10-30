@@ -14,7 +14,7 @@ export const NotesImportModal: React.FC<NotesImportModalProps> = ({
   existingHives,
   onClose,
   onConfirmImport,
-  onExportBackup,
+  onExportBackup: _onExportBackup,
 }) => {
   const [notesText, setNotesText] = useState("");
   const [previewResult, setPreviewResult] = useState<ParsedNotesResult | null>(null);
@@ -89,18 +89,6 @@ export const NotesImportModal: React.FC<NotesImportModalProps> = ({
       detectedHives: [...previewResult.detectedHives, { name: norm, isNew }],
     });
     setNewHiveInput("");
-  };
-
-  const handleEventHiveChange = (eventIndex: number, newHiveName: string) => {
-    if (!previewResult) return;
-    const updatedEvents = [...previewResult.events];
-    if (updatedEvents[eventIndex]) {
-      updatedEvents[eventIndex] = { ...updatedEvents[eventIndex], hiveName: newHiveName };
-      setPreviewResult({
-        ...previewResult,
-        events: updatedEvents,
-      });
-    }
   };
 
   return (

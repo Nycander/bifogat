@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { OutboxOp, SyncConflict, Hive, Transaction } from "../domain/types.ts";
+import { OutboxOp, SyncConflict, Hive } from "../domain/types.ts";
 import { generateUUID } from "../domain/validation.ts";
 
 test("outbox retry behavior tracks retryCount and records last error message", () => {

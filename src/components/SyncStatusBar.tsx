@@ -1,6 +1,6 @@
 import React from "react";
 import { SyncEngineStatus } from "../sync/syncEngine";
-import { RefreshCw, CloudCheck, CloudOff, AlertCircle, AlertTriangle } from "lucide-react";
+import { RefreshCw, CloudOff, AlertCircle, AlertTriangle } from "lucide-react";
 
 interface SyncStatusBarProps {
   status: SyncEngineStatus;

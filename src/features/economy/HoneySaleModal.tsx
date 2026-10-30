@@ -1,7 +1,7 @@
-import React, { useState, useMemo, useRef, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { Harvest, Transaction } from "../../domain/types";
 import { formatDate } from "../../domain/validation";
-import { extractUniqueCustomers, filterCustomerSuggestions } from "../../domain/customers";
+import { extractUniqueCustomers } from "../../domain/customers";
 import { useBottomSheet } from "../../hooks/useBottomSheet";
 import { BottomSheetDragHandle } from "../../components/ui/BottomSheetDragHandle";
 import {
@@ -14,10 +14,8 @@ import {
   Banknote,
   FileText,
   Smartphone,
-  User,
   ArrowRight,
   ArrowLeft,
-  Sparkles,
 } from "lucide-react";
 
 interface HoneySaleModalProps {
@@ -51,13 +49,9 @@ export const HoneySaleModal: React.FC<HoneySaleModalProps> = ({
   const [jarCount, setJarCount] = useState<number>(1);
   const [jarSizeGrams, setJarSizeGrams] = useState<number>(500);
   const [pricePerJar, setPricePerJar] = useState<number>(initialPrice);
-  const [isCustomTotal, setIsCustomTotal] = useState(false);
-  const [customTotalSek, setCustomTotalSek] = useState<string>("");
   const [paymentMethod, setPaymentMethod] = useState<"Swish" | "Kontant" | "Faktura" | "Övrigt">("Swish");
   const [counterparty, setCounterparty] = useState<string>("");
   const [date, setDate] = useState(formatDate(new Date()));
-  const [selectedHarvestId, setSelectedHarvestId] = useState<string>(harvests[0]?.id || "");
-  const [notes, setNotes] = useState<string>("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,10 +60,7 @@ export const HoneySaleModal: React.FC<HoneySaleModalProps> = ({
   const allCustomers = useMemo(() => extractUniqueCustomers(transactions), [transactions]);
   const recentCustomers = useMemo(() => allCustomers.slice(0, 4), [allCustomers]);
 
-  const totalSek = isCustomTotal && customTotalSek !== ""
-    ? parseFloat(customTotalSek.replace(",", ".")) || 0
-    : jarCount * pricePerJar;
-
+  const totalSek = jarCount * pricePerJar;
   const totalWeightKg = (jarCount * jarSizeGrams) / 1000;
 
   const handlePriceChange = (val: number) => {
@@ -112,9 +103,6 @@ export const HoneySaleModal: React.FC<HoneySaleModalProps> = ({
       if (counterpartyClean) {
         description += ` till ${counterpartyClean}`;
       }
-      if (notes.trim()) {
-        description += ` - ${notes.trim()}`;
-      }
 
       await onSaveSale({
         date,
@@ -124,7 +112,7 @@ export const HoneySaleModal: React.FC<HoneySaleModalProps> = ({
         category: "Honungsförsäljning",
         jarCount,
         jarSizeGrams,
-        harvestId: selectedHarvestId || undefined,
+        harvestId: harvests[0]?.id || undefined,
       });
 
       onClose();

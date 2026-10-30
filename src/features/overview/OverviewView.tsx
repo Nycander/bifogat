@@ -3,13 +3,9 @@ import { Hive, HiveEvent, Task, Harvest, Transaction } from "../../domain/types"
 import { SyncEngineStatus } from "../../sync/syncEngine";
 import { formatOreToSEK } from "../../domain/validation";
 import {
-  Layers,
   CheckSquare,
   Droplet,
-  Wallet,
   Plus,
-  Calendar,
-  Clock,
   ArrowRight,
   ClipboardList,
 } from "lucide-react";
@@ -35,13 +31,13 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
   tasks,
   harvests,
   transactions,
-  syncStatus,
+  syncStatus: _syncStatus,
   onOpenLogEvent,
-  onOpenCreateTask,
+  onOpenCreateTask: _onOpenCreateTask,
   onOpenHoneySale,
   onToggleTask,
   onNavigateToTab,
-  onSelectHive,
+  onSelectHive: _onSelectHive,
 }) => {
   const activeHives = hives.filter((h) => h.status === "active");
   const openTasks = tasks.filter((t) => t.status === "open").slice(0, 4);

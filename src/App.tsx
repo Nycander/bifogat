@@ -200,7 +200,7 @@ function AppContent() {
           status: "active",
           notes: "Stark koloni på Svea-ram. Drottning från 2025.",
         });
-        const hiveB = await hiveRepository.create({
+        await hiveRepository.create({
           name: "Kupa B",
           status: "active",
           notes: "Ny avläggare från maj 2026.",

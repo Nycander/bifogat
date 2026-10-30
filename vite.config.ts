@@ -3,7 +3,7 @@ import path from "path";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
-export default defineConfig(({ command }) => {
+export default defineConfig(() => {
   // Determine base path:
   // 1. Explicit BASE_PATH env var (e.g. "/bifogat/" for GitHub Pages)
   // 2. GITHUB_REPOSITORY (e.g. "nycander/bifogat" -> "/bifogat/")

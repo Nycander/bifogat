@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Transaction } from "../../domain/types";
 import { parseSwedishFinancialCsv, CsvImportResult } from "../../import/csvParser";
 import { formatOreToSEK } from "../../domain/validation";
-import { X, Upload, Check, AlertTriangle, FileText, ArrowRight } from "lucide-react";
+import { X, Upload, Check, FileText, ArrowRight } from "lucide-react";
 
 interface CsvImportModalProps {
   existingTransactions: Transaction[];

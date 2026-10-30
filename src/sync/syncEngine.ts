@@ -5,7 +5,6 @@ import {
   Harvest,
   Transaction,
   OutboxOp,
-  SyncConflict,
   EntityType,
 } from "../domain/types";
 import {
@@ -18,8 +17,8 @@ import {
   harvestRepository,
   transactionRepository,
 } from "../storage/repositories";
-import { getAllFromStore, putInStore, deleteFromStore, bulkPutInStore } from "../storage/db";
-import { sheetsClient, SHEET_TABS, SCHEMAS } from "./sheetsClient";
+import { putInStore, deleteFromStore } from "../storage/db";
+import { sheetsClient, SHEET_TABS } from "./sheetsClient";
 import { getAccessToken } from "../auth/googleAuth";
 
 export type SyncState = "idle" | "syncing" | "error" | "offline" | "needs_auth" | "no_sheet";

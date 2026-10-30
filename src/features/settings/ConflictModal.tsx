@@ -1,6 +1,6 @@
 import React from "react";
 import { SyncConflict } from "../../domain/types";
-import { X, AlertTriangle, Check, ArrowRight } from "lucide-react";
+import { X, AlertTriangle, Check } from "lucide-react";
 
 interface ConflictModalProps {
   conflicts: SyncConflict[];

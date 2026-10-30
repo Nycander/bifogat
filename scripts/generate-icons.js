@@ -27,7 +27,7 @@ const fullBleedSvg = svgContent
     ""
   );
 
-function renderPng(svg, width, height) {
+function renderPng(svg, width) {
   const resvg = new Resvg(svg, {
     fitTo: {
       mode: "width",

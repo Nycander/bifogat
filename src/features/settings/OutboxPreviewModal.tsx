@@ -220,7 +220,7 @@ export const OutboxPreviewModal: React.FC<OutboxPreviewModalProps> = ({
             </div>
 
             <div style={{ maxHeight: "280px", overflowY: "auto" }} className="item-list">
-              {outboxOps.map((op, idx) => (
+              {outboxOps.map((op) => (
                 <div key={op.id} className="list-item" style={{ padding: "0.75rem" }}>
                   <div
                     style={{ display: "flex", alignItems: "flex-start", gap: "0.65rem", flex: 1 }}

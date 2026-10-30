@@ -11,7 +11,6 @@ import {
   ChevronUp,
   BarChart2,
   TrendingUp,
-  Clock,
 } from "lucide-react";
 
 interface HarvestsViewProps {
