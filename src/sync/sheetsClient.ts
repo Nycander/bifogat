@@ -1,5 +1,3 @@
-import { Hive, HiveEvent, Task, Harvest, Transaction, AppMeta } from "../domain/types";
-
 export const SHEET_TABS = {
   HIVES: "Hives",
   EVENTS: "Events",
@@ -59,7 +57,7 @@ async function sheetsFetch(accessToken: string, endpoint: string, options: Reque
   const headers = {
     Authorization: `Bearer ${accessToken}`,
     "Content-Type": "application/json",
-    ...(options.headers || {}),
+    ...options.headers,
   };
 
   const response = await fetch(`${BASE_URL}${endpoint}`, {

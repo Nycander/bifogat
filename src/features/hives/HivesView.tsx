@@ -10,7 +10,6 @@ import {
   Edit2,
   Trash2,
   Check,
-  AlertCircle,
   Droplet,
 } from "lucide-react";
 

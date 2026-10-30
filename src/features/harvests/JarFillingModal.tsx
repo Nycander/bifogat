@@ -117,8 +117,6 @@ export const JarFillingModal: React.FC<JarFillingModalProps> = ({
     }
   };
 
-  const commonSizes = [250, 350, 500, 700];
-
   const { contentRef, bottomSheetHandlers } = useBottomSheet({ onClose });
 
   return (

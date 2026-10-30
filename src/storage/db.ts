@@ -5,7 +5,6 @@ import {
   Harvest,
   Transaction,
   OutboxOp,
-  SyncConflict,
   AppMeta,
 } from "../domain/types";
 

@@ -3,14 +3,12 @@ import { AppMeta, OutboxOp, SyncConflict } from "../../domain/types";
 import { SyncEngineStatus } from "../../sync/syncEngine";
 import { ComponentShowcaseModal } from "../../components/ui";
 import {
-  Settings,
   Cloud,
   FileSpreadsheet,
   RefreshCw,
   Upload,
   Download,
   AlertTriangle,
-  CheckCircle,
   Database,
   Trash2,
   ExternalLink,

@@ -270,8 +270,8 @@ export function parseHistoricalNotes(
     // 4. Loggbok or Hive-specific log entries
     const lineDateMatch =
       trimmed.match(
-        /^[-*•\s]*(\d{4}[-/.]\d{1,2}[-/.]\d{1,2}|\d{1,2}[-/.]\d{1,2}[-/.]\d{4})[:\s\-]*(.*)$/,
-      ) || trimmed.match(/^[-*•\s]*(\d{1,2}[-/.]\d{1,2})[:\s\-]*(.*)$/);
+        /^[-*•\s]*(\d{4}[-/.]\d{1,2}[-/.]\d{1,2}|\d{1,2}[-/.]\d{1,2}[-/.]\d{4})[:\s-]*(.*)$/,
+      ) || trimmed.match(/^[-*•\s]*(\d{1,2}[-/.]\d{1,2})[:\s-]*(.*)$/);
 
     if (lineDateMatch) {
       let rawDateStr = lineDateMatch[1];

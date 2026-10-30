@@ -20,13 +20,11 @@ import {
   ShoppingBag,
   Plus,
   Trash2,
-  Calendar,
   CheckCircle2,
   AlertCircle,
   Clock,
   Layers,
   Search,
-  Check,
 } from "lucide-react";
 
 interface ComponentShowcaseModalProps {
