@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useBottomSheet } from "../../hooks/useBottomSheet";
 import { BottomSheetDragHandle } from "../../components/ui/BottomSheetDragHandle";
+import { deriveEventTitle } from "../../utils/eventTitleDerivation";
 
 interface EventFormModalProps {
   hives: Hive[];
@@ -62,28 +63,8 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const defaultLabels: Record<EventType, string> = {
-    inspection: "Kupbesiktning & tillsyn",
-    feeding: "Fodring & foderkontroll",
-    treatment: "Varroabehandling",
-    equipment_change: "Utrustningsbyte / skattlådor",
-    queen_activity: "Drottningtillsyn & yngelkontroll",
-    harvest: "Skördeuttag",
-    other: "Skötsel & tillsyn",
-  };
-
   const getDerivedTitle = (notesText: string, eventType: EventType): string => {
-    const cleanText = notesText.trim();
-    if (!cleanText) return defaultLabels[eventType] || "Kupbesök";
-    const firstLine = cleanText.split(/[\r\n]+/)[0]?.trim() || "";
-    if (firstLine.length <= 70) {
-      return firstLine;
-    }
-    const periodIdx = firstLine.search(/[.!?]/);
-    if (periodIdx > 10 && periodIdx <= 70) {
-      return firstLine.slice(0, periodIdx).trim();
-    }
-    return firstLine.slice(0, 67).trim() + "...";
+    return deriveEventTitle(notesText, eventType);
   };
 
   // Filter open tasks for this hive (plus general tasks without hive reference)
