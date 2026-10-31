@@ -49,7 +49,6 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
   const [hiveId, setHiveId] = useState(initialHiveId || (hives[0]?.id ?? ""));
   const [date, setDate] = useState(formatDate(new Date()));
   const [type, setType] = useState<EventType>("inspection");
-  const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
 
   // Todos to complete during this visit
@@ -62,6 +61,30 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const defaultLabels: Record<EventType, string> = {
+    inspection: "Kupbesiktning & tillsyn",
+    feeding: "Fodring & foderkontroll",
+    treatment: "Varroabehandling",
+    equipment_change: "Utrustningsbyte / skattlådor",
+    queen_activity: "Drottningtillsyn & yngelkontroll",
+    harvest: "Skördeuttag",
+    other: "Skötsel & tillsyn",
+  };
+
+  const getDerivedTitle = (notesText: string, eventType: EventType): string => {
+    const cleanText = notesText.trim();
+    if (!cleanText) return defaultLabels[eventType] || "Kupbesök";
+    const firstLine = cleanText.split(/[\r\n]+/)[0]?.trim() || "";
+    if (firstLine.length <= 70) {
+      return firstLine;
+    }
+    const periodIdx = firstLine.search(/[.!?]/);
+    if (periodIdx > 10 && periodIdx <= 70) {
+      return firstLine.slice(0, periodIdx).trim();
+    }
+    return firstLine.slice(0, 67).trim() + "...";
+  };
 
   // Filter open tasks for this hive (plus general tasks without hive reference)
   const openTasksForThisHive = tasks.filter(
@@ -90,11 +113,12 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
     if (typeof navigator !== "undefined" && navigator.vibrate) {
       navigator.vibrate(8);
     }
-    if (!title.trim()) {
-      setTitle(tag);
-    } else if (!title.includes(tag)) {
-      setTitle((prev) => `${prev}, ${tag}`);
-    }
+    setNotes((prev) => {
+      const trimmed = prev.trim();
+      if (!trimmed) return tag;
+      if (trimmed.includes(tag)) return prev;
+      return `${trimmed}. ${tag}`;
+    });
   };
 
   const handleNextFromStep1 = () => {
@@ -107,19 +131,6 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
   };
 
   const handleNextFromStep2 = () => {
-    if (!title.trim() && !notes.trim()) {
-      // Default to standard inspection title based on type
-      const defaultLabels: Record<EventType, string> = {
-        inspection: "Kupbesiktning & tillsyn",
-        feeding: "Fodring & foderkontroll",
-        treatment: "Varroabehandling",
-        equipment_change: "Utrustningsbyte / skattlådor",
-        queen_activity: "Drottningtillsyn & yngelkontroll",
-        harvest: "Skördeuttag",
-        other: "Skötsel & tillsyn",
-      };
-      setTitle(defaultLabels[type] || "Kupbesök");
-    }
     setError(null);
     setStep(3);
   };
@@ -137,12 +148,15 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
     try {
       setIsSubmitting(true);
       setError(null);
+      const cleanNotes = notes.trim();
+      const finalTitle = getDerivedTitle(cleanNotes, type);
+
       await onSave({
         hiveId,
         date,
         type,
-        title: title.trim() || "Kupbesök",
-        notes: notes.trim(),
+        title: finalTitle,
+        notes: cleanNotes,
         completedTaskIds,
         newTasks,
       });
@@ -165,13 +179,13 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
   ];
 
   const quickObservationChips = [
-    "👑 Drottning sedd",
-    "🥚 Yngel i alla stadier",
-    "🍯 Gott om foder",
-    "🐝 Lugnt temperament",
-    "📦 Mycket bin / trångt",
-    "⚠️ Drottningcell sedd",
-    "🌸 Nektardrag pågår",
+    "Drottning sedd",
+    "Yngel i alla stadier",
+    "Gott om foder",
+    "Lugnt temperament",
+    "Mycket bin / trångt",
+    "Drottningcell sedd",
+    "Nektardrag pågår",
   ];
 
   const currentHive = hives.find((h) => h.id === hiveId);
@@ -234,7 +248,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
                       setCompletedTaskIds([]);
                     }}
                   >
-                    <span className="hive-chip-icon">🐝</span>
+                    <Layers size={15} />
                     <span className="hive-chip-name">{h.name}</span>
                     {hiveId === h.id && <Check size={16} className="hive-chip-check" />}
                   </button>
@@ -272,6 +286,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
                 className="form-input"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
+                autoComplete="off"
                 required
               />
             </div>
@@ -310,17 +325,37 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
           </div>
         )}
 
-        {/* STEP 2: Observationer & Skick */}
+        {/* STEP 2: Observationer & Skick (Single Field, Upper-Half Positioned) */}
         {step === 2 && (
           <div className="wizard-step-content">
-            <div className="wizard-context-banner">
+            <div className="wizard-context-banner" style={{ marginBottom: "6px" }}>
               <span className="wizard-context-pill">🐝 {currentHive?.name || "Kupa"}</span>
               <span className="wizard-context-pill">📅 {date}</span>
             </div>
 
-            {/* Quick Apiary Observation Chips */}
-            <div className="form-group" style={{ marginBottom: "0.75rem" }}>
-              <label className="form-label">Snabbval för observationsnotering</label>
+            {/* Single Observation Field placed in the upper half of modal */}
+            <div className="form-group" style={{ marginBottom: "8px" }}>
+              <label className="form-label" htmlFor="event-single-notes" style={{ fontWeight: 700, marginBottom: "4px" }}>
+                Anteckningar & observationer
+              </label>
+              <textarea
+                id="event-single-notes"
+                className="form-textarea"
+                style={{ minHeight: "88px", resize: "none", fontSize: "0.92rem", lineHeight: "1.4" }}
+                placeholder="Beskriv vad du såg och gjorde i kupan... (t.ex. Drottning sedd, 5 ramar yngel, gott om foder)"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
+              />
+            </div>
+
+            {/* Quick Apiary Observation Chips directly below */}
+            <div className="form-group" style={{ marginBottom: "6px" }}>
+              <label className="form-label" style={{ fontSize: "0.8rem", color: "var(--color-text-muted)", marginBottom: "4px" }}>
+                Snabbval att lägga till i anteckningen
+              </label>
               <div className="quick-tags-cloud">
                 {quickObservationChips.map((chip) => (
                   <button
@@ -336,32 +371,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
               </div>
             </div>
 
-            {/* Summary Title */}
-            <div className="form-group" style={{ marginBottom: "0.75rem" }}>
-              <label className="form-label">Kort sammanfattning *</label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="t.ex. Drottning sedd, 5 ramar yngel, gott om foder"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                autoFocus
-              />
-            </div>
-
-            {/* Detailed Notes */}
-            <div className="form-group" style={{ marginBottom: "0.5rem" }}>
-              <label className="form-label">Fördjupade anteckningar (valfritt)</label>
-              <textarea
-                className="form-textarea"
-                style={{ minHeight: "68px", resize: "none" }}
-                placeholder="Foderstatus, drönarbygge, skattlådor, bisamhällets humör..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-              />
-            </div>
-
-            <div className="wizard-actions">
+            <div className="wizard-actions" style={{ marginTop: "auto", paddingTop: "8px" }}>
               <button
                 type="button"
                 className="btn btn-secondary"
@@ -385,9 +395,9 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
         {/* STEP 3: Att göra & Slutför */}
         {step === 3 && (
           <div className="wizard-step-content">
-            <div className="wizard-context-banner">
+            <div className="wizard-context-banner" style={{ marginBottom: "6px" }}>
               <span className="wizard-context-pill">🐝 {currentHive?.name}</span>
-              <span className="wizard-context-pill">📝 {title || "Besök"}</span>
+              <span className="wizard-context-pill">📝 {getDerivedTitle(notes, type)}</span>
             </div>
 
             {/* Tasks to Complete during this visit */}
@@ -437,6 +447,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
                   placeholder="t.ex. Sätta på skattlåda 2..."
                   value={newTaskTitle}
                   onChange={(e) => setNewTaskTitle(e.target.value)}
+                  autoComplete="off"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();

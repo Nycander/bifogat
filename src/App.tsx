@@ -84,9 +84,21 @@ function AppContent() {
     [],
   );
 
+  // Scroll position store per tab
+  const scrollPositionsRef = useRef<Record<NavTab, number>>({
+    overview: 0,
+    hives: 0,
+    harvests: 0,
+    economy: 0,
+    settings: 0,
+  });
+
   const handleSelectTab = useCallback(
     (newTab: NavTab) => {
       if (newTab === activeTab) return;
+
+      // Save current scroll position for departing tab
+      scrollPositionsRef.current[activeTab] = window.scrollY || document.documentElement.scrollTop || 0;
 
       const prevIndex = tabOrder.indexOf(activeTab);
       const nextIndex = tabOrder.indexOf(newTab);
@@ -99,6 +111,12 @@ function AppContent() {
       setExitingTab(activeTab);
       setSlideDirection(movingRight ? "right" : "left");
       setActiveTab(newTab);
+
+      // Restore scroll position for entering tab
+      const targetScroll = scrollPositionsRef.current[newTab] || 0;
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: targetScroll, behavior: "instant" as ScrollBehavior });
+      });
 
       transitionTimerRef.current = window.setTimeout(() => {
         setExitingTab(null);

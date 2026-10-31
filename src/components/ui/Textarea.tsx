@@ -38,6 +38,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         aria-invalid={error ? "true" : undefined}
         className={`form-textarea ${error ? "form-textarea-error" : ""} ${className}`.trim()}
         style={style}
+        autoComplete={props.autoComplete ?? "off"}
         {...props}
       />
     );

@@ -75,8 +75,10 @@ export const HiveEditModal: React.FC<HiveEditModalProps> = ({ hive, onClose, onS
               placeholder="t.ex. Kupa A, Bigård Skogen 2"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck={false}
               required
-              autoFocus
             />
           </div>
 
@@ -108,6 +110,9 @@ export const HiveEditModal: React.FC<HiveEditModalProps> = ({ hive, onClose, onS
               rows={3}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck={false}
             />
           </div>
 

@@ -48,6 +48,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           paddingRight: rightIcon ? "2.25rem" : rightAddon ? "3rem" : undefined,
           ...style,
         }}
+        autoComplete={props.autoComplete ?? "off"}
         {...props}
       />
     );

@@ -272,8 +272,10 @@ export const HarvestFormModal: React.FC<HarvestFormModalProps> = ({
                 value={batchName}
                 onChange={(e) => setBatchName(e.target.value)}
                 placeholder={`t.ex. Sommarskörd ${currentYear}`}
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
                 required
-                autoFocus
               />
               <div style={{ display: "flex", gap: "0.35rem", marginTop: "0.35rem", flexWrap: "wrap" }}>
                 {[`Vårskörd ${currentYear}`, `Sommarskörd ${currentYear}`, `Sensommarskörd ${currentYear}`, `Ljunghonung ${currentYear}`].map(
@@ -315,6 +317,7 @@ export const HarvestFormModal: React.FC<HarvestFormModalProps> = ({
                 className="form-input"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
+                autoComplete="off"
                 required
               />
             </div>
@@ -377,7 +380,7 @@ export const HarvestFormModal: React.FC<HarvestFormModalProps> = ({
                       marginBottom: "0.2rem",
                     }}
                   >
-                    🌸 {computedDragPeriod.label}
+                    {computedDragPeriod.label}
                   </div>
                   <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
                     {computedDragPeriod.isSpringStart
@@ -394,6 +397,7 @@ export const HarvestFormModal: React.FC<HarvestFormModalProps> = ({
                     value={customDragPeriod}
                     onChange={(e) => setCustomDragPeriod(e.target.value)}
                     style={{ marginTop: "0.25rem" }}
+                    autoComplete="off"
                   />
                   <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", marginTop: "0.25rem", display: "block" }}>
                     Skriv in egen dragperiod eller datumintervall
@@ -415,6 +419,7 @@ export const HarvestFormModal: React.FC<HarvestFormModalProps> = ({
                   placeholder="t.ex. 30 (kan lämnas tomt)"
                   value={weightKg}
                   onChange={(e) => setWeightKg(e.target.value)}
+                  autoComplete="off"
                 />
                 <span className="form-help" style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
                   Grovt estimat vid slungning. Exakt skörd beräknas allteftersom burkar tappas.
@@ -432,6 +437,7 @@ export const HarvestFormModal: React.FC<HarvestFormModalProps> = ({
                   placeholder="t.ex. 17,4"
                   value={waterContent}
                   onChange={(e) => setWaterContent(e.target.value)}
+                  autoComplete="off"
                 />
                 <span className="form-help" style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
                   Mätt med refraktometer (valfritt)
@@ -506,6 +512,9 @@ export const HarvestFormModal: React.FC<HarvestFormModalProps> = ({
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     style={{ marginTop: "0.3rem" }}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    spellCheck={false}
                   />
                 </div>
               )}

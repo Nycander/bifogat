@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Harvest, HoneyPreparationType } from "../../domain/types";
 import { formatDate } from "../../domain/validation";
-import { X, Check, PackageCheck } from "lucide-react";
+import { X, Check, PackageCheck, Droplet, Sparkles } from "lucide-react";
 import { useBottomSheet } from "../../hooks/useBottomSheet";
 import { BottomSheetDragHandle } from "../../components/ui/BottomSheetDragHandle";
 
@@ -277,7 +277,7 @@ export const JarFillingModal: React.FC<JarFillingModalProps> = ({
                     transition: "all 0.15s ease",
                   }}
                 >
-                  <span style={{ fontSize: "1.4rem" }}>🍯</span>
+                  <Droplet size={20} color="var(--color-honey-base)" />
                   <div>
                     <div style={{ fontWeight: 700, fontSize: "0.9rem", color: honeyType === "nyslungad" ? "var(--color-honey-text)" : "var(--color-text-primary)" }}>
                       Nyslungad
@@ -304,7 +304,7 @@ export const JarFillingModal: React.FC<JarFillingModalProps> = ({
                     transition: "all 0.15s ease",
                   }}
                 >
-                  <span style={{ fontSize: "1.4rem" }}>🥄</span>
+                  <Sparkles size={20} color="var(--color-primary-base)" />
                   <div>
                     <div style={{ fontWeight: 700, fontSize: "0.9rem", color: honeyType === "rörd" ? "var(--color-accent-dark)" : "var(--color-text-primary)" }}>
                       Rörd honung
@@ -329,6 +329,7 @@ export const JarFillingModal: React.FC<JarFillingModalProps> = ({
                   className="form-input"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
+                  autoComplete="off"
                   required
                 />
               </div>
@@ -344,8 +345,8 @@ export const JarFillingModal: React.FC<JarFillingModalProps> = ({
                   className="form-input"
                   value={jarCount}
                   onChange={(e) => setJarCount(e.target.value)}
+                  autoComplete="off"
                   required
-                  autoFocus
                 />
               </div>
             </div>
@@ -367,7 +368,7 @@ export const JarFillingModal: React.FC<JarFillingModalProps> = ({
                   className={`btn ${jarSizeGrams === 500 ? "btn-primary" : "btn-secondary"}`}
                   style={{ fontWeight: 700, padding: "0.45rem 1rem" }}
                 >
-                  ⭐ 500 g (Standard)
+                  500 g (Standard)
                 </button>
                 <button
                   type="button"

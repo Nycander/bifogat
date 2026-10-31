@@ -202,6 +202,9 @@ export const NotesImportModal: React.FC<NotesImportModalProps> = ({
                 placeholder={`# Köpa\n- Apistan\n- 50 st burkar\n\n# Kupa A\n- 2026-05-15: Drottning sedd, 4 ramar yngel\n\n# Skörd\n- 45 st 500 g burkar`}
                 value={notesText}
                 onChange={(e) => setNotesText(e.target.value)}
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
               />
             </div>
 
@@ -393,6 +396,7 @@ export const NotesImportModal: React.FC<NotesImportModalProps> = ({
                       placeholder="Saknas en kupa? Skriv t.ex. 'Kupa B' eller 'Avläggare 2026'..."
                       value={newHiveInput}
                       onChange={(e) => setNewHiveInput(e.target.value)}
+                      autoComplete="off"
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
                           e.preventDefault();

@@ -286,8 +286,8 @@ export const HoneySaleModal: React.FC<HoneySaleModalProps> = ({
         {step === 2 && (
           <div className="wizard-step-content">
             <div className="wizard-context-banner" style={{ marginBottom: "6px" }}>
-              <span className="wizard-context-pill">🍯 {jarCount} st ({jarSizeGrams}g)</span>
-              <span className="wizard-context-pill font-bold" style={{ color: "#d97706" }}>💰 {totalSek.toFixed(0)} kr</span>
+              <span className="wizard-context-pill">{jarCount} st ({jarSizeGrams}g)</span>
+              <span className="wizard-context-pill font-bold" style={{ color: "#d97706" }}>{totalSek.toFixed(0)} kr</span>
             </div>
 
             {/* Payment Method 4-Grid */}
@@ -331,6 +331,9 @@ export const HoneySaleModal: React.FC<HoneySaleModalProps> = ({
                   placeholder="Valfritt namn..."
                   value={counterparty}
                   onChange={(e) => setCounterparty(e.target.value)}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  spellCheck={false}
                 />
               </div>
 
@@ -345,6 +348,7 @@ export const HoneySaleModal: React.FC<HoneySaleModalProps> = ({
                   style={{ padding: "6px 6px", fontSize: "0.85rem" }}
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
+                  autoComplete="off"
                   required
                 />
               </div>

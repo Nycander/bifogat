@@ -167,8 +167,8 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
             </div>
           )}
 
-          <div className="form-group">
-            <label className="form-label" htmlFor="task-title">
+          <div className="form-group" style={{ marginBottom: "0.75rem" }}>
+            <label className="form-label" htmlFor="task-title" style={{ fontWeight: 700 }}>
               Uppgift *
             </label>
             <input
@@ -178,12 +178,14 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
               placeholder="t.ex. Sätta på skattlåda, Oxalsyrabehandling, Kolla svärmceller"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck={false}
               required
-              autoFocus
             />
           </div>
 
-          <div className="form-group">
+          <div className="form-group" style={{ marginBottom: "0.75rem" }}>
             <label className="form-label" htmlFor="task-due">
               Förfallodatum (valfritt)
             </label>
@@ -193,6 +195,7 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
               className="form-input"
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
+              autoComplete="off"
             />
           </div>
 
@@ -392,6 +395,9 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck={false}
             />
           </div>
 
