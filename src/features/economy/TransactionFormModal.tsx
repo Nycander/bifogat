@@ -130,6 +130,7 @@ export const TransactionFormModal: React.FC<TransactionFormModalProps> = ({
                 className="form-input"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
+                autoComplete="off"
                 required
               />
             </div>
@@ -145,8 +146,8 @@ export const TransactionFormModal: React.FC<TransactionFormModalProps> = ({
                 placeholder="t.ex. 350,00"
                 value={amountInput}
                 onChange={(e) => setAmountInput(e.target.value)}
+                autoComplete="off"
                 required
-                autoFocus
               />
             </div>
           </div>
@@ -162,6 +163,9 @@ export const TransactionFormModal: React.FC<TransactionFormModalProps> = ({
               placeholder="t.ex. Försäljning 5 burkar honung, Inköp sockerlösning"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck={false}
               required
             />
           </div>
@@ -179,6 +183,7 @@ export const TransactionFormModal: React.FC<TransactionFormModalProps> = ({
                 placeholder="t.ex. Granngården, Grannen Lisa"
                 value={counterparty}
                 onChange={(e) => setCounterparty(e.target.value)}
+                autoComplete="off"
               />
               <datalist id="tx-counterparty-datalist">
                 {uniqueCounterparties.map((c) => (

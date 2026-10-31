@@ -142,6 +142,9 @@ export const CsvImportModal: React.FC<CsvImportModalProps> = ({
                 placeholder="Datum;Beskrivning ;Förändring;Ackumulerat;Motpart..."
                 value={csvText}
                 onChange={(e) => setCsvText(e.target.value)}
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
               />
             </div>
 

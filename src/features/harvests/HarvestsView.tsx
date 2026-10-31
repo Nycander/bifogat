@@ -494,7 +494,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                     }}
                   >
                     <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-honey-text)" }}>
-                      🍯 Nyslungad
+                      Nyslungad
                     </div>
                     <div style={{ fontSize: "1.15rem", fontWeight: 800, color: "var(--color-honey-text)" }}>
                       {stats.nyslungadKg.toFixed(1).replace(".", ",")} kg
@@ -513,7 +513,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                     }}
                   >
                     <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-success-text)" }}>
-                      🥄 Rörd honung
+                      Rörd honung
                     </div>
                     <div style={{ fontSize: "1.15rem", fontWeight: 800, color: "var(--color-success-text)" }}>
                       {stats.rordKg.toFixed(1).replace(".", ",")} kg
@@ -552,7 +552,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                   }}
                 >
                   <div>
-                    <div style={{ fontWeight: 700, fontSize: "0.95rem" }}>⭐ 500 g standardburk</div>
+                    <div style={{ fontWeight: 700, fontSize: "0.95rem" }}>500 g standardburk</div>
                     <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
                       {stats.totalJarsCount > 0 ? Math.round((stats.count500gJars / stats.totalJarsCount) * 100) : 100}% av all upptappning
                     </div>
