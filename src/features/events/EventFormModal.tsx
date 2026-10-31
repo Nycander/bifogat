@@ -100,6 +100,17 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
       if (trimmed.includes(tag)) return prev;
       return `${trimmed}. ${tag}`;
     });
+
+    // Keep textarea focused so the mobile software keyboard stays open
+    requestAnimationFrame(() => {
+      const textarea = document.getElementById("event-single-notes") as HTMLTextAreaElement | null;
+      if (textarea) {
+        textarea.focus();
+        // Place cursor at the end of the newly inserted tag
+        const length = textarea.value.length;
+        textarea.setSelectionRange(length, length);
+      }
+    });
   };
 
   const handleNextFromStep1 = () => {
@@ -343,6 +354,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
                     key={chip}
                     type="button"
                     className="quick-tag-chip"
+                    onMouseDown={(e) => e.preventDefault()}
                     onClick={() => addObservationTag(chip)}
                   >
                     <Plus size={12} />
