@@ -282,17 +282,17 @@ export const HoneySaleModal: React.FC<HoneySaleModalProps> = ({
           </div>
         )}
 
-        {/* STEP 2: Betalsätt & Köpare */}
+        {/* STEP 2: Betalsätt & Köpare (Zero-Scroll Compact) */}
         {step === 2 && (
           <div className="wizard-step-content">
-            <div className="wizard-context-banner">
+            <div className="wizard-context-banner" style={{ marginBottom: "6px" }}>
               <span className="wizard-context-pill">🍯 {jarCount} st ({jarSizeGrams}g)</span>
               <span className="wizard-context-pill font-bold" style={{ color: "#d97706" }}>💰 {totalSek.toFixed(0)} kr</span>
             </div>
 
             {/* Payment Method 4-Grid */}
-            <div className="form-group" style={{ marginBottom: "0.85rem" }}>
-              <label className="form-label">Hur betalar kunden? *</label>
+            <div style={{ marginBottom: "6px" }}>
+              <label className="form-label" style={{ fontSize: "0.8rem", marginBottom: "3px" }}>Hur betalar kunden? *</label>
               <div className="payment-method-grid">
                 {[
                   { id: "Swish" as const, label: "Swish", icon: Smartphone, color: "#16a34a" },
@@ -309,7 +309,7 @@ export const HoneySaleModal: React.FC<HoneySaleModalProps> = ({
                       className={`payment-method-card ${isSelected ? "selected" : ""}`}
                       onClick={() => setPaymentMethod(m.id)}
                     >
-                      <Icon size={18} color={isSelected ? "var(--color-primary-text, #fff)" : m.color} />
+                      <Icon size={15} color={isSelected ? "var(--color-primary-text, #fff)" : m.color} />
                       <span>{m.label}</span>
                     </button>
                   );
@@ -317,54 +317,57 @@ export const HoneySaleModal: React.FC<HoneySaleModalProps> = ({
               </div>
             </div>
 
-            {/* Buyer name + recent suggestion chips */}
-            <div className="form-group" style={{ marginBottom: "0.85rem" }}>
-              <label className="form-label" htmlFor="sale-counterparty">
-                Köpare / Kund (valfritt)
-              </label>
-              <input
-                id="sale-counterparty"
-                type="text"
-                className="form-input"
-                placeholder="t.ex. Lisa Nilsson, Grannen, Marknad..."
-                value={counterparty}
-                onChange={(e) => setCounterparty(e.target.value)}
-                autoFocus
-              />
+            {/* Combined Buyer & Date Grid (Side-by-side to save vertical space) */}
+            <div style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: "8px", marginBottom: "4px" }}>
+              <div>
+                <label className="form-label" htmlFor="sale-counterparty" style={{ fontSize: "0.8rem", marginBottom: "3px" }}>
+                  Köpare / Kund
+                </label>
+                <input
+                  id="sale-counterparty"
+                  type="text"
+                  className="form-input"
+                  style={{ padding: "6px 9px", fontSize: "0.88rem" }}
+                  placeholder="Valfritt namn..."
+                  value={counterparty}
+                  onChange={(e) => setCounterparty(e.target.value)}
+                />
+              </div>
 
-              {recentCustomers.length > 0 && (
-                <div className="customer-chips-row">
-                  <span className="customer-chips-label">Tidigare:</span>
-                  {recentCustomers.map((c) => (
-                    <button
-                      key={c.name}
-                      type="button"
-                      className="customer-quick-chip"
-                      onClick={() => setCounterparty(c.name)}
-                    >
-                      {c.name}
-                    </button>
-                  ))}
-                </div>
-              )}
+              <div>
+                <label className="form-label" htmlFor="sale-date" style={{ fontSize: "0.8rem", marginBottom: "3px" }}>
+                  Datum
+                </label>
+                <input
+                  id="sale-date"
+                  type="date"
+                  className="form-input"
+                  style={{ padding: "6px 6px", fontSize: "0.85rem" }}
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  required
+                />
+              </div>
             </div>
 
-            {/* Date */}
-            <div className="form-group" style={{ marginBottom: "0.5rem" }}>
-              <label className="form-label" htmlFor="sale-date">
-                Försäljningsdatum
-              </label>
-              <input
-                id="sale-date"
-                type="date"
-                className="form-input"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                required
-              />
-            </div>
+            {/* Quick Customer Chips */}
+            {recentCustomers.length > 0 && (
+              <div className="customer-chips-row" style={{ marginTop: "2px", marginBottom: "4px" }}>
+                <span className="customer-chips-label">Tidigare:</span>
+                {recentCustomers.map((c) => (
+                  <button
+                    key={c.name}
+                    type="button"
+                    className="customer-quick-chip"
+                    onClick={() => setCounterparty(c.name)}
+                  >
+                    {c.name}
+                  </button>
+                ))}
+              </div>
+            )}
 
-            <div className="wizard-actions">
+            <div className="wizard-actions" style={{ marginTop: "auto", paddingTop: "8px" }}>
               <button
                 type="button"
                 className="btn btn-secondary"
@@ -381,7 +384,7 @@ export const HoneySaleModal: React.FC<HoneySaleModalProps> = ({
                 disabled={isSubmitting}
               >
                 <Check size={18} />
-                <span>{isSubmitting ? "Bokför..." : `Bokför försäljning (${totalSek.toFixed(0)} kr)`}</span>
+                <span>{isSubmitting ? "Bokför..." : `Bokför (${totalSek.toFixed(0)} kr)`}</span>
               </button>
             </div>
           </div>

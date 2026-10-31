@@ -808,17 +808,11 @@ function AppContent() {
             harvests={harvests}
             transactions={transactions}
             syncStatus={syncStatus}
-            onOpenLogEvent={() => {
-              setPreselectedHiveId(undefined);
-              setShowEventModal(true);
-            }}
-            onOpenHoneySale={() => setShowHoneySaleModal(true)}
             onToggleTask={handleToggleTask}
             onNavigateToTab={(navTab, subTab) => {
               handleSelectTab(navTab);
               if (subTab) setHivesSubTab(subTab);
             }}
-            onSelectHive={(hive) => setSelectedHiveDetail(hive)}
           />
         );
       case "hives":

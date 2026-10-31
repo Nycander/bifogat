@@ -14,6 +14,8 @@ import {
   Wallet,
   Calendar,
 } from "lucide-react";
+import { useBottomSheet } from "../../hooks/useBottomSheet";
+import { BottomSheetDragHandle } from "../../components/ui/BottomSheetDragHandle";
 
 interface OutboxPreviewModalProps {
   outboxOps: OutboxOp[];
@@ -137,13 +139,17 @@ export const OutboxPreviewModal: React.FC<OutboxPreviewModalProps> = ({
     }
   };
 
+  const { contentRef, backdropRef } = useBottomSheet({ onClose });
+
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div ref={backdropRef} className="modal-backdrop" onClick={onClose}>
       <div
+        ref={contentRef}
         className="modal-content"
         style={{ maxWidth: "680px" }}
         onClick={(e) => e.stopPropagation()}
       >
+        <BottomSheetDragHandle />
         <div className="modal-header">
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <ShieldCheck size={20} color="var(--color-primary)" />

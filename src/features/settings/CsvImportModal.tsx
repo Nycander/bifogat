@@ -3,6 +3,8 @@ import { Transaction } from "../../domain/types";
 import { parseSwedishFinancialCsv, CsvImportResult } from "../../import/csvParser";
 import { formatOreToSEK } from "../../domain/validation";
 import { X, Upload, Check, FileText, ArrowRight } from "lucide-react";
+import { useBottomSheet } from "../../hooks/useBottomSheet";
+import { BottomSheetDragHandle } from "../../components/ui/BottomSheetDragHandle";
 
 interface CsvImportModalProps {
   existingTransactions: Transaction[];
@@ -65,13 +67,17 @@ export const CsvImportModal: React.FC<CsvImportModalProps> = ({
     }
   };
 
+  const { contentRef, backdropRef } = useBottomSheet({ onClose });
+
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div ref={backdropRef} className="modal-backdrop" onClick={onClose}>
       <div
+        ref={contentRef}
         className="modal-content"
         style={{ maxWidth: "720px" }}
         onClick={(e) => e.stopPropagation()}
       >
+        <BottomSheetDragHandle />
         <div className="modal-header">
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <FileText size={20} color="var(--color-primary)" />

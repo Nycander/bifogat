@@ -2828,18 +2828,18 @@ button:active:not(:disabled) {
 
 .payment-method-card {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 9px 4px;
-  border-radius: 10px;
+  gap: 5px;
+  padding: 6px 4px;
+  border-radius: 8px;
   border: 1.5px solid var(--color-border-default);
   background: var(--color-surface-bg);
   color: var(--color-text-primary);
   cursor: pointer;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 600;
+  transition: all 0.15s ease;
 }
 
 .payment-method-card.selected {
