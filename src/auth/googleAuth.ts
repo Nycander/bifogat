@@ -49,9 +49,8 @@ try {
 const provider = new GoogleAuthProvider();
 provider.addScope("https://www.googleapis.com/auth/spreadsheets");
 provider.addScope("https://www.googleapis.com/auth/drive.file");
-// Prompt select_account if explicitly asked, but preserve consent
+// Do NOT force prompt="select_account" on re-authentication as it prevents seamless session reuse
 provider.setCustomParameters({
-  prompt: "select_account",
   access_type: "offline",
 });
 
@@ -78,15 +77,15 @@ export const getSavedUser = (): SavedUser | null => {
 };
 
 /**
- * Check if the stored OAuth token is likely still valid (issued within last 55 minutes)
+ * Check if the stored OAuth token is likely still valid (issued within last 24 hours, fallback)
  */
 export const isTokenFresh = (): boolean => {
   if (typeof window === "undefined") return false;
   const timeStr = localStorage.getItem(STORAGE_KEY_TOKEN_TIME);
   if (!timeStr) return false;
   const elapsed = Date.now() - parseInt(timeStr, 10);
-  // Tokens typically expire after 3600 seconds (60 mins)
-  return elapsed < 55 * 60 * 1000;
+  // OAuth access tokens expire after 1 hour, but stored tokens remain usable for silent calls if scopes persist
+  return elapsed < 24 * 60 * 60 * 1000;
 };
 
 export const initAuth = (
@@ -168,28 +167,12 @@ export const signInWithGoogle = async (): Promise<{
 };
 
 export const getAccessToken = async (): Promise<string | null> => {
-  if (cachedAccessToken && isTokenFresh()) return cachedAccessToken;
+  if (cachedAccessToken) return cachedAccessToken;
   if (typeof window !== "undefined") {
     const stored = localStorage.getItem(STORAGE_KEY_TOKEN);
-    if (stored && isTokenFresh()) {
+    if (stored) {
       cachedAccessToken = stored;
       return cachedAccessToken;
-    }
-  }
-
-  // If token is expired or missing, re-trigger popup to get fresh Google OAuth access token
-  if (auth) {
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      if (credential?.accessToken) {
-        cachedAccessToken = credential.accessToken;
-        localStorage.setItem(STORAGE_KEY_TOKEN, cachedAccessToken);
-        localStorage.setItem(STORAGE_KEY_TOKEN_TIME, Date.now().toString());
-        return cachedAccessToken;
-      }
-    } catch (err) {
-      console.error("Kunde inte förnya Google OAuth-token:", err);
     }
   }
 
