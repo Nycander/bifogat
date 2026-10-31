@@ -175,7 +175,9 @@ class SyncEngine {
       const isAuthError =
         err.message?.includes("401") ||
         err.message?.includes("UNAUTHENTICATED") ||
-        err.message?.includes("Invalid Credentials");
+        err.message?.includes("Invalid Credentials") ||
+        err.message?.includes("invalid authentication credentials") ||
+        err.message?.includes("OAuth 2 access token");
 
       if (isAuthError) {
         this.state = "needs_auth";

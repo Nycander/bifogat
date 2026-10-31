@@ -49,7 +49,6 @@ try {
 const provider = new GoogleAuthProvider();
 provider.addScope("https://www.googleapis.com/auth/spreadsheets");
 provider.addScope("https://www.googleapis.com/auth/drive.file");
-// Do NOT force prompt="select_account" on re-authentication as it prevents seamless session reuse
 provider.setCustomParameters({
   access_type: "offline",
 });
@@ -77,15 +76,15 @@ export const getSavedUser = (): SavedUser | null => {
 };
 
 /**
- * Check if the stored OAuth token is likely still valid (issued within last 24 hours, fallback)
+ * Check if the stored OAuth token is valid (issued within last 55 minutes)
  */
 export const isTokenFresh = (): boolean => {
   if (typeof window === "undefined") return false;
   const timeStr = localStorage.getItem(STORAGE_KEY_TOKEN_TIME);
   if (!timeStr) return false;
   const elapsed = Date.now() - parseInt(timeStr, 10);
-  // OAuth access tokens expire after 1 hour, but stored tokens remain usable for silent calls if scopes persist
-  return elapsed < 24 * 60 * 60 * 1000;
+  // OAuth access tokens expire after 3600 seconds (60 mins)
+  return elapsed < 55 * 60 * 1000;
 };
 
 export const initAuth = (
@@ -167,16 +166,26 @@ export const signInWithGoogle = async (): Promise<{
 };
 
 export const getAccessToken = async (): Promise<string | null> => {
-  if (cachedAccessToken) return cachedAccessToken;
+  if (cachedAccessToken && isTokenFresh()) {
+    return cachedAccessToken;
+  }
+
   if (typeof window !== "undefined") {
     const stored = localStorage.getItem(STORAGE_KEY_TOKEN);
-    if (stored) {
+    if (stored && isTokenFresh()) {
       cachedAccessToken = stored;
       return cachedAccessToken;
     }
   }
 
-  return cachedAccessToken;
+  // Token is missing or expired. Clear stale token to trigger clean auth state
+  cachedAccessToken = null;
+  if (typeof window !== "undefined") {
+    localStorage.removeItem(STORAGE_KEY_TOKEN);
+    localStorage.removeItem(STORAGE_KEY_TOKEN_TIME);
+  }
+
+  return null;
 };
 
 export const getCurrentUser = (): User | SavedUser | null => {
