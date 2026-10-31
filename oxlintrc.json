@@ -5,6 +5,9 @@
     "no-unused-expressions": "error",
     "no-unreachable": "error",
     "no-constant-condition": "error",
-    "no-empty": "error"
+    "no-empty": "error",
+    "no-duplicate-case": "error",
+    "no-dupe-keys": "error",
+    "no-loss-of-precision": "error"
   }
 }
