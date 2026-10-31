@@ -1,6 +1,8 @@
 import React from "react";
 import { SyncConflict } from "../../domain/types";
 import { X, AlertTriangle, Check } from "lucide-react";
+import { useBottomSheet } from "../../hooks/useBottomSheet";
+import { BottomSheetDragHandle } from "../../components/ui/BottomSheetDragHandle";
 
 interface ConflictModalProps {
   conflicts: SyncConflict[];
@@ -10,13 +12,17 @@ interface ConflictModalProps {
 }
 
 export const ConflictModal: React.FC<ConflictModalProps> = ({ conflicts, onClose, onResolve, onResolveAll }) => {
+  const { contentRef, backdropRef } = useBottomSheet({ onClose });
+
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div ref={backdropRef} className="modal-backdrop" onClick={onClose}>
       <div
+        ref={contentRef}
         className="modal-content"
         style={{ maxWidth: "680px" }}
         onClick={(e) => e.stopPropagation()}
       >
+        <BottomSheetDragHandle />
         <div className="modal-header">
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <AlertTriangle size={20} color="var(--color-danger)" />

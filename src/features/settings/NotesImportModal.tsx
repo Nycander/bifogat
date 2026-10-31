@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Hive } from "../../domain/types";
 import { parseHistoricalNotes, normalizeHiveName, ParsedNotesResult } from "../../import/notesParser";
 import { X, Upload, Check, FileText, ArrowRight, Plus } from "lucide-react";
+import { useBottomSheet } from "../../hooks/useBottomSheet";
+import { BottomSheetDragHandle } from "../../components/ui/BottomSheetDragHandle";
 
 interface NotesImportModalProps {
   existingHives: Hive[];
@@ -91,13 +93,17 @@ export const NotesImportModal: React.FC<NotesImportModalProps> = ({
     setNewHiveInput("");
   };
 
+  const { contentRef, backdropRef } = useBottomSheet({ onClose });
+
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div ref={backdropRef} className="modal-backdrop" onClick={onClose}>
       <div
+        ref={contentRef}
         className="modal-content"
         style={{ maxWidth: "720px" }}
         onClick={(e) => e.stopPropagation()}
       >
+        <BottomSheetDragHandle />
         <div className="modal-header">
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <FileText size={20} color="var(--color-primary)" />

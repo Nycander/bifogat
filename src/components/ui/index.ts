@@ -8,4 +8,3 @@ export * from "./FormField";
 export * from "./Badge";
 export * from "./Modal";
 export * from "./Tabs";
-export * from "./ComponentShowcaseModal";

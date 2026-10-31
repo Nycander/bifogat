@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { AppMeta, OutboxOp, SyncConflict } from "../../domain/types";
 import { SyncEngineStatus } from "../../sync/syncEngine";
-import { ComponentShowcaseModal } from "../../components/ui";
 import {
   Cloud,
   FileSpreadsheet,
@@ -58,7 +57,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [spreadsheetInput, setSpreadsheetInput] = useState(meta.spreadsheetId || "");
   const [isCreatingSheet, setIsCreatingSheet] = useState(false);
   const [sheetMessage, setSheetMessage] = useState<string | null>(null);
-  const [showUiShowcase, setShowUiShowcase] = useState(false);
 
   const handleSaveSheetId = async () => {
     if (!spreadsheetInput.trim()) return;
@@ -669,11 +667,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </button>
         </div>
       </div>
-
-      <ComponentShowcaseModal
-        isOpen={showUiShowcase}
-        onClose={() => setShowUiShowcase(false)}
-      />
     </div>
   );
 };

@@ -12,7 +12,7 @@
     "preview": "vite preview",
     "test": "tsx --test \"src/**/*.test.ts\"",
     "clean": "rm -rf dist server.js",
-    "lint": "oxlint",
+    "lint": "oxlint --deny-warnings -D no-unused-vars -D no-unused-expressions -D no-unreachable",
     "format": "oxfmt .",
     "format:check": "oxfmt --check .",
     "generate:icons": "node scripts/generate-icons.js"

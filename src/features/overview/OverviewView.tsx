@@ -4,8 +4,6 @@ import { SyncEngineStatus } from "../../sync/syncEngine";
 import { formatOreToSEK } from "../../domain/validation";
 import {
   CheckSquare,
-  Droplet,
-  Plus,
   ArrowRight,
   ClipboardList,
 } from "lucide-react";
@@ -17,12 +15,8 @@ interface OverviewViewProps {
   harvests: Harvest[];
   transactions: Transaction[];
   syncStatus: SyncEngineStatus;
-  onOpenLogEvent: () => void;
-  onOpenCreateTask?: () => void;
-  onOpenHoneySale: () => void;
   onToggleTask: (id: string) => Promise<void>;
   onNavigateToTab: (tab: any, subTab?: "hives" | "tasks") => void;
-  onSelectHive: (hive: Hive) => void;
 }
 
 export const OverviewView: React.FC<OverviewViewProps> = ({
@@ -32,12 +26,8 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
   harvests,
   transactions,
   syncStatus: _syncStatus,
-  onOpenLogEvent,
-  onOpenCreateTask: _onOpenCreateTask,
-  onOpenHoneySale,
   onToggleTask,
   onNavigateToTab,
-  onSelectHive: _onSelectHive,
 }) => {
   const activeHives = hives.filter((h) => h.status === "active");
   const openTasks = tasks.filter((t) => t.status === "open").slice(0, 4);
@@ -74,26 +64,6 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         <p style={{ fontSize: "0.875rem", color: "var(--color-text-muted)" }}>
           Kupjournal och loggbok för din bigård — alltid tillgänglig även offline
         </p>
-      </div>
-
-      {/* Quick Action Bar */}
-      <div className="quick-actions" style={{ gridTemplateColumns: "1fr 1fr" }}>
-        <button
-          className="btn btn-primary"
-          onClick={onOpenLogEvent}
-          style={{ padding: "0.75rem", justifyContent: "center" }}
-        >
-          <Plus size={18} />
-          <span>Logga kupbesök</span>
-        </button>
-        <button
-          className="btn btn-honey"
-          onClick={onOpenHoneySale}
-          style={{ padding: "0.75rem", justifyContent: "center" }}
-        >
-          <Droplet size={18} />
-          <span>Sälj honung</span>
-        </button>
       </div>
 
       {/* Key Numbers Grid */}
@@ -263,7 +233,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
               fontSize: "0.875rem",
             }}
           >
-            Inga kupbesök loggade än. Tryck på "Logga kupbesök" ovan för att göra din första
+            Inga kupbesök loggade än. Använd snabbknappen (+) för att göra din första
             notering.
           </div>
         ) : (
