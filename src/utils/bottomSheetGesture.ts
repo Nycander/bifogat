@@ -6,8 +6,9 @@ export interface SheetDragState {
 }
 
 export interface SheetDecisionOptions {
-  dismissDistanceThreshold?: number; // default 85px
-  dismissVelocityThreshold?: number; // default 0.45 px/ms
+  dismissDistanceThreshold?: number; // default 130px
+  dismissVelocityThreshold?: number; // default 0.55 px/ms
+  minFlickDistance?: number; // default 75px
   resistanceFactor?: number; // damping for upward pulls (default 0.2)
 }
 
@@ -32,6 +33,7 @@ export function calculateSheetTranslation(
 /**
  * Evaluates whether a release gesture should dismiss the bottom sheet.
  * Returns true if dragged down past threshold distance or swiped with sufficient downward velocity.
+ * Prevents premature dismissal on tiny finger slips or early short releases (< 75px).
  */
 export function shouldDismissSheet(
   startY: number,
@@ -40,22 +42,70 @@ export function shouldDismissSheet(
   endTime: number,
   options?: SheetDecisionOptions,
 ): boolean {
-  const distanceThreshold = options?.dismissDistanceThreshold ?? 85;
-  const velocityThreshold = options?.dismissVelocityThreshold ?? 0.45;
+  const distanceThreshold = options?.dismissDistanceThreshold ?? 130;
+  const velocityThreshold = options?.dismissVelocityThreshold ?? 0.55;
+  const minFlickDistance = options?.minFlickDistance ?? 75;
 
   const deltaY = endY - startY;
+  if (deltaY <= 0) {
+    return false;
+  }
+
   const deltaTime = Math.max(1, endTime - startTime);
   const velocity = deltaY / deltaTime; // px per ms
 
-  // Downward distance exceeds threshold
+  // Downward distance exceeds substantial threshold (e.g. >= 130px)
   if (deltaY >= distanceThreshold) {
     return true;
   }
 
-  // Fast downward swipe even if short distance (minimum 35px)
-  if (deltaY >= 35 && velocity >= velocityThreshold) {
+  // Fast downward flick requires at least minFlickDistance (>= 75px) to prevent accidental dismissals
+  if (deltaY >= minFlickDistance && velocity >= velocityThreshold) {
     return true;
   }
 
   return false;
+}
+
+/**
+ * Smooth cubic ease-out curve matching cubic-bezier(0.25, 1, 0.5, 1).
+ */
+export function easeOutCubic(t: number): number {
+  const p = Math.max(0, Math.min(1, t));
+  return 1 - Math.pow(1 - p, 3);
+}
+
+/**
+ * Spring ease-out with subtle overshoot for responsive, organic rebound to 0.
+ */
+export function easeOutBack(t: number): number {
+  const p = Math.max(0, Math.min(1, t));
+  const c1 = 1.35;
+  const c3 = c1 + 1;
+  return 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2);
+}
+
+/**
+ * Computes intermediate translation coordinate along an animation curve.
+ */
+export function interpolatePosition(
+  from: number,
+  to: number,
+  progress: number,
+  easing: (t: number) => number = easeOutCubic,
+): number {
+  const eased = easing(progress);
+  return from + (to - from) * eased;
+}
+
+/**
+ * Computes intermediate backdrop opacity along an animation curve.
+ */
+export function interpolateOpacity(
+  from: number,
+  to: number,
+  progress: number,
+): number {
+  const p = Math.max(0, Math.min(1, progress));
+  return from + (to - from) * p;
 }

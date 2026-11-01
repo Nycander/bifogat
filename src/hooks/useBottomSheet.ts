@@ -1,8 +1,12 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import {
   calculateSheetTranslation,
   shouldDismissSheet,
   SheetDecisionOptions,
+  easeOutCubic,
+  easeOutBack,
+  interpolatePosition,
+  interpolateOpacity,
 } from "../utils/bottomSheetGesture";
 
 export interface UseBottomSheetProps {
@@ -18,12 +22,12 @@ export interface UseBottomSheetProps {
  * 2. Immediately removes CSS keyframe animations and transitions upon touching drag areas.
  * 3. Uses active touch listeners to preventDefault() on downward swipes so mobile browsers
  *    never hijack the gesture.
- * 4. Applies translate3d directly with CSS priority to guarantee 60fps tracking during movement.
+ * 4. Animates exit and spring-back using frame-by-frame requestAnimationFrame with C1 continuity,
+ *    bypassing browser CSS transition bugs and delivering silky-smooth 60/120fps physics.
  */
 export function useBottomSheet({ onClose, options }: UseBottomSheetProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
-  const [isClosing, setIsClosing] = useState<boolean>(false);
 
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
@@ -45,16 +49,26 @@ export function useBottomSheet({ onClose, options }: UseBottomSheetProps) {
     };
   }, []);
 
-  // 2. Gesture tracking
+  // 2. Gesture tracking and continuous frame-by-frame physics
   useEffect(() => {
     const el = contentRef.current;
     if (!el) return;
 
     let startY = 0;
     let startTime = 0;
+    let currentDragY = 0;
     let isDragging = false;
+    let isExiting = false;
     let activeTouchId: number | null = null;
     let activePointerId: number | null = null;
+    let rafId: number | null = null;
+
+    const cancelCurrentAnimation = () => {
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+    };
 
     const getBackdrop = (): HTMLElement | null => {
       if (backdropRef.current) return backdropRef.current;
@@ -105,15 +119,89 @@ export function useBottomSheet({ onClose, options }: UseBottomSheetProps) {
       return { allowed: isAtTop, isDirectHandle: false };
     };
 
+    const animateExit = (startOffset: number) => {
+      isExiting = true;
+      cancelCurrentAnimation();
+
+      const exitDistance = Math.max(window.innerHeight, (el.offsetHeight || 500) + 120);
+      const duration = 260; // ms
+      const animStartTime = performance.now();
+
+      const bd = getBackdrop();
+      const startOpacity = bd ? parseFloat(window.getComputedStyle(bd).opacity) || 1 : 1;
+
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate(10);
+      }
+
+      const runExitFrame = (now: number) => {
+        const elapsed = now - animStartTime;
+        const progress = Math.min(1, elapsed / duration);
+        const y = interpolatePosition(startOffset, exitDistance, progress, easeOutCubic);
+        const opacity = interpolateOpacity(startOpacity, 0, progress);
+
+        el.style.setProperty("transform", `translate3d(0, ${y}px, 0)`, "important");
+        if (bd) {
+          bd.style.setProperty("opacity", `${opacity}`, "important");
+        }
+
+        if (progress < 1) {
+          rafId = requestAnimationFrame(runExitFrame);
+        } else {
+          rafId = null;
+          onCloseRef.current();
+        }
+      };
+
+      rafId = requestAnimationFrame(runExitFrame);
+    };
+
+    const animateSpringBack = (startOffset: number) => {
+      cancelCurrentAnimation();
+
+      const duration = 240; // ms
+      const animStartTime = performance.now();
+
+      const bd = getBackdrop();
+      const startOpacity = bd ? parseFloat(window.getComputedStyle(bd).opacity) || 1 : 1;
+
+      const runSpringFrame = (now: number) => {
+        const elapsed = now - animStartTime;
+        const progress = Math.min(1, elapsed / duration);
+        const y = interpolatePosition(startOffset, 0, progress, easeOutBack);
+        const opacity = interpolateOpacity(startOpacity, 1, progress);
+
+        el.style.setProperty("transform", `translate3d(0, ${Math.max(0, y)}px, 0)`, "important");
+        if (bd) {
+          bd.style.setProperty("opacity", `${opacity}`, "important");
+        }
+
+        if (progress < 1) {
+          rafId = requestAnimationFrame(runSpringFrame);
+        } else {
+          rafId = null;
+          currentDragY = 0;
+          el.style.removeProperty("transform");
+          if (bd) {
+            bd.style.removeProperty("opacity");
+          }
+        }
+      };
+
+      rafId = requestAnimationFrame(runSpringFrame);
+    };
+
     /* -------------------------------------------------------------------------
        TOUCH GESTURE (Mobile Touchscreen)
        ------------------------------------------------------------------------- */
     const handleTouchStart = (e: TouchEvent) => {
-      if (e.touches.length !== 1 || isClosing) return;
+      if (e.touches.length !== 1 || isExiting) return;
 
       const target = e.target as HTMLElement | null;
       const { allowed, isDirectHandle } = checkDragZone(target);
       if (!allowed) return;
+
+      cancelCurrentAnimation();
 
       const touch = e.touches[0];
       startY = touch.clientY;
@@ -133,7 +221,7 @@ export function useBottomSheet({ onClose, options }: UseBottomSheetProps) {
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (activeTouchId === null || isClosing) return;
+      if (activeTouchId === null || isExiting) return;
 
       const touch = Array.from(e.touches).find((t) => t.identifier === activeTouchId);
       if (!touch) return;
@@ -158,6 +246,7 @@ export function useBottomSheet({ onClose, options }: UseBottomSheetProps) {
 
         const translation = calculateSheetTranslation(startY, currentY, optionsRef.current);
         const clampedY = Math.max(0, translation);
+        currentDragY = clampedY;
 
         el.style.setProperty("transform", `translate3d(0, ${clampedY}px, 0)`, "important");
 
@@ -192,34 +281,10 @@ export function useBottomSheet({ onClose, options }: UseBottomSheetProps) {
         optionsRef.current
       );
 
-      const bd = getBackdrop();
-
       if (shouldDismiss) {
-        setIsClosing(true);
-        el.style.setProperty("transition", "transform 0.22s cubic-bezier(0.32, 0, 0.67, 0)", "important");
-        el.style.setProperty("transform", "translate3d(0, 100%, 0)", "important");
-
-        if (bd) {
-          bd.style.setProperty("transition", "opacity 0.2s ease-out", "important");
-          bd.style.setProperty("opacity", "0", "important");
-        }
-
-        if (typeof navigator !== "undefined" && navigator.vibrate) {
-          navigator.vibrate(10);
-        }
-
-        window.setTimeout(() => {
-          onCloseRef.current();
-        }, 210);
+        animateExit(currentDragY);
       } else {
-        // Spring back smoothly to rest position
-        el.style.setProperty("transition", "transform 0.26s cubic-bezier(0.175, 0.885, 0.32, 1.15)", "important");
-        el.style.setProperty("transform", "translate3d(0, 0px, 0)", "important");
-
-        if (bd) {
-          bd.style.setProperty("transition", "opacity 0.24s ease-out", "important");
-          bd.style.setProperty("opacity", "1", "important");
-        }
+        animateSpringBack(currentDragY);
       }
     };
 
@@ -227,13 +292,7 @@ export function useBottomSheet({ onClose, options }: UseBottomSheetProps) {
       activeTouchId = null;
       if (isDragging) {
         isDragging = false;
-        el.style.setProperty("transition", "transform 0.24s ease-out", "important");
-        el.style.setProperty("transform", "translate3d(0, 0px, 0)", "important");
-        const bd = getBackdrop();
-        if (bd) {
-          bd.style.setProperty("transition", "opacity 0.24s ease-out", "important");
-          bd.style.setProperty("opacity", "1", "important");
-        }
+        animateSpringBack(currentDragY);
       }
     };
 
@@ -242,11 +301,13 @@ export function useBottomSheet({ onClose, options }: UseBottomSheetProps) {
        ------------------------------------------------------------------------- */
     const handlePointerDown = (e: PointerEvent) => {
       if (e.pointerType === "touch") return; // Handled by touch events above
-      if (e.button !== 0 || isClosing) return;
+      if (e.button !== 0 || isExiting) return;
 
       const target = e.target as HTMLElement | null;
       const { allowed, isDirectHandle } = checkDragZone(target);
       if (!allowed) return;
+
+      cancelCurrentAnimation();
 
       startY = e.clientY;
       startTime = performance.now();
@@ -264,7 +325,7 @@ export function useBottomSheet({ onClose, options }: UseBottomSheetProps) {
     };
 
     const handlePointerMove = (e: PointerEvent) => {
-      if (activePointerId === null || e.pointerId !== activePointerId || isClosing) return;
+      if (activePointerId === null || e.pointerId !== activePointerId || isExiting) return;
 
       const currentY = e.clientY;
       const deltaY = currentY - startY;
@@ -280,6 +341,8 @@ export function useBottomSheet({ onClose, options }: UseBottomSheetProps) {
       if (isDragging) {
         const translation = calculateSheetTranslation(startY, currentY, optionsRef.current);
         const clampedY = Math.max(0, translation);
+        currentDragY = clampedY;
+
         el.style.setProperty("transform", `translate3d(0, ${clampedY}px, 0)`, "important");
 
         const bd = getBackdrop();
@@ -310,29 +373,10 @@ export function useBottomSheet({ onClose, options }: UseBottomSheetProps) {
         optionsRef.current
       );
 
-      const bd = getBackdrop();
-
       if (shouldDismiss) {
-        setIsClosing(true);
-        el.style.setProperty("transition", "transform 0.22s cubic-bezier(0.32, 0, 0.67, 0)", "important");
-        el.style.setProperty("transform", "translate3d(0, 100%, 0)", "important");
-
-        if (bd) {
-          bd.style.setProperty("transition", "opacity 0.2s ease-out", "important");
-          bd.style.setProperty("opacity", "0", "important");
-        }
-
-        window.setTimeout(() => {
-          onCloseRef.current();
-        }, 210);
+        animateExit(currentDragY);
       } else {
-        el.style.setProperty("transition", "transform 0.26s cubic-bezier(0.175, 0.885, 0.32, 1.15)", "important");
-        el.style.setProperty("transform", "translate3d(0, 0px, 0)", "important");
-
-        if (bd) {
-          bd.style.setProperty("transition", "opacity 0.24s ease-out", "important");
-          bd.style.setProperty("opacity", "1", "important");
-        }
+        animateSpringBack(currentDragY);
       }
     };
 
@@ -349,6 +393,8 @@ export function useBottomSheet({ onClose, options }: UseBottomSheetProps) {
     window.addEventListener("pointercancel", handlePointerUp);
 
     return () => {
+      cancelCurrentAnimation();
+
       el.removeEventListener("touchstart", handleTouchStart);
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("touchend", handleTouchEnd);
@@ -359,12 +405,12 @@ export function useBottomSheet({ onClose, options }: UseBottomSheetProps) {
       window.removeEventListener("pointerup", handlePointerUp);
       window.removeEventListener("pointercancel", handlePointerUp);
     };
-  }, [isClosing]);
+  }, []);
 
   return {
     contentRef,
     backdropRef,
-    isClosing,
+    isClosing: false,
     bottomSheetHandlers: {},
   };
 }
