@@ -26,6 +26,8 @@ import {
   Sparkles,
   User,
   ArrowRight,
+  Plus,
+  Minus,
 } from "lucide-react";
 
 export interface SwishInboxModalProps {
@@ -614,7 +616,15 @@ Karin Blom 130 kr
                 const learnedAlias = aliasMap.get(normSwish);
                 const quickChips = rankCustomerSuggestionsForSwish(row.swishName, allCustomers, learnedAlias, 4);
                 const sek = row.amountOre / 100;
-                const jarChipOptions = [1, 2, 3, 4, 5];
+                const exactCount = (pricePerJar > 0 && sek > 0) ? Math.round(sek / pricePerJar) : null;
+                const chipSet = new Set<number>([1, 2, 3, 4, 5, 6]);
+                if (exactCount && exactCount >= 1 && exactCount <= 30) {
+                  chipSet.add(exactCount);
+                }
+                if (row.jarCount && row.jarCount >= 1 && row.jarCount <= 30) {
+                  chipSet.add(row.jarCount);
+                }
+                const jarChipOptions = Array.from(chipSet).sort((a, b) => a - b);
 
                 return (
                   <div
@@ -742,9 +752,34 @@ Karin Blom 130 kr
                       )}
                     </div>
 
-                    {/* Jar count selector chips */}
+                    {/* Jar count selector chips & stepper */}
                     <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px", flexWrap: "wrap" }}>
                       <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>Antal burkar:</span>
+
+                      {/* Stepper Controls */}
+                      <div style={{ display: "inline-flex", alignItems: "center", border: "1px solid var(--color-border-default)", borderRadius: "8px", overflow: "hidden", backgroundColor: "var(--color-surface-bg)" }}>
+                        <button
+                          type="button"
+                          style={{ padding: "2px 6px", background: "none", border: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", color: "var(--color-text-main)" }}
+                          aria-label="Minska antal burkar"
+                          onClick={() => handleJarCountSelect(row.id, Math.max(1, (row.jarCount || 1) - 1))}
+                        >
+                          <Minus size={13} />
+                        </button>
+                        <span style={{ padding: "0 6px", fontSize: "0.78rem", fontWeight: 700, minWidth: "22px", textAlign: "center", color: "var(--color-text-main)" }}>
+                          {row.jarCount || 1} st
+                        </span>
+                        <button
+                          type="button"
+                          style={{ padding: "2px 6px", background: "none", border: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", color: "var(--color-text-main)" }}
+                          aria-label="Öka antal burkar"
+                          onClick={() => handleJarCountSelect(row.id, (row.jarCount || 1) + 1)}
+                        >
+                          <Plus size={13} />
+                        </button>
+                      </div>
+
+                      {/* Preset Chips */}
                       {jarChipOptions.map((cnt) => {
                         const cost = cnt * pricePerJar;
                         const isSelected = row.jarCount === cnt;
