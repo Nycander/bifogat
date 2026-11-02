@@ -17,18 +17,24 @@ import {
 import { useBottomSheet } from "../../hooks/useBottomSheet";
 import { BottomSheetDragHandle } from "../../components/ui/BottomSheetDragHandle";
 
+import { SyncEngineStatus } from "../../sync/syncEngine";
+
 interface OutboxPreviewModalProps {
   outboxOps: OutboxOp[];
+  syncStatus?: SyncEngineStatus;
   onClose: () => void;
   onConfirmPush: () => Promise<void>;
   onClearOutbox: () => Promise<void>;
+  onSignIn?: () => Promise<void>;
 }
 
 export const OutboxPreviewModal: React.FC<OutboxPreviewModalProps> = ({
   outboxOps,
+  syncStatus,
   onClose,
   onConfirmPush,
   onClearOutbox,
+  onSignIn,
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showRawJson, setShowRawJson] = useState(false);
@@ -160,9 +166,40 @@ export const OutboxPreviewModal: React.FC<OutboxPreviewModalProps> = ({
           </button>
         </div>
 
-        {error && (
-          <div className="form-error" style={{ marginBottom: "1rem" }}>
-            {error}
+        {(error || syncStatus?.state === "needs_auth") && (
+          <div
+            className="form-error"
+            style={{
+              marginBottom: "1rem",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "0.5rem",
+              flexWrap: "wrap",
+            }}
+          >
+            <span>
+              {error ||
+                syncStatus?.lastError ||
+                "Google-behörigheten har gått ut och behöver förnyas för kalkylarkssynk."}
+            </span>
+            {onSignIn && (
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={async () => {
+                  try {
+                    await onSignIn();
+                    setError(null);
+                  } catch (err: any) {
+                    setError(err.message || "Kunde inte förnya inloggning");
+                  }
+                }}
+                style={{ whiteSpace: "nowrap" }}
+              >
+                Förnya behörighet
+              </button>
+            )}
           </div>
         )}
 

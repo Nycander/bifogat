@@ -297,8 +297,19 @@ function AppContent() {
      Actions
      ========================================================================== */
   const handleSyncNow = async () => {
-    await syncEngine.triggerSync();
+    const res = await syncEngine.triggerSync();
     await reloadData();
+    if (!res.success) {
+      showSnackbar({
+        message: res.error || "Synkroniseringen misslyckades",
+        type: "error",
+      });
+    } else {
+      showSnackbar({
+        message: "Synkronisering slutförd",
+        type: "success",
+      });
+    }
   };
 
   const handleSignIn = async () => {
@@ -719,8 +730,14 @@ function AppContent() {
 
   // Safe Push Outbox to Sheets
   const handleConfirmPushOutbox = async () => {
-    await syncEngine.pushPendingOutbox();
+    const res = await syncEngine.pushPendingOutbox();
     await reloadData();
+    if (!res.success) {
+      throw new Error(
+        res.error ||
+          "Kunde inte skriva ändringar till Google Sheets. Vänligen förnya behörigheten i Inställningar.",
+      );
+    }
   };
 
   // Clear Outbox without pushing
@@ -1052,6 +1069,7 @@ function AppContent() {
         activeTab={activeTab}
         onSelectTab={handleSelectTab}
         openTaskCount={tasks.filter((t) => t.status === "open").length}
+        hasSyncAlert={syncStatus.state === "needs_auth" || syncStatus.state === "error" || conflicts.length > 0}
       />
 
       {/* Material 3 Speed Dial Floating Action Button */}
@@ -1077,9 +1095,11 @@ function AppContent() {
       {showOutboxPreviewModal && (
         <OutboxPreviewModal
           outboxOps={outboxOps}
+          syncStatus={syncStatus}
           onClose={() => setShowOutboxPreviewModal(false)}
           onConfirmPush={handleConfirmPushOutbox}
           onClearOutbox={handleClearOutbox}
+          onSignIn={handleSignIn}
         />
       )}
       {showEventModal && (

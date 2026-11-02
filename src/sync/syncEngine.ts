@@ -125,13 +125,20 @@ class SyncEngine {
     const token = await getAccessToken();
     if (!token) {
       this.state = "needs_auth";
+      this.lastError =
+        "Google-behörigheten har gått ut eller saknas. Vänligen förnya behörigheten i Inställningar.";
       this.notify();
-      return { success: false, error: "Behörighet saknas. Logga in med Google." };
+      return {
+        success: false,
+        error:
+          "Google-behörigheten har gått ut eller saknas. Vänligen förnya behörigheten i Inställningar.",
+      };
     }
 
     const meta = await metaRepository.get();
     if (!meta.spreadsheetId) {
       this.state = "no_sheet";
+      this.lastError = "Inget kalkylark är valt i inställningarna";
       this.notify();
       return { success: false, error: "Inget kalkylark är valt i inställningarna" };
     }

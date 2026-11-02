@@ -16,6 +16,7 @@ interface NavBarProps {
   activeTab: NavTab;
   onSelectTab: (tab: NavTab) => void;
   openTaskCount: number;
+  hasSyncAlert?: boolean;
 }
 
 const TABS: Array<{ id: NavTab; label: string; icon: React.FC<{ size: number; style?: React.CSSProperties }> }> = [
@@ -28,7 +29,12 @@ const TABS: Array<{ id: NavTab; label: string; icon: React.FC<{ size: number; st
 
 export type FlightState = "resting" | "flying";
 
-export const NavBar: React.FC<NavBarProps> = ({ activeTab, onSelectTab, openTaskCount }) => {
+export const NavBar: React.FC<NavBarProps> = ({
+  activeTab,
+  onSelectTab,
+  openTaskCount,
+  hasSyncAlert = false,
+}) => {
   const activeIndex = Math.max(0, TABS.findIndex((t) => t.id === activeTab));
   const tabWidthPercent = 100 / TABS.length;
 
@@ -380,6 +386,7 @@ export const NavBar: React.FC<NavBarProps> = ({ activeTab, onSelectTab, openTask
         const Icon = tab.icon;
         const isActive = activeTab === tab.id;
         const badgeCount = tab.id === "hives" && openTaskCount > 0 ? openTaskCount : undefined;
+        const showNoticeDot = tab.id === "settings" && hasSyncAlert;
 
         return (
           <button
@@ -417,6 +424,22 @@ export const NavBar: React.FC<NavBarProps> = ({ activeTab, onSelectTab, openTask
                 >
                   {badgeCount}
                 </span>
+              )}
+              {showNoticeDot && (
+                <span
+                  title="Google-synkronisering behöver åtgärdas"
+                  style={{
+                    position: "absolute",
+                    top: -2,
+                    right: -5,
+                    width: "9px",
+                    height: "9px",
+                    borderRadius: "50%",
+                    backgroundColor: "var(--color-danger-base, #ef4444)",
+                    border: "2px solid var(--color-surface, #ffffff)",
+                    boxShadow: "0 0 0 1px rgba(239, 68, 68, 0.4)",
+                  }}
+                />
               )}
             </div>
             <span
