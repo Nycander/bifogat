@@ -217,7 +217,11 @@ Karin Blom 130 kr
   /**
    * Updates customer on a card and propagates to other unbooked cards with same Swish name.
    */
-  const handleCustomerChange = (rowId: string, newCustomerName: string) => {
+  const handleCustomerChange = (
+    rowId: string,
+    newCustomerName: string,
+    closeEditing = false,
+  ) => {
     const target = draftRows.find((r) => r.id === rowId);
     if (!target) return;
 
@@ -239,7 +243,7 @@ Karin Blom 130 kr
           ...r,
           chosenCustomer: newCustomerName,
           isCustomerManual: true,
-          isEditingCustomer: false,
+          isEditingCustomer: closeEditing ? false : r.isEditingCustomer,
         };
       }
       // Propagate to unbooked rows with same normalized Swish name that weren't manually edited
@@ -654,15 +658,35 @@ Karin Blom 130 kr
                     {/* Customer Row */}
                     <div style={{ marginBottom: "6px" }}>
                       {row.isEditingCustomer ? (
-                        <div style={{ marginTop: "4px", marginBottom: "4px" }}>
-                          <CustomerPicker
-                            id={`picker-${row.id}`}
-                            value={row.chosenCustomer}
-                            onChange={(name) => handleCustomerChange(row.id, name)}
-                            allCustomers={allCustomers}
-                            quickChips={quickChips}
-                            placeholder="Välj eller skriv kund..."
-                          />
+                        <div style={{ marginTop: "4px", marginBottom: "4px", display: "flex", alignItems: "flex-start", gap: "6px" }}>
+                          <div style={{ flex: 1 }}>
+                            <CustomerPicker
+                              id={`picker-${row.id}`}
+                              value={row.chosenCustomer}
+                              onChange={(name) => handleCustomerChange(row.id, name, false)}
+                              onFinishEditing={() =>
+                                setDraftRows((prev) =>
+                                  prev.map((r) => (r.id === row.id ? { ...r, isEditingCustomer: false } : r)),
+                                )
+                              }
+                              allCustomers={allCustomers}
+                              quickChips={quickChips}
+                              placeholder="Välj eller skriv kund..."
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            className="btn btn-secondary btn-sm"
+                            style={{ padding: "5px 10px", fontSize: "0.8rem", whiteSpace: "nowrap", height: "34px" }}
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() =>
+                              setDraftRows((prev) =>
+                                prev.map((r) => (r.id === row.id ? { ...r, isEditingCustomer: false } : r)),
+                              )
+                            }
+                          >
+                            Klar
+                          </button>
                         </div>
                       ) : (
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -707,7 +731,7 @@ Karin Blom 130 kr
                                   className="customer-quick-chip"
                                   style={{ fontSize: "0.75rem", padding: "1px 6px" }}
                                   onMouseDown={(e) => e.preventDefault()}
-                                  onClick={() => handleCustomerChange(row.id, chip)}
+                                  onClick={() => handleCustomerChange(row.id, chip, true)}
                                 >
                                   {chip}
                                 </button>

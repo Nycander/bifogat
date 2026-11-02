@@ -5,6 +5,7 @@ import { filterCustomerSuggestions } from "../../domain/customers";
 export interface CustomerPickerProps {
   value: string;
   onChange: (customerName: string) => void;
+  onFinishEditing?: () => void;
   allCustomers?: string[];
   quickChips?: string[];
   label?: string;
@@ -20,6 +21,7 @@ export interface CustomerPickerProps {
 export interface CustomerQuickChipsProps {
   value: string;
   onChange: (customerName: string) => void;
+  onFinishEditing?: () => void;
   chips: string[];
   chipLabel?: string;
   className?: string;
@@ -28,6 +30,7 @@ export interface CustomerQuickChipsProps {
 export const CustomerQuickChips: React.FC<CustomerQuickChipsProps> = ({
   value,
   onChange,
+  onFinishEditing,
   chips,
   chipLabel = "Tidigare:",
   className = "",
@@ -43,7 +46,10 @@ export const CustomerQuickChips: React.FC<CustomerQuickChipsProps> = ({
           type="button"
           className={`customer-quick-chip ${value === name ? "selected" : ""}`}
           onMouseDown={(e) => e.preventDefault()}
-          onClick={() => onChange(name)}
+          onClick={() => {
+            onChange(name);
+            onFinishEditing?.();
+          }}
         >
           {name}
         </button>
@@ -55,7 +61,7 @@ export const CustomerQuickChips: React.FC<CustomerQuickChipsProps> = ({
 /**
  * Shared, reusable CustomerPicker component for HoneySaleModal and SwishInboxModal.
  * Features:
- * - Direct text input with autocomplete="off" (mobile-friendly, no intrusive browser popups)
+ * - Direct text input with autoComplete="off" (mobile-friendly, no intrusive browser popups)
  * - Native <datalist> backing
  * - Interactive suggestion dropdown with User icon on typing
  * - Quick chips (with onMouseDown preventDefault so software keyboard isn't dismissed)
@@ -63,6 +69,7 @@ export const CustomerQuickChips: React.FC<CustomerQuickChipsProps> = ({
 export const CustomerPicker: React.FC<CustomerPickerProps> = ({
   value,
   onChange,
+  onFinishEditing,
   allCustomers = [],
   quickChips,
   label,
@@ -113,6 +120,12 @@ export const CustomerPicker: React.FC<CustomerPickerProps> = ({
                 // Short delay so click on suggestion dropdown fires first
                 setTimeout(() => setIsFocused(false), 200);
               }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  (e.target as HTMLInputElement).blur();
+                  onFinishEditing?.();
+                }
+              }}
               autoComplete="off"
               autoCorrect="off"
               spellCheck={false}
@@ -136,6 +149,7 @@ export const CustomerPicker: React.FC<CustomerPickerProps> = ({
                     onClick={() => {
                       onChange(name);
                       setIsFocused(false);
+                      onFinishEditing?.();
                     }}
                   >
                     <User size={13} className="suggestion-icon" />
@@ -153,6 +167,7 @@ export const CustomerPicker: React.FC<CustomerPickerProps> = ({
         <CustomerQuickChips
           value={value}
           onChange={onChange}
+          onFinishEditing={onFinishEditing}
           chips={displayedChips}
           chipLabel={computedChipLabel}
         />
