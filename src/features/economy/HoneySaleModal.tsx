@@ -1,12 +1,13 @@
 import React, { useState, useMemo } from "react";
 import { Harvest, Transaction } from "../../domain/types";
 import { formatDate } from "../../domain/validation";
-import { extractUniqueCustomers, filterCustomerSuggestions } from "../../domain/customers";
+import { extractUniqueCustomers } from "../../domain/customers";
+import { formatHoneySaleDescription } from "../../domain/honeySale";
 import { useBottomSheet } from "../../hooks/useBottomSheet";
 import { BottomSheetDragHandle } from "../../components/ui/BottomSheetDragHandle";
+import { CustomerPicker, CustomerQuickChips } from "../../components/ui/CustomerPicker";
 import {
   X,
-  Check,
   Droplet,
   Plus,
   Minus,
@@ -16,7 +17,6 @@ import {
   Smartphone,
   ArrowRight,
   ArrowLeft,
-  User,
 } from "lucide-react";
 
 interface HoneySaleModalProps {
@@ -52,18 +52,13 @@ export const HoneySaleModal: React.FC<HoneySaleModalProps> = ({
   const [pricePerJar, setPricePerJar] = useState<number>(initialPrice);
   const [paymentMethod, setPaymentMethod] = useState<"Swish" | "Kontant" | "Faktura" | "Övrigt">("Swish");
   const [counterparty, setCounterparty] = useState<string>("");
-  const [isCounterpartyFocused, setIsCounterpartyFocused] = useState(false);
   const [date, setDate] = useState(formatDate(new Date()));
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Extract past unique customers & calculate suggestions
+  // Extract past unique customers
   const allCustomers = useMemo(() => extractUniqueCustomers(transactions), [transactions]);
-  const recentCustomers = useMemo(() => allCustomers.slice(0, 4), [allCustomers]);
-  const matchingCustomers = useMemo(() => {
-    return filterCustomerSuggestions(allCustomers, counterparty, 5);
-  }, [allCustomers, counterparty]);
 
   const totalSek = jarCount * pricePerJar;
   const totalWeightKg = (jarCount * jarSizeGrams) / 1000;
@@ -104,10 +99,12 @@ export const HoneySaleModal: React.FC<HoneySaleModalProps> = ({
       const amountOre = Math.round(totalSek * 100);
       const counterpartyClean = counterparty.trim() || undefined;
 
-      let description = `Honungsförsäljning: ${jarCount} st burkar (${jarSizeGrams}g) [${paymentMethod}]`;
-      if (counterpartyClean) {
-        description += ` till ${counterpartyClean}`;
-      }
+      const description = formatHoneySaleDescription({
+        jarCount,
+        jarSizeGrams,
+        paymentMethod,
+        counterparty: counterpartyClean,
+      });
 
       await onSaveSale({
         date,
@@ -324,55 +321,14 @@ export const HoneySaleModal: React.FC<HoneySaleModalProps> = ({
 
             {/* Combined Buyer & Date Grid (Side-by-side to save vertical space) */}
             <div style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: "8px", marginBottom: "4px" }}>
-              <div style={{ position: "relative" }}>
-                <label className="form-label" htmlFor="sale-counterparty" style={{ fontSize: "0.8rem", marginBottom: "3px" }}>
-                  Köpare / Kund
-                </label>
-                <input
-                  id="sale-counterparty"
-                  type="text"
-                  list="sale-customers-datalist"
-                  className="form-input"
-                  style={{ padding: "6px 9px", fontSize: "0.88rem" }}
-                  placeholder="Valfritt namn..."
-                  value={counterparty}
-                  onChange={(e) => setCounterparty(e.target.value)}
-                  onFocus={() => setIsCounterpartyFocused(true)}
-                  onBlur={() => {
-                    setTimeout(() => setIsCounterpartyFocused(false), 200);
-                  }}
-                  autoComplete="off"
-                  autoCorrect="off"
-                  spellCheck={false}
-                />
-
-                <datalist id="sale-customers-datalist">
-                  {allCustomers.map((name) => (
-                    <option key={name} value={name} />
-                  ))}
-                </datalist>
-
-                {/* Autocomplete suggestions dropdown when typing */}
-                {isCounterpartyFocused && counterparty.trim().length > 0 && matchingCustomers.length > 0 && (
-                  <div className="autocomplete-suggestions-dropdown">
-                    {matchingCustomers.map((name) => (
-                      <button
-                        key={name}
-                        type="button"
-                        className="autocomplete-suggestion-item"
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => {
-                          setCounterparty(name);
-                          setIsCounterpartyFocused(false);
-                        }}
-                      >
-                        <User size={13} className="suggestion-icon" />
-                        <span>{name}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <CustomerPicker
+                id="sale-counterparty"
+                label="Köpare / Kund"
+                value={counterparty}
+                onChange={setCounterparty}
+                allCustomers={allCustomers}
+                showChips={false}
+              />
 
               <div>
                 <label className="form-label" htmlFor="sale-date" style={{ fontSize: "0.8rem", marginBottom: "3px" }}>
@@ -393,25 +349,12 @@ export const HoneySaleModal: React.FC<HoneySaleModalProps> = ({
 
             {/* Quick Customer Chips */}
             {allCustomers.length > 0 && (
-              <div className="customer-chips-row" style={{ marginTop: "2px", marginBottom: "4px" }}>
-                <span className="customer-chips-label">
-                  {counterparty.trim() ? "Förslag:" : "Tidigare:"}
-                </span>
-                {(counterparty.trim() ? matchingCustomers : recentCustomers).map((name) => (
-                  <button
-                    key={name}
-                    type="button"
-                    className="customer-quick-chip"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => {
-                      setCounterparty(name);
-                      setIsCounterpartyFocused(false);
-                    }}
-                  >
-                    {name}
-                  </button>
-                ))}
-              </div>
+              <CustomerQuickChips
+                value={counterparty}
+                onChange={setCounterparty}
+                chips={allCustomers.slice(0, 4)}
+                chipLabel="Tidigare:"
+              />
             )}
 
             <div className="wizard-actions" style={{ marginTop: "auto", paddingTop: "8px" }}>

@@ -77,6 +77,30 @@ export default defineConfig(() => {
           clientsClaim: true,
           skipWaiting: true,
           globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
+          runtimeCaching: [
+            {
+              urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/npm\/tesseract\.js.*$/,
+              handler: "CacheFirst",
+              options: {
+                cacheName: "tesseract-assets",
+                expiration: {
+                  maxEntries: 10,
+                  maxAgeSeconds: 60 * 60 * 24 * 365,
+                },
+              },
+            },
+            {
+              urlPattern: /.*tessdata.*\.traineddata.*/,
+              handler: "CacheFirst",
+              options: {
+                cacheName: "tesseract-lang-data",
+                expiration: {
+                  maxEntries: 5,
+                  maxAgeSeconds: 60 * 60 * 24 * 365,
+                },
+              },
+            },
+          ],
         },
         devOptions: {
           enabled: false,

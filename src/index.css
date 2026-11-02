@@ -3075,6 +3075,27 @@ button:active:not(:disabled) {
   }
 }
 
+.swish-inbox-card {
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.swish-inbox-card:hover {
+  border-color: var(--color-primary-base);
+}
+
+.customer-name-toggle-btn:hover span {
+  text-decoration: underline;
+  color: var(--color-primary-base) !important;
+}
+
+.accordion-header-btn:hover {
+  filter: brightness(0.96);
+}
+
+[data-theme="dark"] .accordion-header-btn:hover {
+  filter: brightness(1.1);
+}
+
 
 
 

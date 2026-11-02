@@ -11,6 +11,7 @@ import {
   Edit2,
   AlertCircle,
   Droplet,
+  ScanText,
 } from "lucide-react";
 
 interface EconomyViewProps {
@@ -18,6 +19,7 @@ interface EconomyViewProps {
   importedHistoricalBalanceOre?: number;
   onOpenCreateTransaction: () => void;
   onOpenHoneySale: () => void;
+  onOpenSwishInbox?: () => void;
   onEditTransaction: (tx: Transaction) => void;
   onDeleteTransaction: (id: string) => Promise<void>;
 }
@@ -27,6 +29,7 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
   importedHistoricalBalanceOre,
   onOpenCreateTransaction,
   onOpenHoneySale,
+  onOpenSwishInbox,
   onEditTransaction,
   onDeleteTransaction,
 }) => {
@@ -92,6 +95,15 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
             <Droplet size={16} />
             <span>Sälj honung</span>
           </button>
+          {onOpenSwishInbox && (
+            <button
+              className="btn btn-secondary btn-sm"
+              onClick={onOpenSwishInbox}
+            >
+              <ScanText size={16} />
+              <span>Swish-inkorg</span>
+            </button>
+          )}
           <button className="btn btn-secondary btn-sm" onClick={onOpenCreateTransaction}>
             <Plus size={16} />
             <span>Ny transaktion</span>

@@ -32,6 +32,7 @@ import {
   getSavedUser,
 } from "./auth/googleAuth";
 import { HoneySaleModal } from "./features/economy/HoneySaleModal";
+import { SwishInboxModal } from "./features/economy/SwishInboxModal";
 import { useOnlineStatus } from "./pwa/useOnlineStatus";
 import { PWAInstallButton } from "./pwa/PWAInstallButton";
 import { OfflineIndicator } from "./pwa/OfflineIndicator";
@@ -166,6 +167,7 @@ function AppContent() {
   const [fillingBatchId, setFillingBatchId] = useState<string | undefined>();
 
   const [showHoneySaleModal, setShowHoneySaleModal] = useState(false);
+  const [showSwishInboxModal, setShowSwishInboxModal] = useState(false);
   const [showTxModal, setShowTxModal] = useState(false);
   const [editingTx, setEditingTx] = useState<Transaction | undefined>();
 
@@ -183,6 +185,7 @@ function AppContent() {
       showHarvestModal ||
       showJarFillingModal ||
       showHoneySaleModal ||
+      showSwishInboxModal ||
       showTxModal ||
       showConflictModal ||
       showOutboxPreviewModal ||
@@ -650,6 +653,47 @@ function AppContent() {
     });
   };
 
+  const swishBookedSessionCountRef = useRef(0);
+
+  const handleSaveSwishSale = async (data: {
+    date: string;
+    description: string;
+    amountOre: number;
+    counterparty?: string;
+    category?: string;
+    externalReference: string;
+  }): Promise<string> => {
+    const createdTx = await transactionRepository.create({
+      date: data.date,
+      description: data.description,
+      amountOre: data.amountOre,
+      counterparty: data.counterparty,
+      category: data.category || "Honungsförsäljning",
+      source: "manual",
+      externalReference: data.externalReference,
+    });
+    swishBookedSessionCountRef.current += 1;
+    return createdTx.id;
+  };
+
+  const handleDeleteSwishSale = async (txId: string): Promise<void> => {
+    await transactionRepository.delete(txId);
+    swishBookedSessionCountRef.current = Math.max(0, swishBookedSessionCountRef.current - 1);
+  };
+
+  const handleCloseSwishInbox = async () => {
+    setShowSwishInboxModal(false);
+    const count = swishBookedSessionCountRef.current;
+    swishBookedSessionCountRef.current = 0;
+    if (count > 0) {
+      await reloadData();
+      showSnackbar({
+        message: `${count} ${count === 1 ? "Swish-försäljning bokförd" : "Swish-försäljningar bokförda"}`,
+        type: "success",
+      });
+    }
+  };
+
   // Conflict Resolution
   const handleResolveConflict = async (conflictId: string, keepLocal: boolean) => {
     await conflictRepository.resolveConflict(conflictId, keepLocal);
@@ -896,6 +940,7 @@ function AppContent() {
               setShowTxModal(true);
             }}
             onOpenHoneySale={() => setShowHoneySaleModal(true)}
+            onOpenSwishInbox={() => setShowSwishInboxModal(true)}
             onEditTransaction={(tx) => {
               setEditingTx(tx);
               setShowTxModal(true);
@@ -1127,6 +1172,15 @@ function AppContent() {
           transactions={transactions}
           onClose={() => setShowHoneySaleModal(false)}
           onSaveSale={handleSaveHoneySale}
+        />
+      )}
+
+      {showSwishInboxModal && (
+        <SwishInboxModal
+          transactions={transactions}
+          onClose={handleCloseSwishInbox}
+          onSaveSwishSale={handleSaveSwishSale}
+          onDeleteSwishSale={handleDeleteSwishSale}
         />
       )}
 
