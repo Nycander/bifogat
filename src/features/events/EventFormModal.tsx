@@ -17,6 +17,7 @@ import {
   Layers,
   Crown,
   MoreHorizontal,
+  Calendar,
 } from "lucide-react";
 import { useBottomSheet } from "../../hooks/useBottomSheet";
 import { BottomSheetDragHandle } from "../../components/ui/BottomSheetDragHandle";
@@ -321,8 +322,14 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
         {step === 2 && (
           <div className="wizard-step-content">
             <div className="wizard-context-banner" style={{ marginBottom: "6px" }}>
-              <span className="wizard-context-pill">🐝 {currentHive?.name || "Kupa"}</span>
-              <span className="wizard-context-pill">📅 {date}</span>
+              <span className="wizard-context-pill">
+                <Layers size={13} style={{ display: "inline", verticalAlign: "middle", marginRight: "4px" }} />
+                {currentHive?.name || "Kupa"}
+              </span>
+              <span className="wizard-context-pill">
+                <Calendar size={13} style={{ display: "inline", verticalAlign: "middle", marginRight: "4px" }} />
+                {date}
+              </span>
             </div>
 
             {/* Single Observation Field placed in the upper half of modal */}
@@ -389,8 +396,14 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
         {step === 3 && (
           <div className="wizard-step-content">
             <div className="wizard-context-banner" style={{ marginBottom: "6px" }}>
-              <span className="wizard-context-pill">🐝 {currentHive?.name}</span>
-              <span className="wizard-context-pill">📝 {getDerivedTitle(notes, type)}</span>
+              <span className="wizard-context-pill">
+                <Layers size={13} style={{ display: "inline", verticalAlign: "middle", marginRight: "4px" }} />
+                {currentHive?.name}
+              </span>
+              <span className="wizard-context-pill">
+                <ClipboardList size={13} style={{ display: "inline", verticalAlign: "middle", marginRight: "4px" }} />
+                {getDerivedTitle(notes, type)}
+              </span>
             </div>
 
             {/* Tasks to Complete during this visit */}
@@ -463,7 +476,10 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
                 <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginTop: "6px" }}>
                   {newTasks.map((nt, idx) => (
                     <div key={idx} className="wizard-new-task-pill">
-                      <span>📌 {nt.title}</span>
+                      <span>
+                        <CheckSquare size={13} style={{ display: "inline", verticalAlign: "middle", marginRight: "4px" }} />
+                        {nt.title}
+                      </span>
                       <button
                         type="button"
                         onClick={() => handleRemoveNewTask(idx)}

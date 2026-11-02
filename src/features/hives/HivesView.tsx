@@ -10,7 +10,6 @@ import {
   Edit2,
   Trash2,
   Check,
-  Droplet,
 } from "lucide-react";
 
 interface HivesViewProps {
@@ -40,7 +39,6 @@ export const HivesView: React.FC<HivesViewProps> = ({
   onOpenCreateTask,
   onEditTask,
   onDeleteTask,
-  onOpenHoneySale,
 }) => {
   const [subTab, setSubTab] = useState<"hives" | "tasks">(initialSubTab);
   const [hiveFilter, setHiveFilter] = useState<"all" | "active" | "inactive">("active");
@@ -108,33 +106,14 @@ export const HivesView: React.FC<HivesViewProps> = ({
   return (
     <div>
       {/* Top Header */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: "1rem",
-          flexWrap: "wrap",
-          gap: "0.5rem",
-        }}
-      >
-        <div>
+      <div className="view-header">
+        <div className="view-header-title">
           <h1>Bikupor & åtgärder</h1>
-          <p style={{ fontSize: "0.875rem", color: "var(--color-text-muted)" }}>
+          <p className="view-header-subtitle">
             Hantera dina bisamhällen, planerade åtgärder och inspektioner
           </p>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
-          {onOpenHoneySale && (
-            <button
-              className="btn btn-honey btn-sm"
-              onClick={onOpenHoneySale}
-              title="Bokför honungsförsäljning"
-            >
-              <Droplet size={16} />
-              <span>Sälj honung</span>
-            </button>
-          )}
+        <div className="view-header-actions">
           <button
             className="btn btn-secondary btn-sm"
             onClick={() => onOpenCreateTask()}

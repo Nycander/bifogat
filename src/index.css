@@ -201,6 +201,36 @@ a:hover {
 }
 
 /* ==========================================================================
+   View Header & Layout Consistency
+   ========================================================================== */
+.view-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.view-header-title h1 {
+  margin: 0;
+}
+
+.view-header-subtitle {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  margin-top: 0.2rem;
+  margin-bottom: 0;
+}
+
+.view-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* ==========================================================================
    Buttons
    ========================================================================== */
 .btn {
@@ -209,43 +239,56 @@ a:hover {
   justify-content: center;
   gap: 8px;
   font-family: inherit;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
-  padding: 8px 14px;
-  border-radius: var(--radius-md);
+  padding: 8px 16px;
+  border-radius: var(--radius-md, 10px);
   border: 1px solid transparent;
   cursor: pointer;
-  transition: all 0.15s ease-in-out;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
   touch-action: manipulation;
   user-select: none;
   text-decoration: none;
+  line-height: 1.25;
 }
 
 .btn:disabled {
-  opacity: 0.6;
+  opacity: 0.55;
   cursor: not-allowed;
+  box-shadow: none !important;
+  transform: none !important;
 }
 
 .btn-primary {
-  background-color: var(--color-primary-base);
-  color: var(--color-primary-text);
-  border-color: var(--color-primary-hover);
+  background-color: var(--color-primary-base, #2d5a27);
+  color: #ffffff;
+  border-color: var(--color-primary-base, #2d5a27);
   font-weight: 700;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 .btn-primary:hover:not(:disabled) {
-  background-color: var(--color-primary-hover);
-  color: var(--color-primary-text);
-  border-color: var(--color-border-strong);
+  background-color: var(--color-primary-hover, #1e3e1a);
+  border-color: var(--color-primary-hover, #1e3e1a);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+.btn-primary:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .btn-secondary {
-  background-color: var(--color-surface);
-  color: var(--color-text-main);
-  border-color: var(--color-border);
+  background-color: var(--color-surface, #ffffff);
+  color: var(--color-text-main, #1e293b);
+  border: 1px solid var(--color-border-default, #cbd5e1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 .btn-secondary:hover:not(:disabled) {
-  background-color: var(--color-surface-hover);
-  border-color: var(--color-border-strong);
+  background-color: var(--color-surface-hover, #f8fafc);
+  border-color: var(--color-border-strong, #94a3b8);
+  color: var(--color-text-main, #0f172a);
+}
+.btn-secondary:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .btn-outline {
@@ -260,28 +303,35 @@ a:hover {
 }
 
 .btn-danger {
-  background-color: var(--color-danger);
+  background-color: var(--color-danger, #ef4444);
   color: #ffffff;
-  border-color: var(--color-danger);
+  border-color: var(--color-danger, #ef4444);
+  font-weight: 600;
 }
 .btn-danger:hover:not(:disabled) {
-  background-color: #7f1d1d;
+  background-color: #dc2626;
+  border-color: #dc2626;
 }
 
 .btn-honey {
-  background-color: var(--color-honey-btn-bg);
-  color: var(--color-honey-btn-text);
-  border-color: var(--color-honey-btn-border);
+  background-color: #d97706;
+  color: #ffffff;
+  border-color: #b45309;
   font-weight: 700;
+  box-shadow: 0 1px 3px rgba(217, 119, 6, 0.2);
 }
 .btn-honey:hover:not(:disabled) {
-  background-color: var(--color-honey-btn-hover);
-  color: var(--color-honey-btn-text);
-  border-color: var(--color-honey-btn-border);
+  background-color: #b45309;
+  color: #ffffff;
+  border-color: #92400e;
+  box-shadow: 0 2px 6px rgba(180, 83, 9, 0.25);
+}
+.btn-honey:active:not(:disabled) {
+  transform: scale(0.98);
 }
 .btn-honey svg {
-  color: var(--color-honey-btn-text);
-  stroke: var(--color-honey-btn-text);
+  color: #ffffff;
+  stroke: #ffffff;
 }
 
 .btn-ghost {
@@ -303,14 +353,14 @@ a:hover {
 
 .btn-sm {
   font-size: 13px;
-  padding: 6px 10px;
-  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm, 8px);
 }
 
 .btn-lg {
-  font-size: 17px;
-  padding: 12px 20px;
-  border-radius: var(--radius-md);
+  font-size: 16px;
+  padding: 10px 20px;
+  border-radius: var(--radius-md, 12px);
 }
 
 .btn-icon-only {
@@ -2182,10 +2232,10 @@ button:active:not(:disabled) {
   width: 56px;
   height: 56px;
   border-radius: 18px;
-  background: linear-gradient(135deg, #e09f3e 0%, #ca8a04 100%);
+  background: var(--color-primary-base, #364833);
   color: #ffffff;
   border: none;
-  box-shadow: 0 4px 14px rgba(202, 138, 4, 0.42), 0 2px 6px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 16px rgba(27, 67, 23, 0.32), 0 2px 6px rgba(0, 0, 0, 0.12);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -2195,12 +2245,17 @@ button:active:not(:disabled) {
   user-select: none;
 }
 
+.fab-main-btn:hover {
+  background: var(--color-primary-hover, #283626);
+  box-shadow: 0 6px 20px rgba(27, 67, 23, 0.4);
+}
+
 .fab-main-btn:active {
   transform: scale(0.92);
 }
 
 .fab-main-btn.fab-open {
-  background: #334155;
+  background: #273026;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
 }
 
@@ -2284,18 +2339,18 @@ button:active:not(:disabled) {
 }
 
 .speed-dial-btn-sale {
-  background-color: var(--color-warning-surface, #fffbeb);
-  color: #d97706;
+  background-color: var(--color-honey-surface, #fffbeb);
+  color: var(--color-honey-base, #d97706);
 }
 
 .speed-dial-btn-task {
   background-color: var(--color-info-surface, #eff6ff);
-  color: #2563eb;
+  color: var(--color-info-base, #2563eb);
 }
 
 .speed-dial-btn-harvest {
-  background-color: var(--color-secondary-surface, #fefce8);
-  color: #b45309;
+  background-color: var(--color-secondary-surface, #f5f7eb);
+  color: var(--color-secondary-text, #364833);
 }
 
 .speed-dial-item:hover .speed-dial-btn {
@@ -2323,9 +2378,13 @@ button:active:not(:disabled) {
 }
 
 [data-theme="dark"] .fab-main-btn {
-  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
-  color: #ffffff;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), 0 0 20px rgba(217, 119, 6, 0.25);
+  background: var(--color-primary-base, #8fae87);
+  color: var(--color-primary-text, #121811);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .fab-main-btn:hover {
+  background: var(--color-primary-hover, #a2c39a);
 }
 
 [data-theme="dark"] .fab-main-btn.fab-open {

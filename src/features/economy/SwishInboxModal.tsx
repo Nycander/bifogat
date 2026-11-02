@@ -810,7 +810,7 @@ Karin Blom 130 kr
                       <button
                         type="button"
                         className="btn btn-primary btn-sm"
-                        style={{ padding: "4px 12px", fontSize: "0.8rem", backgroundColor: "#16a34a" }}
+                        style={{ padding: "4px 12px", fontSize: "0.8rem" }}
                         onClick={() => handleBookRow(row)}
                       >
                         <Check size={14} />

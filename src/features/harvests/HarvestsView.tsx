@@ -11,6 +11,8 @@ import {
   ChevronUp,
   BarChart2,
   TrendingUp,
+  Crown,
+  Sparkles,
 } from "lucide-react";
 
 interface HarvestsViewProps {
@@ -32,7 +34,6 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
   onDeleteHarvest,
   onOpenJarFilling,
   onDeleteFilling,
-  onOpenHoneySale,
 }) => {
   const [activeTab, setActiveTab] = useState<"batches" | "statistics">("batches");
   const [selectedYearFilter, setSelectedYearFilter] = useState<string>("all");
@@ -196,36 +197,20 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
   return (
     <div>
       {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: "1rem",
-          flexWrap: "wrap",
-          gap: "0.5rem",
-        }}
-      >
-        <div>
+      <div className="view-header">
+        <div className="view-header-title">
           <h1>Skörd & honungsproduktion</h1>
-          <p style={{ fontSize: "0.875rem", color: "var(--color-text-muted)" }}>
+          <p className="view-header-subtitle">
             Bigårdens slungningar, automatisk dragperiod, nyslungad/rörd honung och årsstatistik
           </p>
         </div>
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-          {onOpenHoneySale && (
-            <button className="btn btn-honey btn-sm" onClick={onOpenHoneySale}>
-              <Droplet size={16} />
-              <span>Sälj honung</span>
-            </button>
-          )}
+        <div className="view-header-actions">
           {harvests.length > 0 && (
             <button
               className="btn btn-secondary btn-sm"
               onClick={() => onOpenJarFilling()}
-              style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
             >
-              <PackageCheck size={16} color="var(--color-primary-base)" />
+              <PackageCheck size={16} />
               <span>Tappa burkar (500g)</span>
             </button>
           )}
@@ -317,7 +302,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
               </h3>
               {stats.bestYear && (
                 <span className="badge badge-success" style={{ fontSize: "0.75rem" }}>
-                  🏆 Rekordår: {stats.bestYear} ({stats.bestYearKg.toFixed(1).replace(".", ",")} kg)
+                  <Crown size={13} style={{ display: "inline", verticalAlign: "middle", marginRight: "3px" }} /> Rekordår: {stats.bestYear} ({stats.bestYearKg.toFixed(1).replace(".", ",")} kg)
                 </span>
               )}
             </div>
@@ -745,7 +730,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                                 }`,
                               }}
                             >
-                              💧 {harvest.waterContentPercent}% vatten
+                              <Droplet size={12} style={{ display: "inline", verticalAlign: "middle", marginRight: "2px" }} /> {harvest.waterContentPercent}% vatten
                             </span>
                           )}
                         </div>
@@ -777,7 +762,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                                 fontWeight: 500,
                               }}
                             >
-                              🌸 Dragperiod: {dragPeriodDisplay}
+                              <Sparkles size={12} style={{ display: "inline", verticalAlign: "middle", marginRight: "3px" }} /> Dragperiod: {dragPeriodDisplay}
                             </span>
                           )}
                         </div>
@@ -893,8 +878,18 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                               Beredning
                             </div>
                             <div style={{ fontSize: "0.85rem", color: "var(--color-text-primary)" }}>
-                              {nyslungadBatchJars > 0 && <span>🍯 {nyslungadBatchJars} nyslungad </span>}
-                              {rordBatchJars > 0 && <span>🥄 {rordBatchJars} rörd</span>}
+                              {nyslungadBatchJars > 0 && (
+                                <span>
+                                  <Droplet size={12} style={{ display: "inline", verticalAlign: "middle", marginRight: "2px" }} />
+                                  {nyslungadBatchJars} nyslungad{" "}
+                                </span>
+                              )}
+                              {rordBatchJars > 0 && (
+                                <span>
+                                  <Sparkles size={12} style={{ display: "inline", verticalAlign: "middle", marginRight: "2px" }} />
+                                  {rordBatchJars} rörd
+                                </span>
+                              )}
                               {totalJars === 0 && "Inga burkar tappade än"}
                             </div>
                           </div>
@@ -910,7 +905,8 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                             className="badge badge-warning"
                             style={{ fontSize: "0.75rem", padding: "2px 8px" }}
                           >
-                            🍯 Nyslungad: {nyslungadBatchJars} st
+                            <Droplet size={12} style={{ display: "inline", verticalAlign: "middle", marginRight: "2px" }} />
+                            Nyslungad: {nyslungadBatchJars} st
                           </span>
                         )}
                         {rordBatchJars > 0 && (
@@ -918,7 +914,8 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                             className="badge badge-success"
                             style={{ fontSize: "0.75rem", padding: "2px 8px" }}
                           >
-                            🥄 Rörd honung: {rordBatchJars} st
+                            <Sparkles size={12} style={{ display: "inline", verticalAlign: "middle", marginRight: "2px" }} />
+                            Rörd honung: {rordBatchJars} st
                           </span>
                         )}
                       </div>

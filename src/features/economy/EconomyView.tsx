@@ -10,7 +10,6 @@ import {
   Trash2,
   Edit2,
   AlertCircle,
-  Droplet,
   ScanText,
 } from "lucide-react";
 
@@ -28,7 +27,6 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
   transactions,
   importedHistoricalBalanceOre,
   onOpenCreateTransaction,
-  onOpenHoneySale,
   onOpenSwishInbox,
   onEditTransaction,
   onDeleteTransaction,
@@ -73,28 +71,15 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
 
   return (
     <div>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: "1rem",
-        }}
-      >
-        <div>
+      {/* Header */}
+      <div className="view-header">
+        <div className="view-header-title">
           <h1>Ekonomi & kassa</h1>
-          <p style={{ fontSize: "0.875rem", color: "var(--color-text-muted)" }}>
+          <p className="view-header-subtitle">
             Försäljning av honung, materialinköp och löpande saldo
           </p>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
-          <button
-            className="btn btn-honey btn-sm"
-            onClick={onOpenHoneySale}
-          >
-            <Droplet size={16} />
-            <span>Sälj honung</span>
-          </button>
+        <div className="view-header-actions">
           {onOpenSwishInbox && (
             <button
               className="btn btn-secondary btn-sm"
@@ -104,7 +89,7 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
               <span>Swish-inkorg</span>
             </button>
           )}
-          <button className="btn btn-secondary btn-sm" onClick={onOpenCreateTransaction}>
+          <button className="btn btn-primary btn-sm" onClick={onOpenCreateTransaction}>
             <Plus size={16} />
             <span>Ny transaktion</span>
           </button>
