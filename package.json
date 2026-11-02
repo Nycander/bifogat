@@ -44,7 +44,8 @@
     "onlyBuiltDependencies": [
       "@firebase/util",
       "esbuild",
-      "protobufjs"
+      "protobufjs",
+      "tesseract.js"
     ]
   }
 }
