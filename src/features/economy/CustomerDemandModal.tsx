@@ -174,7 +174,7 @@ export const CustomerDemandModal: React.FC<CustomerDemandModalProps> = ({
         </div>
 
         {/* Scrollable Body Content */}
-        <div style={{ flex: 1, overflowY: "auto", padding: "16px 4px 16px 4px" }}>
+        <div className="modal-scroll-body" style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "16px 4px 16px 4px" }}>
           {/* Top KPI Cards */}
           <div
             style={{

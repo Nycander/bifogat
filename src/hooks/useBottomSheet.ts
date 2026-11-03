@@ -61,6 +61,7 @@ export function useBottomSheet({ onClose, options }: UseBottomSheetProps) {
     let isExiting = false;
     let activeTouchId: number | null = null;
     let activePointerId: number | null = null;
+    let activeScrollContainer: HTMLElement | null = null;
     let rafId: number | null = null;
 
     const cancelCurrentAnimation = () => {
@@ -89,34 +90,58 @@ export function useBottomSheet({ onClose, options }: UseBottomSheetProps) {
       );
     };
 
-    const checkDragZone = (target: HTMLElement | null): { allowed: boolean; isDirectHandle: boolean } => {
+    const findScrollContainer = (target: HTMLElement | null): HTMLElement | null => {
+      let curr = target;
+      while (curr && curr !== el && curr !== document.body) {
+        const style = window.getComputedStyle(curr);
+        const overflowY = style.overflowY;
+        if (
+          (overflowY === "auto" || overflowY === "scroll" || curr.classList.contains("modal-scroll-body") || curr.classList.contains("modal-body")) &&
+          curr.scrollHeight > curr.clientHeight
+        ) {
+          return curr;
+        }
+        curr = curr.parentElement;
+      }
+      // Check fallback inside modal
+      const fallback = el.querySelector(
+        ".modal-scroll-body, .modal-body, .wizard-step-content"
+      ) as HTMLElement | null;
+      if (fallback && (fallback.scrollHeight > fallback.clientHeight || fallback.scrollTop > 0)) {
+        return fallback;
+      }
+      return null;
+    };
+
+    const checkDragZone = (
+      target: HTMLElement | null,
+    ): { allowed: boolean; isDirectHandle: boolean; scrollContainer: HTMLElement | null } => {
       if (!target || isInteractiveElement(target)) {
-        return { allowed: false, isDirectHandle: false };
+        return { allowed: false, isDirectHandle: false, scrollContainer: null };
       }
 
       // Check handle or header
       const isHandle = Boolean(
         target.closest(".sheet-drag-handle-container") ||
-        target.closest(".sheet-drag-handle")
-      );
-      const isHeader = Boolean(
+        target.closest(".sheet-drag-handle") ||
         target.closest(".modal-header") ||
         target.closest(".wizard-header") ||
         target.closest(".wizard-progress-track") ||
         target.closest(".wizard-context-banner")
       );
 
-      if (isHandle || isHeader) {
-        return { allowed: true, isDirectHandle: true };
+      if (isHandle) {
+        return { allowed: true, isDirectHandle: true, scrollContainer: null };
       }
 
-      // Inside content body: only allow if at top of scroll
-      const scrollContainer = el.querySelector(
-        ".modal-scroll-body, .modal-body, .wizard-step-content"
-      ) as HTMLElement | null;
-      const isAtTop = !scrollContainer || scrollContainer.scrollTop <= 0;
+      // Inside content body: find scroll container
+      const scrollContainer = findScrollContainer(target);
+      // If user is scrolled down into content, NEVER allow dragging (user is scrolling content up/down!)
+      if (scrollContainer && scrollContainer.scrollTop > 0) {
+        return { allowed: false, isDirectHandle: false, scrollContainer };
+      }
 
-      return { allowed: isAtTop, isDirectHandle: false };
+      return { allowed: true, isDirectHandle: false, scrollContainer };
     };
 
     const animateExit = (startOffset: number) => {
@@ -198,8 +223,13 @@ export function useBottomSheet({ onClose, options }: UseBottomSheetProps) {
       if (e.touches.length !== 1 || isExiting) return;
 
       const target = e.target as HTMLElement | null;
-      const { allowed, isDirectHandle } = checkDragZone(target);
-      if (!allowed) return;
+      const { allowed, isDirectHandle, scrollContainer } = checkDragZone(target);
+      if (!allowed) {
+        activeTouchId = null;
+        isDragging = false;
+        activeScrollContainer = null;
+        return;
+      }
 
       cancelCurrentAnimation();
 
@@ -207,6 +237,7 @@ export function useBottomSheet({ onClose, options }: UseBottomSheetProps) {
       startY = touch.clientY;
       startTime = performance.now();
       activeTouchId = touch.identifier;
+      activeScrollContainer = scrollContainer;
 
       if (isDirectHandle) {
         // Immediate drag engagement on handle or header
@@ -229,17 +260,35 @@ export function useBottomSheet({ onClose, options }: UseBottomSheetProps) {
       const currentY = touch.clientY;
       const deltaY = currentY - startY;
 
-      // For body area, start dragging once pulling downwards
-      if (!isDragging && deltaY > 3) {
-        isDragging = true;
-        el.style.animation = "none";
-        el.style.setProperty("transition", "none", "important");
-        const bd = getBackdrop();
-        if (bd) bd.style.setProperty("transition", "none", "important");
+      // CRITICAL: If the user is inside a scroll container and has scrolled down (scrollTop > 0),
+      // any downward motion is the user scrolling UP in content. NEVER hijack it!
+      if (activeScrollContainer && activeScrollContainer.scrollTop > 0) {
+        if (isDragging) {
+          isDragging = false;
+          el.style.removeProperty("transform");
+        }
+        return;
+      }
+
+      // For body area: only engage drag if pulling downwards at the very top (deltaY > 20px)
+      if (!isDragging) {
+        if (deltaY > 20) {
+          // Double check scroll position in case momentum or user scrolled
+          if (activeScrollContainer && activeScrollContainer.scrollTop > 0) {
+            return;
+          }
+          isDragging = true;
+          el.style.animation = "none";
+          el.style.setProperty("transition", "none", "important");
+          const bd = getBackdrop();
+          if (bd) bd.style.setProperty("transition", "none", "important");
+        } else {
+          return;
+        }
       }
 
       if (isDragging) {
-        // Always prevent native browser scroll / overscroll during drag
+        // Always prevent native browser scroll / overscroll during active drag
         if (e.cancelable) {
           e.preventDefault();
         }
@@ -264,6 +313,7 @@ export function useBottomSheet({ onClose, options }: UseBottomSheetProps) {
 
       const touch = Array.from(e.changedTouches).find((t) => t.identifier === activeTouchId);
       activeTouchId = null;
+      activeScrollContainer = null;
 
       if (!isDragging) {
         isDragging = false;
@@ -290,6 +340,7 @@ export function useBottomSheet({ onClose, options }: UseBottomSheetProps) {
 
     const handleTouchCancel = () => {
       activeTouchId = null;
+      activeScrollContainer = null;
       if (isDragging) {
         isDragging = false;
         animateSpringBack(currentDragY);
@@ -304,14 +355,20 @@ export function useBottomSheet({ onClose, options }: UseBottomSheetProps) {
       if (e.button !== 0 || isExiting) return;
 
       const target = e.target as HTMLElement | null;
-      const { allowed, isDirectHandle } = checkDragZone(target);
-      if (!allowed) return;
+      const { allowed, isDirectHandle, scrollContainer } = checkDragZone(target);
+      if (!allowed) {
+        activePointerId = null;
+        isDragging = false;
+        activeScrollContainer = null;
+        return;
+      }
 
       cancelCurrentAnimation();
 
       startY = e.clientY;
       startTime = performance.now();
       activePointerId = e.pointerId;
+      activeScrollContainer = scrollContainer;
 
       if (isDirectHandle) {
         isDragging = true;
@@ -330,12 +387,27 @@ export function useBottomSheet({ onClose, options }: UseBottomSheetProps) {
       const currentY = e.clientY;
       const deltaY = currentY - startY;
 
-      if (!isDragging && deltaY > 3) {
-        isDragging = true;
-        el.style.animation = "none";
-        el.style.setProperty("transition", "none", "important");
-        const bd = getBackdrop();
-        if (bd) bd.style.setProperty("transition", "none", "important");
+      if (activeScrollContainer && activeScrollContainer.scrollTop > 0) {
+        if (isDragging) {
+          isDragging = false;
+          el.style.removeProperty("transform");
+        }
+        return;
+      }
+
+      if (!isDragging) {
+        if (deltaY > 20) {
+          if (activeScrollContainer && activeScrollContainer.scrollTop > 0) {
+            return;
+          }
+          isDragging = true;
+          el.style.animation = "none";
+          el.style.setProperty("transition", "none", "important");
+          const bd = getBackdrop();
+          if (bd) bd.style.setProperty("transition", "none", "important");
+        } else {
+          return;
+        }
       }
 
       if (isDragging) {
@@ -357,6 +429,7 @@ export function useBottomSheet({ onClose, options }: UseBottomSheetProps) {
     const handlePointerUp = (e: PointerEvent) => {
       if (activePointerId === null || e.pointerId !== activePointerId) return;
       activePointerId = null;
+      activeScrollContainer = null;
 
       if (!isDragging) {
         isDragging = false;
