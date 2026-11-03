@@ -33,6 +33,7 @@ import {
 } from "./auth/googleAuth";
 import { HoneySaleModal } from "./features/economy/HoneySaleModal";
 import { SwishInboxModal } from "./features/economy/SwishInboxModal";
+import { HoneyJarCostModal } from "./features/economy/HoneyJarCostModal";
 import { useOnlineStatus } from "./pwa/useOnlineStatus";
 import { PWAInstallButton } from "./pwa/PWAInstallButton";
 import { OfflineIndicator } from "./pwa/OfflineIndicator";
@@ -168,6 +169,7 @@ function AppContent() {
 
   const [showHoneySaleModal, setShowHoneySaleModal] = useState(false);
   const [showSwishInboxModal, setShowSwishInboxModal] = useState(false);
+  const [showHoneyJarCostModal, setShowHoneyJarCostModal] = useState(false);
   const [showTxModal, setShowTxModal] = useState(false);
   const [editingTx, setEditingTx] = useState<Transaction | undefined>();
 
@@ -186,6 +188,7 @@ function AppContent() {
       showJarFillingModal ||
       showHoneySaleModal ||
       showSwishInboxModal ||
+      showHoneyJarCostModal ||
       showTxModal ||
       showConflictModal ||
       showOutboxPreviewModal ||
@@ -958,6 +961,7 @@ function AppContent() {
             }}
             onOpenHoneySale={() => setShowHoneySaleModal(true)}
             onOpenSwishInbox={() => setShowSwishInboxModal(true)}
+            onOpenHoneyJarCost={() => setShowHoneyJarCostModal(true)}
             onEditTransaction={(tx) => {
               setEditingTx(tx);
               setShowTxModal(true);
@@ -1192,6 +1196,14 @@ function AppContent() {
           transactions={transactions}
           onClose={() => setShowHoneySaleModal(false)}
           onSaveSale={handleSaveHoneySale}
+        />
+      )}
+
+      {showHoneyJarCostModal && (
+        <HoneyJarCostModal
+          transactions={transactions}
+          harvests={harvests}
+          onClose={() => setShowHoneyJarCostModal(false)}
         />
       )}
 

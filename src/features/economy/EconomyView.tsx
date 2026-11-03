@@ -11,6 +11,8 @@ import {
   Edit2,
   AlertCircle,
   ScanText,
+  Droplet,
+  ChevronRight,
 } from "lucide-react";
 
 interface EconomyViewProps {
@@ -19,6 +21,7 @@ interface EconomyViewProps {
   onOpenCreateTransaction: () => void;
   onOpenHoneySale: () => void;
   onOpenSwishInbox?: () => void;
+  onOpenHoneyJarCost?: () => void;
   onEditTransaction: (tx: Transaction) => void;
   onDeleteTransaction: (id: string) => Promise<void>;
 }
@@ -28,6 +31,7 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
   importedHistoricalBalanceOre,
   onOpenCreateTransaction,
   onOpenSwishInbox,
+  onOpenHoneyJarCost,
   onEditTransaction,
   onDeleteTransaction,
 }) => {
@@ -211,6 +215,67 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Pedagogical Cost Breakdown Entry Card */}
+      {onOpenHoneyJarCost && (
+        <div
+          className="card"
+          style={{
+            cursor: "pointer",
+            marginBottom: "1.25rem",
+            padding: "12px 14px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "12px",
+            background: "var(--color-surface)",
+            border: "1px solid var(--color-honey-border)",
+            borderRadius: "var(--radius-lg)",
+            transition: "all 0.15s ease",
+          }}
+          onClick={onOpenHoneyJarCost}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onOpenHoneyJarCost();
+            }
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div
+              style={{
+                width: "40px",
+                height: "40px",
+                borderRadius: "12px",
+                background: "var(--color-honey-surface)",
+                border: "1px solid var(--color-honey-border)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--color-honey-text)",
+                flexShrink: 0,
+              }}
+            >
+              <Droplet size={22} />
+            </div>
+            <div>
+              <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--color-text-primary)" }}>
+                Vad kostar en burk honung?
+              </div>
+              <div style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
+                Pedagogisk kostnadsuppdelning och visualisering för kunden
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "var(--color-honey-text)", flexShrink: 0 }}>
+            <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>Öppna burken</span>
+            <ChevronRight size={18} />
+          </div>
         </div>
       )}
 
