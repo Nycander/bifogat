@@ -34,6 +34,7 @@ import {
 import { HoneySaleModal } from "./features/economy/HoneySaleModal";
 import { SwishInboxModal } from "./features/economy/SwishInboxModal";
 import { HoneyJarCostModal } from "./features/economy/HoneyJarCostModal";
+import { CustomerDemandModal } from "./features/economy/CustomerDemandModal";
 import { useOnlineStatus } from "./pwa/useOnlineStatus";
 import { PWAInstallButton } from "./pwa/PWAInstallButton";
 import { OfflineIndicator } from "./pwa/OfflineIndicator";
@@ -170,6 +171,7 @@ function AppContent() {
   const [showHoneySaleModal, setShowHoneySaleModal] = useState(false);
   const [showSwishInboxModal, setShowSwishInboxModal] = useState(false);
   const [showHoneyJarCostModal, setShowHoneyJarCostModal] = useState(false);
+  const [showCustomerDemandModal, setShowCustomerDemandModal] = useState(false);
   const [showTxModal, setShowTxModal] = useState(false);
   const [editingTx, setEditingTx] = useState<Transaction | undefined>();
 
@@ -189,6 +191,7 @@ function AppContent() {
       showHoneySaleModal ||
       showSwishInboxModal ||
       showHoneyJarCostModal ||
+      showCustomerDemandModal ||
       showTxModal ||
       showConflictModal ||
       showOutboxPreviewModal ||
@@ -962,6 +965,7 @@ function AppContent() {
             onOpenHoneySale={() => setShowHoneySaleModal(true)}
             onOpenSwishInbox={() => setShowSwishInboxModal(true)}
             onOpenHoneyJarCost={() => setShowHoneyJarCostModal(true)}
+            onOpenCustomerDemand={() => setShowCustomerDemandModal(true)}
             onEditTransaction={(tx) => {
               setEditingTx(tx);
               setShowTxModal(true);
@@ -1203,6 +1207,13 @@ function AppContent() {
         <HoneyJarCostModal
           transactions={transactions}
           onClose={() => setShowHoneyJarCostModal(false)}
+        />
+      )}
+
+      {showCustomerDemandModal && (
+        <CustomerDemandModal
+          transactions={transactions}
+          onClose={() => setShowCustomerDemandModal(false)}
         />
       )}
 

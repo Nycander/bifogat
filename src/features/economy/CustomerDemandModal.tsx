@@ -1,0 +1,685 @@
+import React, { useState, useMemo } from "react";
+import { Transaction } from "../../domain/types";
+import { formatOreToSEK } from "../../domain/validation";
+import {
+  calculateCustomerAnalytics,
+  CustomerLoyaltyStatus,
+} from "../../domain/customerAnalytics";
+import { useBottomSheet } from "../../hooks/useBottomSheet";
+import { BottomSheetDragHandle } from "../../components/ui/BottomSheetDragHandle";
+import {
+  X,
+  Users,
+  Search,
+  Calendar,
+  Info,
+  ChevronRight,
+  ChevronDown,
+  ArrowUpDown,
+  Receipt,
+  ArrowLeft,
+} from "lucide-react";
+
+interface CustomerDemandModalProps {
+  transactions: Transaction[];
+  onClose: () => void;
+}
+
+type FilterTab = "all" | "regular" | "lapsed" | "new";
+type SortOption = "annual_demand" | "total_jars" | "total_spent" | "years" | "latest_date" | "name";
+
+export const CustomerDemandModal: React.FC<CustomerDemandModalProps> = ({
+  transactions,
+  onClose,
+}) => {
+  const { contentRef, backdropRef, bottomSheetHandlers } = useBottomSheet({ onClose });
+
+  // Standard jar price used for estimation when count is missing in description
+  const savedPrice = typeof window !== "undefined" ? localStorage.getItem("bifogat_honey_price_per_jar") : null;
+  const standardPriceOre = (savedPrice ? parseInt(savedPrice, 10) || 95 : 95) * 100;
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeFilter, setActiveFilter] = useState<FilterTab>("all");
+  const [sortBy, setSortBy] = useState<SortOption>("annual_demand");
+  const [showMethodology, setShowMethodology] = useState(false);
+  const [selectedCustomerName, setSelectedCustomerName] = useState<string | null>(null);
+
+  // Calculate report across all historical transactions
+  const report = useMemo(() => {
+    return calculateCustomerAnalytics(transactions, {
+      defaultPriceOre: standardPriceOre,
+    });
+  }, [transactions, standardPriceOre]);
+
+  // Selected customer for drilldown
+  const selectedCustomer = useMemo(() => {
+    if (!selectedCustomerName) return null;
+    return report.customers.find((c) => c.name.toLowerCase() === selectedCustomerName.toLowerCase()) || null;
+  }, [report.customers, selectedCustomerName]);
+
+  // Filtered & sorted customers
+  const filteredCustomers = useMemo(() => {
+    let list = report.customers;
+
+    // Filter tab
+    if (activeFilter === "regular") {
+      list = list.filter((c) => c.status === "regular");
+    } else if (activeFilter === "lapsed") {
+      list = list.filter((c) => c.status === "lapsed");
+    } else if (activeFilter === "new") {
+      list = list.filter((c) => c.status === "new");
+    }
+
+    // Search query
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
+      list = list.filter((c) => c.name.toLowerCase().includes(q));
+    }
+
+    // Sorting
+    return [...list].sort((a, b) => {
+      switch (sortBy) {
+        case "annual_demand":
+          if (b.estimatedAnnualJars !== a.estimatedAnnualJars) {
+            return b.estimatedAnnualJars - a.estimatedAnnualJars;
+          }
+          return b.totalJars - a.totalJars;
+        case "total_jars":
+          if (b.totalJars !== a.totalJars) {
+            return b.totalJars - a.totalJars;
+          }
+          return b.totalSpentOre - a.totalSpentOre;
+        case "total_spent":
+          return b.totalSpentOre - a.totalSpentOre;
+        case "years":
+          if (b.activeYearCount !== a.activeYearCount) {
+            return b.activeYearCount - a.activeYearCount;
+          }
+          return b.estimatedAnnualJars - a.estimatedAnnualJars;
+        case "latest_date":
+          return b.latestDate.localeCompare(a.latestDate);
+        case "name":
+          return a.name.localeCompare(b.name, "sv");
+        default:
+          return 0;
+      }
+    });
+  }, [report.customers, activeFilter, searchQuery, sortBy]);
+
+  const getStatusBadgeStyle = (status: CustomerLoyaltyStatus) => {
+    switch (status) {
+      case "regular":
+        return {
+          bg: "var(--color-honey-surface, #fffbeb)",
+          border: "var(--color-honey-border, #fde68a)",
+          text: "var(--color-honey-text, #92400e)",
+        };
+      case "lapsed":
+        return {
+          bg: "rgba(239, 68, 68, 0.08)",
+          border: "rgba(239, 68, 68, 0.25)",
+          text: "var(--color-danger, #dc2626)",
+        };
+      case "new":
+        return {
+          bg: "rgba(16, 185, 129, 0.08)",
+          border: "rgba(16, 185, 129, 0.25)",
+          text: "var(--color-success, #059669)",
+        };
+      default:
+        return {
+          bg: "var(--color-surface-hover, #f3f4f6)",
+          border: "var(--color-border, #e5e7eb)",
+          text: "var(--color-text-muted, #6b7280)",
+        };
+    }
+  };
+
+  return (
+    <div ref={backdropRef} className="modal-backdrop" onClick={onClose}>
+      <div
+        ref={contentRef}
+        className="modal-content zero-scroll-modal"
+        style={{ maxWidth: "680px", maxHeight: "90vh", display: "flex", flexDirection: "column" }}
+        onClick={(e) => e.stopPropagation()}
+        {...bottomSheetHandlers}
+      >
+        <BottomSheetDragHandle />
+
+        {/* Modal Header */}
+        <div className="modal-header wizard-header" style={{ paddingBottom: "12px", borderBottom: "1px solid var(--color-border)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div
+              className="wizard-icon-badge"
+              style={{
+                background: "var(--color-honey-surface)",
+                borderColor: "var(--color-honey-border)",
+                color: "var(--color-honey-text)",
+              }}
+            >
+              <Users size={18} />
+            </div>
+            <div>
+              <h2 className="modal-title" style={{ fontSize: "1.15rem", margin: 0, fontWeight: 700 }}>
+                Stamkunder & Årsbehov
+              </h2>
+              <span className="wizard-subtitle" style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
+                Analys av 5 års honungskunder, återköpsmönster och estimerad efterfrågan
+              </span>
+            </div>
+          </div>
+          <button className="modal-close-btn" onClick={onClose} aria-label="Stäng">
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Scrollable Body Content */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "16px 4px 16px 4px" }}>
+          {/* Top KPI Cards */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
+              gap: "8px",
+              marginBottom: "14px",
+            }}
+          >
+            <div
+              className="card"
+              style={{
+                padding: "10px 12px",
+                marginBottom: 0,
+                background: "var(--color-honey-surface)",
+                borderColor: "var(--color-honey-border)",
+              }}
+            >
+              <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-honey-text)" }}>
+                STAMKUNDERNAS BEHOV
+              </div>
+              <div style={{ fontSize: "1.45rem", fontWeight: 800, color: "var(--color-honey-text)", marginTop: "2px" }}>
+                {report.regularEstimatedAnnualJars} st
+              </div>
+              <div style={{ fontSize: "0.7rem", color: "var(--color-text-muted)" }}>
+                burkar / säsong
+              </div>
+            </div>
+
+            <div className="card" style={{ padding: "10px 12px", marginBottom: 0 }}>
+              <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-text-brand)" }}>
+                TROGNA STAMMISAR
+              </div>
+              <div style={{ fontSize: "1.45rem", fontWeight: 800, color: "var(--color-text-main)", marginTop: "2px" }}>
+                {report.regularCount} st
+              </div>
+              <div style={{ fontSize: "0.7rem", color: "var(--color-text-muted)" }}>
+                handlat under ≥ 2 år
+              </div>
+            </div>
+
+            <div className="card" style={{ padding: "10px 12px", marginBottom: 0 }}>
+              <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-danger)" }}>
+                VILANDE STAMMISAR
+              </div>
+              <div style={{ fontSize: "1.45rem", fontWeight: 800, color: "var(--color-danger)", marginTop: "2px" }}>
+                {report.lapsedCount} st
+              </div>
+              <div style={{ fontSize: "0.7rem", color: "var(--color-text-muted)" }}>
+                kontakta vid skörd
+              </div>
+            </div>
+
+            <div className="card" style={{ padding: "10px 12px", marginBottom: 0 }}>
+              <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-text-muted)" }}>
+                TOTAL KUNDBAS
+              </div>
+              <div style={{ fontSize: "1.45rem", fontWeight: 800, color: "var(--color-text-main)", marginTop: "2px" }}>
+                {report.totalCustomers} st
+              </div>
+              <div style={{ fontSize: "0.7rem", color: "var(--color-text-muted)" }}>
+                {report.totalJarsSold} burkar sålda totalt
+              </div>
+            </div>
+          </div>
+
+          {/* Educational / Methodology Disclosure */}
+          <div
+            className="card"
+            style={{
+              padding: "10px 12px",
+              marginBottom: "14px",
+              background: "var(--color-surface)",
+              border: "1px solid var(--color-border)",
+              cursor: "pointer",
+            }}
+            onClick={() => setShowMethodology(!showMethodology)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setShowMethodology(!showMethodology);
+              }
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <Info size={16} color="var(--color-primary, #d97706)" />
+                <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--color-text-main)" }}>
+                  Hur beräknas estimat och stamkunder?
+                </span>
+              </div>
+              {showMethodology ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+            </div>
+
+            {showMethodology && (
+              <div
+                style={{
+                  marginTop: "10px",
+                  paddingTop: "10px",
+                  borderTop: "1px solid var(--color-border)",
+                  fontSize: "0.8rem",
+                  color: "var(--color-text-muted)",
+                  lineHeight: "1.45",
+                }}
+              >
+                <p style={{ margin: "0 0 6px 0" }}>
+                  <strong>1. Burkantal per transaktion:</strong> Läses i första hand från beskrivningen (t.ex. <em>"3 st burkar"</em>). Om text saknas beräknas det utifrån beloppet delat med standardpriset (95 kr).
+                </p>
+                <p style={{ margin: "0 0 6px 0" }}>
+                  <strong>2. Estimerat årsbehov per kund:</strong> För varje kund räknas totalt köpta burkar delat med antalet unika säsonger/år kunden handlat:
+                  <br />
+                  <code style={{ fontSize: "0.75rem", background: "var(--color-surface-hover)", padding: "2px 4px", borderRadius: "4px" }}>
+                    Årsbehov = Totalt köpta burkar / Antal aktiva säsonger
+                  </code>
+                </p>
+                <p style={{ margin: "0 0 6px 0" }}>
+                  <strong>3. Trogen stamkund:</strong> Kund som köpt honung under minst 2 olika kalenderår och handlat under den senaste säsongen ({report.latestYear}).
+                </p>
+                <p style={{ margin: "0 0 6px 0" }}>
+                  <strong>4. Vilande stamkund:</strong> Kund med flerårig stamkundshistorik som <em>inte</em> köpt under den senaste säsongen. Dessa är bigårdens mest värdefulla kontaktlista inför årets slungning!
+                </p>
+                <p style={{ margin: 0 }}>
+                  <strong>5. Bigårdens stamkundsbehov:</strong> Summan av alla aktiva stammisars årsbehov ({report.regularEstimatedAnnualJars} burkar). Detta är minimimängden burkar du bör hålla reserverad innan överskott säljs till nya köpare.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Drilldown modal/card if customer selected */}
+          {selectedCustomer ? (
+            <div
+              className="card"
+              style={{
+                marginBottom: "16px",
+                padding: "16px",
+                border: "2px solid var(--color-honey-border)",
+                background: "var(--color-surface)",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => setSelectedCustomerName(null)}
+                  style={{ display: "flex", alignItems: "center", gap: "6px" }}
+                >
+                  <ArrowLeft size={14} />
+                  <span>Tillbaka till kundöversikt</span>
+                </button>
+                <span
+                  style={{
+                    fontSize: "0.75rem",
+                    fontWeight: 700,
+                    padding: "3px 8px",
+                    borderRadius: "12px",
+                    background: getStatusBadgeStyle(selectedCustomer.status).bg,
+                    border: `1px solid ${getStatusBadgeStyle(selectedCustomer.status).border}`,
+                    color: getStatusBadgeStyle(selectedCustomer.status).text,
+                  }}
+                >
+                  {selectedCustomer.statusLabel}
+                </span>
+              </div>
+
+              {/* Customer Header */}
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "8px", marginBottom: "14px" }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 800 }}>{selectedCustomer.name}</h3>
+                  <div style={{ fontSize: "0.8rem", color: "var(--color-text-muted)", marginTop: "2px" }}>
+                    Aktiv {selectedCustomer.activeYears.join(", ")} ({selectedCustomer.activeYearCount} säsonger)
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    background: "var(--color-honey-surface)",
+                    border: "1px solid var(--color-honey-border)",
+                    padding: "6px 12px",
+                    borderRadius: "8px",
+                    textAlign: "right",
+                  }}
+                >
+                  <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--color-honey-text)" }}>
+                    ESTIMERAT ÅRSBEHOV
+                  </div>
+                  <div style={{ fontSize: "1.3rem", fontWeight: 800, color: "var(--color-honey-text)" }}>
+                    {selectedCustomer.estimatedAnnualJars} burkar / år
+                  </div>
+                </div>
+              </div>
+
+              {/* Calculation Summary Box */}
+              <div
+                style={{
+                  background: "var(--color-surface-hover)",
+                  padding: "10px 12px",
+                  borderRadius: "8px",
+                  fontSize: "0.8rem",
+                  color: "var(--color-text-main)",
+                  marginBottom: "14px",
+                  lineHeight: "1.4",
+                }}
+              >
+                <strong>Exakt beräkning:</strong> {selectedCustomer.name} har köpt totalt <strong>{selectedCustomer.totalJars} burkar</strong> ({formatOreToSEK(selectedCustomer.totalSpentOre)}) fördelat på <strong>{selectedCustomer.orderCount} köptillfällen</strong> över <strong>{selectedCustomer.activeYearCount} aktiva år</strong>.
+                <br />
+                Snitt per säsong: {selectedCustomer.totalJars} burkar / {selectedCustomer.activeYearCount} år = <strong>{selectedCustomer.estimatedAnnualJars} burkar/år</strong>. Snitt per order: <strong>{selectedCustomer.averageJarsPerOrder} burkar</strong>.
+              </div>
+
+              {/* Year-by-year breakdown table */}
+              <div style={{ marginBottom: "14px" }}>
+                <div style={{ fontSize: "0.85rem", fontWeight: 700, marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
+                  <Calendar size={15} />
+                  <span>Historik år för år</span>
+                </div>
+                <div style={{ border: "1px solid var(--color-border)", borderRadius: "8px", overflow: "hidden" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
+                    <thead>
+                      <tr style={{ background: "var(--color-surface-hover)", borderBottom: "1px solid var(--color-border)" }}>
+                        <th style={{ padding: "6px 10px", textAlign: "left" }}>År</th>
+                        <th style={{ padding: "6px 10px", textAlign: "right" }}>Burkar</th>
+                        <th style={{ padding: "6px 10px", textAlign: "right" }}>Köptillfällen</th>
+                        <th style={{ padding: "6px 10px", textAlign: "right" }}>Summa (SEK)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedCustomer.yearlyBreakdown.map((row) => (
+                        <tr key={row.year} style={{ borderBottom: "1px solid var(--color-border)" }}>
+                          <td style={{ padding: "6px 10px", fontWeight: 600 }}>{row.year}</td>
+                          <td style={{ padding: "6px 10px", textAlign: "right", fontWeight: 700, color: "var(--color-honey-text)" }}>
+                            {row.jars} st
+                          </td>
+                          <td style={{ padding: "6px 10px", textAlign: "right", color: "var(--color-text-muted)" }}>
+                            {row.orderCount} st
+                          </td>
+                          <td style={{ padding: "6px 10px", textAlign: "right", fontWeight: 600 }}>
+                            {formatOreToSEK(row.spentOre)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Transaction list for customer */}
+              <div>
+                <div style={{ fontSize: "0.85rem", fontWeight: 700, marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
+                  <Receipt size={15} />
+                  <span>Alla transaktioner ({selectedCustomer.transactions.length})</span>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxHeight: "220px", overflowY: "auto" }}>
+                  {selectedCustomer.transactions.map((tx) => (
+                    <div
+                      key={tx.id}
+                      style={{
+                        padding: "8px 10px",
+                        border: "1px solid var(--color-border)",
+                        borderRadius: "6px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        fontSize: "0.8rem",
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontWeight: 600 }}>{tx.date}</div>
+                        <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>{tx.description}</div>
+                      </div>
+                      <div style={{ fontWeight: 700, color: "var(--color-success)" }}>
+                        +{formatOreToSEK(tx.amountOre)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Controls: Search, Filters, Sorting */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "14px" }}>
+                {/* Search Input */}
+                <div style={{ position: "relative" }}>
+                  <Search
+                    size={16}
+                    style={{
+                      position: "absolute",
+                      left: "10px",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      color: "var(--color-text-muted)",
+                    }}
+                  />
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Sök stamkund..."
+                    style={{ paddingLeft: "34px", fontSize: "0.85rem" }}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.currentTarget.blur();
+                      }
+                    }}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    spellCheck={false}
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery("")}
+                      style={{
+                        position: "absolute",
+                        right: "10px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        color: "var(--color-text-muted)",
+                      }}
+                      aria-label="Rensa sökning"
+                    >
+                      <X size={15} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Filter Tabs & Sort Selector */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "8px" }}>
+                  {/* Filter Chips */}
+                  <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                    {[
+                      { id: "all" as const, label: `Alla (${report.totalCustomers})` },
+                      { id: "regular" as const, label: `Stammisar (${report.regularCount})` },
+                      { id: "lapsed" as const, label: `Vilande (${report.lapsedCount})` },
+                      { id: "new" as const, label: `Nya (${report.newCount})` },
+                    ].map((tab) => {
+                      const isSelected = activeFilter === tab.id;
+                      return (
+                        <button
+                          key={tab.id}
+                          type="button"
+                          className={`badge ${isSelected ? "badge-primary" : "badge-inactive"}`}
+                          style={{
+                            padding: "6px 10px",
+                            cursor: "pointer",
+                            fontSize: "0.75rem",
+                            fontWeight: isSelected ? 700 : 500,
+                            border: isSelected ? "1px solid var(--color-primary)" : "1px solid var(--color-border)",
+                            background: isSelected ? "var(--color-honey-surface)" : "var(--color-surface)",
+                            color: isSelected ? "var(--color-honey-text)" : "var(--color-text-muted)",
+                          }}
+                          onClick={() => setActiveFilter(tab.id)}
+                        >
+                          {tab.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Sort Selector */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                    <ArrowUpDown size={14} color="var(--color-text-muted)" />
+                    <select
+                      className="form-input"
+                      style={{ padding: "4px 8px", fontSize: "0.75rem", width: "auto" }}
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value as SortOption)}
+                    >
+                      <option value="annual_demand">Högst årsbehov</option>
+                      <option value="total_jars">Flest burkar totalt</option>
+                      <option value="total_spent">Störst köpesumma</option>
+                      <option value="years">Flest aktiva år</option>
+                      <option value="latest_date">Senaste köp</option>
+                      <option value="name">Namn (A-Ö)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Customer List */}
+              {filteredCustomers.length === 0 ? (
+                <div className="card empty-state" style={{ padding: "2rem" }}>
+                  <Users size={32} className="empty-state-icon" />
+                  <h4 className="empty-state-title" style={{ fontSize: "1rem" }}>
+                    Inga kunder matchade filtret
+                  </h4>
+                  <p className="empty-state-desc" style={{ fontSize: "0.8rem" }}>
+                    {searchQuery ? `Ingen kund hittades för "${searchQuery}"` : "Inga transaktioner registrerade ännu."}
+                  </p>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {filteredCustomers.map((c) => {
+                    const badge = getStatusBadgeStyle(c.status);
+
+                    return (
+                      <div
+                        key={c.name}
+                        className="card"
+                        style={{
+                          padding: "10px 14px",
+                          marginBottom: 0,
+                          cursor: "pointer",
+                          border: "1px solid var(--color-border)",
+                          transition: "background 0.15s ease",
+                        }}
+                        onClick={() => setSelectedCustomerName(c.name)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setSelectedCustomerName(c.name);
+                          }
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+                          {/* Left: Customer Info & Timeline */}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                              <span style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--color-text-main)" }}>
+                                {c.name}
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: "0.68rem",
+                                  fontWeight: 700,
+                                  padding: "2px 6px",
+                                  borderRadius: "10px",
+                                  background: badge.bg,
+                                  border: `1px solid ${badge.border}`,
+                                  color: badge.text,
+                                }}
+                              >
+                                {c.statusLabel}
+                              </span>
+                            </div>
+
+                            <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", marginTop: "2px" }}>
+                              {c.totalJars} burkar totalt ({formatOreToSEK(c.totalSpentOre)}) • {c.orderCount} köp
+                            </div>
+
+                            {/* Year tags timeline */}
+                            <div style={{ display: "flex", gap: "4px", marginTop: "6px", flexWrap: "wrap" }}>
+                              {report.allYears.map((yr) => {
+                                const didBuy = c.activeYears.includes(yr);
+                                const yrStat = c.yearlyBreakdown.find((y) => y.year === yr);
+                                return (
+                                  <span
+                                    key={yr}
+                                    style={{
+                                      fontSize: "0.65rem",
+                                      fontWeight: didBuy ? 700 : 400,
+                                      padding: "1px 5px",
+                                      borderRadius: "4px",
+                                      background: didBuy ? "var(--color-honey-surface)" : "var(--color-surface-hover)",
+                                      border: didBuy ? "1px solid var(--color-honey-border)" : "1px solid transparent",
+                                      color: didBuy ? "var(--color-honey-text)" : "var(--color-text-light)",
+                                    }}
+                                    title={yrStat ? `${yr}: ${yrStat.jars} burkar (${formatOreToSEK(yrStat.spentOre)})` : `${yr}: Inget köp`}
+                                  >
+                                    '{yr.substring(2)} {didBuy && `(${yrStat?.jars}st)`}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          {/* Right: Estimated Annual Demand */}
+                          <div style={{ textAlign: "right", display: "flex", alignItems: "center", gap: "10px" }}>
+                            <div>
+                              <div style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--color-text-muted)", textTransform: "uppercase" }}>
+                                Årsbehov
+                              </div>
+                              <div style={{ fontSize: "1.15rem", fontWeight: 800, color: "var(--color-honey-text)" }}>
+                                ~{c.estimatedAnnualJars} st
+                              </div>
+                              <div style={{ fontSize: "0.65rem", color: "var(--color-text-light)" }}>
+                                Senast: {c.latestDate}
+                              </div>
+                            </div>
+                            <ChevronRight size={18} color="var(--color-text-muted)" />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Modal Footer */}
+        <div className="modal-footer" style={{ borderTop: "1px solid var(--color-border)", paddingTop: "10px" }}>
+          <button type="button" className="btn btn-secondary" onClick={onClose} style={{ width: "100%" }}>
+            Stäng
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
