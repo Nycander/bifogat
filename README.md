@@ -66,7 +66,7 @@ Beekeeping happens in the field — often in remote apiaries where mobile recept
 
 - **Frontend Framework**: [React 19](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
 - **Build Tool & Server**: [Vite](https://vitejs.dev/)
-- **Styling**: Pure CSS with semantic tokens (CSS Custom Properties), custom dark/light theme, and [Tailwind CSS v4](https://tailwindcss.com/)
+- **Styling**: Pure modern CSS with semantic tokens (CSS Custom Properties), responsive flex/grid layouts, and custom dark/light theme system
 - **Icons**: [Lucide React](https://lucide.dev/)
 - **Local Database & Storage**: IndexedDB (via custom repository pattern)
 - **Local OCR Engine**: [Tesseract.js](https://tesseract.projectnaptha.com/)

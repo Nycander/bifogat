@@ -76,15 +76,23 @@ export const getSavedUser = (): SavedUser | null => {
 };
 
 /**
- * Check if the stored OAuth token is valid (issued within last 55 minutes)
+ * Check if the stored OAuth token is valid (retained up to 24 hours unless Google API returns 401)
  */
 export const isTokenFresh = (): boolean => {
   if (typeof window === "undefined") return false;
   const timeStr = localStorage.getItem(STORAGE_KEY_TOKEN_TIME);
   if (!timeStr) return false;
   const elapsed = Date.now() - parseInt(timeStr, 10);
-  // OAuth access tokens expire after 3600 seconds (60 mins)
-  return elapsed < 55 * 60 * 1000;
+  // OAuth access tokens are retained for extended session duration (up to 24h) or until invalidated by 401 response
+  return elapsed < 24 * 60 * 60 * 1000;
+};
+
+export const clearAccessToken = (): void => {
+  cachedAccessToken = null;
+  if (typeof window !== "undefined") {
+    localStorage.removeItem(STORAGE_KEY_TOKEN);
+    localStorage.removeItem(STORAGE_KEY_TOKEN_TIME);
+  }
 };
 
 export const initAuth = (
@@ -178,13 +186,8 @@ export const getAccessToken = async (): Promise<string | null> => {
     }
   }
 
-  // Token is missing or expired. Clear stale token to trigger clean auth state
-  cachedAccessToken = null;
-  if (typeof window !== "undefined") {
-    localStorage.removeItem(STORAGE_KEY_TOKEN);
-    localStorage.removeItem(STORAGE_KEY_TOKEN_TIME);
-  }
-
+  // Token is missing or expired beyond maximum retention window
+  clearAccessToken();
   return null;
 };
 
@@ -201,10 +204,8 @@ export const logoutGoogle = async (): Promise<void> => {
       console.warn("Fel vid utloggning från Firebase:", err);
     }
   }
-  cachedAccessToken = null;
+  clearAccessToken();
   if (typeof window !== "undefined") {
-    localStorage.removeItem(STORAGE_KEY_TOKEN);
-    localStorage.removeItem(STORAGE_KEY_TOKEN_TIME);
     localStorage.removeItem(STORAGE_KEY_USER);
   }
 };

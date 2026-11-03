@@ -19,7 +19,7 @@ import {
 } from "../storage/repositories";
 import { putInStore, deleteFromStore } from "../storage/db";
 import { sheetsClient, SHEET_TABS } from "./sheetsClient";
-import { getAccessToken } from "../auth/googleAuth";
+import { getAccessToken, clearAccessToken } from "../auth/googleAuth";
 
 export type SyncState = "idle" | "syncing" | "error" | "offline" | "needs_auth" | "no_sheet";
 
@@ -187,6 +187,7 @@ class SyncEngine {
         err.message?.includes("OAuth 2 access token");
 
       if (isAuthError) {
+        clearAccessToken();
         this.state = "needs_auth";
         this.lastError =
           "Google-behörigheten har gått ut. Klicka på 'Förnya behörighet' i Inställningar för att återansluta kalkylarket.";
