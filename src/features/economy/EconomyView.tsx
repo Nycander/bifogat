@@ -76,7 +76,7 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
         <div className="view-header-title">
           <h1>Ekonomi & kassa</h1>
           <p className="view-header-subtitle">
-            Försäljning av honung, materialinköp och löpande saldo
+            Följ honungsförsäljning, materialinköp och ditt saldo
           </p>
         </div>
         <div className="view-header-actions">
@@ -218,9 +218,9 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
       {transactions.length === 0 ? (
         <div className="card empty-state">
           <Wallet size={40} className="empty-state-icon" />
-          <h3 className="empty-state-title">Inga ekonomiska poster registrerade</h3>
+          <h3 className="empty-state-title">Inga transaktioner registrerade ännu</h3>
           <p className="empty-state-desc">
-            Bokför intäkter från honung eller utlägg för vax, burkar och utrustning.
+            Bokför intäkter från honungsförsäljning eller utlägg för ramar, foder och utrustning.
           </p>
           <button className="btn btn-primary" onClick={onOpenCreateTransaction}>
             <Plus size={16} />

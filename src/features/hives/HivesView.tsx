@@ -108,9 +108,9 @@ export const HivesView: React.FC<HivesViewProps> = ({
       {/* Top Header */}
       <div className="view-header">
         <div className="view-header-title">
-          <h1>Bikupor & åtgärder</h1>
+          <h1>Bikupor & bisamhällen</h1>
           <p className="view-header-subtitle">
-            Hantera dina bisamhällen, planerade åtgärder och inspektioner
+            Översikt över dina kupor, planerade insatser och utförda inspektioner
           </p>
         </div>
         <div className="view-header-actions">
@@ -143,7 +143,7 @@ export const HivesView: React.FC<HivesViewProps> = ({
           onClick={() => setSubTab("tasks")}
         >
           <CheckSquare size={16} style={{ display: "inline", marginRight: "5px" }} />
-          Att göra ({totalOpenTasks})
+          Planerade uppgifter ({totalOpenTasks})
         </button>
       </div>
 
@@ -177,12 +177,12 @@ export const HivesView: React.FC<HivesViewProps> = ({
               <h3 className="empty-state-title">Inga kupor att visa</h3>
               <p className="empty-state-desc">
                 {hiveFilter === "active"
-                  ? "Du har inga aktiva kupor registrerade just nu."
+                  ? "Du har inga aktiva kupor i listan just nu. Klicka nedan för att lägga till din första kupa."
                   : "Det finns inga kupor i den här listan."}
               </p>
               <button className="btn btn-primary" onClick={onOpenCreateHive}>
                 <Plus size={16} />
-                <span>Lägg till din första kupa</span>
+                <span>Lägg till ny kupa</span>
               </button>
             </div>
           ) : (

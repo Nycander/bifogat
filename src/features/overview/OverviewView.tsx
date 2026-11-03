@@ -62,7 +62,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           <span>Välkommen till Bifogat</span>
         </h1>
         <p style={{ fontSize: "0.875rem", color: "var(--color-text-muted)" }}>
-          Kupjournal och loggbok för din bigård — alltid tillgänglig även offline
+          Din digitala kupjournal och loggbok – fungerar direkt i bigården även utan täckning.
         </p>
       </div>
 
@@ -75,10 +75,10 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           role="button"
           tabIndex={0}
         >
-          <span className="stat-label">Aktiva kupor</span>
+          <span className="stat-label">Dina kupor</span>
           <span className="stat-value">{activeHives.length}</span>
           <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
-            av {hives.length} totalt
+            aktiva av {hives.length} totalt
           </span>
         </div>
 
@@ -89,7 +89,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           role="button"
           tabIndex={0}
         >
-          <span className="stat-label">Att göra</span>
+          <span className="stat-label">Planerade åtgärder</span>
           <span className="stat-value">{tasks.filter((t) => t.status === "open").length}</span>
           <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
             öppna uppgifter
@@ -134,7 +134,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             {formatOreToSEK(totalBalanceOre)}
           </span>
           <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
-            löpande saldo
+            ditt saldo
           </span>
         </div>
       </div>
@@ -144,7 +144,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         <div className="card-header">
           <h2 className="card-title">
             <CheckSquare size={18} color="var(--color-primary)" />
-            <span>Kommande uppgifter</span>
+            <span>Planerade uppgifter</span>
           </h2>
           <button
             className="btn btn-secondary btn-sm"
@@ -165,7 +165,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
               fontSize: "0.875rem",
             }}
           >
-            Inga öppna uppgifter just nu! Bra jobbat!
+            Inga öppna uppgifter just nu. Du är helt i fas!
           </div>
         ) : (
           <div className="item-list">

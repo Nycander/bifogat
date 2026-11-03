@@ -199,9 +199,9 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
       {/* Header */}
       <div className="view-header">
         <div className="view-header-title">
-          <h1>Skörd & honungsproduktion</h1>
+          <h1>Honungsskörd & produktion</h1>
           <p className="view-header-subtitle">
-            Bigårdens slungningar, automatisk dragperiod, nyslungad/rörd honung och årsstatistik
+            Registrera slungningar, följ dragperioder och hantera burktappning
           </p>
         </div>
         <div className="view-header-actions">
@@ -230,7 +230,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
         >
           <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
             <Droplet size={15} />
-            <span>Skördepartier & burktappning ({harvests.length})</span>
+            <span>Skördepartier & burkar ({harvests.length})</span>
           </span>
         </button>
         <button
@@ -240,7 +240,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
         >
           <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
             <BarChart2 size={15} />
-            <span>Bigårdens skördestatistik & årsutveckling</span>
+            <span>Skördestatistik & historik</span>
           </span>
         </button>
       </div>
