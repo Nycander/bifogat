@@ -4,6 +4,7 @@ import { calculateHoneyCostBreakdown } from "../../domain/honeyCostBreakdown";
 import { formatOreToSEK } from "../../domain/validation";
 import { useBottomSheet } from "../../hooks/useBottomSheet";
 import { BottomSheetDragHandle } from "../../components/ui/BottomSheetDragHandle";
+import { CategoryDrilldownModal } from "./CategoryDrilldownModal";
 import {
   X,
   Droplet,
@@ -19,9 +20,10 @@ import {
   Truck,
   HelpCircle,
   Receipt,
+  ExternalLink,
 } from "lucide-react";
 
-import { classifyExpense, BEEKEEPING_CATEGORIES } from "../../domain/honeyCostBreakdown";
+import { classifyExpense } from "../../domain/honeyCostBreakdown";
 
 interface HoneyJarCostModalProps {
   transactions: Transaction[];
@@ -64,6 +66,7 @@ export const HoneyJarCostModal: React.FC<HoneyJarCostModalProps> = ({
 
   const [priceOre, setPriceOre] = useState<number>(initialPriceOre);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [isDrilldownOpen, setIsDrilldownOpen] = useState(false);
 
   const handlePriceChange = (newPriceKr: number) => {
     const validKr = Math.max(10, Math.min(500, newPriceKr));
@@ -341,87 +344,16 @@ export const HoneyJarCostModal: React.FC<HoneyJarCostModalProps> = ({
                     </div>
                   </div>
 
-                  {/* Transaction Drilldown & Recategorization List */}
-                  <div style={{ marginTop: "12px", paddingTop: "10px", borderTop: "1px dashed var(--color-border)" }}>
-                    <div style={{ fontSize: "0.8rem", fontWeight: 700, marginBottom: "6px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span>TRANSAKTIONER I DENNA KATEGORI ({categoryTransactions.length})</span>
-                      <span style={{ fontSize: "0.7rem", fontWeight: 400, color: "var(--color-text-muted)" }}>
-                        Ändra kategori för att omfördela
-                      </span>
-                    </div>
-
-                    {categoryTransactions.length === 0 ? (
-                      <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", fontStyle: "italic", padding: "6px 0" }}>
-                        Inga enskilda transaktioner har klassificerats till den här kategorin ännu. Du kan kategorisera om transaktioner från "Övrigt" eller andra kategorier.
-                      </div>
-                    ) : (
-                      <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxHeight: "200px", overflowY: "auto", paddingRight: "4px" }}>
-                        {categoryTransactions.map((tx) => (
-                          <div
-                            key={tx.id}
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              gap: "8px",
-                              padding: "6px 8px",
-                              borderRadius: "6px",
-                              backgroundColor: "var(--color-surface)",
-                              border: "1px solid var(--color-border-subtle)",
-                              fontSize: "0.8rem",
-                            }}
-                          >
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontWeight: 600, color: "var(--color-text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                                {tx.description}
-                              </div>
-                              <div style={{ fontSize: "0.7rem", color: "var(--color-text-muted)", display: "flex", gap: "6px" }}>
-                                <span>{tx.date}</span>
-                                {tx.counterparty && <span>• {tx.counterparty}</span>}
-                              </div>
-                            </div>
-
-                            <div style={{ textAlign: "right", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "2px" }}>
-                              <span style={{ fontWeight: 700, color: "var(--color-danger)" }}>
-                                {formatOreToSEK(Math.abs(tx.amountOre))}
-                              </span>
-                              {onSaveTransaction && (
-                                <select
-                                  className="form-select"
-                                  style={{
-                                    fontSize: "0.7rem",
-                                    padding: "2px 4px",
-                                    height: "auto",
-                                    lineHeight: 1.2,
-                                    borderRadius: "4px",
-                                  }}
-                                  value={tx.category || selectedCategory.name}
-                                  onChange={(e) => {
-                                    const newCat = e.target.value;
-                                    onSaveTransaction({
-                                      id: tx.id,
-                                      date: tx.date,
-                                      description: tx.description,
-                                      amountOre: tx.amountOre,
-                                      counterparty: tx.counterparty,
-                                      category: newCat,
-                                    });
-                                  }}
-                                  title="Ändra kategori för transaktionen"
-                                >
-                                  {BEEKEEPING_CATEGORIES.map((catName) => (
-                                    <option key={catName} value={catName}>
-                                      {catName}
-                                    </option>
-                                  ))}
-                                </select>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  {/* Clean Trigger Button for Stacked Modal Drilldown */}
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-sm"
+                    style={{ marginTop: "10px", width: "100%", justifyContent: "center" }}
+                    onClick={() => setIsDrilldownOpen(true)}
+                  >
+                    <ExternalLink size={14} />
+                    <span>Granska & omfördela transaktioner ({categoryTransactions.length} st)</span>
+                  </button>
                 </div>
               ) : null}
 
@@ -529,6 +461,16 @@ export const HoneyJarCostModal: React.FC<HoneyJarCostModalProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Stacked Sub-Modal for Category Drilldown */}
+      {selectedCategory && isDrilldownOpen && (
+        <CategoryDrilldownModal
+          category={selectedCategory}
+          transactions={categoryTransactions}
+          onClose={() => setIsDrilldownOpen(false)}
+          onSaveTransaction={onSaveTransaction}
+        />
+      )}
     </div>
   );
 };

@@ -942,6 +942,11 @@ a:hover {
   }
 }
 
+.modal-backdrop-stacked {
+  z-index: 1100 !important;
+  background-color: rgba(0, 0, 0, 0.55);
+}
+
 .modal-content {
   background-color: var(--color-surface);
   width: 100%;
