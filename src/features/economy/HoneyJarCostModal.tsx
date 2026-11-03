@@ -21,9 +21,19 @@ import {
   Receipt,
 } from "lucide-react";
 
+import { classifyExpense, BEEKEEPING_CATEGORIES } from "../../domain/honeyCostBreakdown";
+
 interface HoneyJarCostModalProps {
   transactions: Transaction[];
   onClose: () => void;
+  onSaveTransaction?: (txData: {
+    id?: string;
+    date: string;
+    description: string;
+    amountOre: number;
+    counterparty?: string;
+    category?: string;
+  }) => Promise<void>;
 }
 
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -43,6 +53,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
 export const HoneyJarCostModal: React.FC<HoneyJarCostModalProps> = ({
   transactions,
   onClose,
+  onSaveTransaction,
 }) => {
   // Read remembered price from localStorage or 95 kr default
   const savedPrice =
@@ -77,6 +88,13 @@ export const HoneyJarCostModal: React.FC<HoneyJarCostModalProps> = ({
     if (!selectedCategoryId) return null;
     return breakdown.categories.find((c) => c.id === selectedCategoryId) || null;
   }, [breakdown.categories, selectedCategoryId]);
+
+  const categoryTransactions = useMemo(() => {
+    if (!selectedCategoryId) return [];
+    return transactions.filter(
+      (tx) => (tx.amountOre || 0) < 0 && classifyExpense(tx) === selectedCategoryId,
+    );
+  }, [transactions, selectedCategoryId]);
 
   return (
     <div ref={backdropRef} className="modal-backdrop" onClick={onClose}>
@@ -323,12 +341,87 @@ export const HoneyJarCostModal: React.FC<HoneyJarCostModalProps> = ({
                     </div>
                   </div>
 
-                  {selectedCategory.sampleItems.length > 0 && (
-                    <div style={{ marginTop: "6px", fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
-                      <strong>Exempel på utlägg: </strong>
-                      {selectedCategory.sampleItems.join(", ")}
+                  {/* Transaction Drilldown & Recategorization List */}
+                  <div style={{ marginTop: "12px", paddingTop: "10px", borderTop: "1px dashed var(--color-border)" }}>
+                    <div style={{ fontSize: "0.8rem", fontWeight: 700, marginBottom: "6px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span>TRANSAKTIONER I DENNA KATEGORI ({categoryTransactions.length})</span>
+                      <span style={{ fontSize: "0.7rem", fontWeight: 400, color: "var(--color-text-muted)" }}>
+                        Ändra kategori för att omfördela
+                      </span>
                     </div>
-                  )}
+
+                    {categoryTransactions.length === 0 ? (
+                      <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", fontStyle: "italic", padding: "6px 0" }}>
+                        Inga enskilda transaktioner har klassificerats till den här kategorin ännu. Du kan kategorisera om transaktioner från "Övrigt" eller andra kategorier.
+                      </div>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxHeight: "200px", overflowY: "auto", paddingRight: "4px" }}>
+                        {categoryTransactions.map((tx) => (
+                          <div
+                            key={tx.id}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: "8px",
+                              padding: "6px 8px",
+                              borderRadius: "6px",
+                              backgroundColor: "var(--color-surface)",
+                              border: "1px solid var(--color-border-subtle)",
+                              fontSize: "0.8rem",
+                            }}
+                          >
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontWeight: 600, color: "var(--color-text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                {tx.description}
+                              </div>
+                              <div style={{ fontSize: "0.7rem", color: "var(--color-text-muted)", display: "flex", gap: "6px" }}>
+                                <span>{tx.date}</span>
+                                {tx.counterparty && <span>• {tx.counterparty}</span>}
+                              </div>
+                            </div>
+
+                            <div style={{ textAlign: "right", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "2px" }}>
+                              <span style={{ fontWeight: 700, color: "var(--color-danger)" }}>
+                                {formatOreToSEK(Math.abs(tx.amountOre))}
+                              </span>
+                              {onSaveTransaction && (
+                                <select
+                                  className="form-select"
+                                  style={{
+                                    fontSize: "0.7rem",
+                                    padding: "2px 4px",
+                                    height: "auto",
+                                    lineHeight: 1.2,
+                                    borderRadius: "4px",
+                                  }}
+                                  value={tx.category || selectedCategory.name}
+                                  onChange={(e) => {
+                                    const newCat = e.target.value;
+                                    onSaveTransaction({
+                                      id: tx.id,
+                                      date: tx.date,
+                                      description: tx.description,
+                                      amountOre: tx.amountOre,
+                                      counterparty: tx.counterparty,
+                                      category: newCat,
+                                    });
+                                  }}
+                                  title="Ändra kategori för transaktionen"
+                                >
+                                  {BEEKEEPING_CATEGORIES.map((catName) => (
+                                    <option key={catName} value={catName}>
+                                      {catName}
+                                    </option>
+                                  ))}
+                                </select>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               ) : null}
 

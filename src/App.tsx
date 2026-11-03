@@ -153,6 +153,7 @@ function AppContent() {
 
   // Modals
   const [showEventModal, setShowEventModal] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<HiveEvent | undefined>();
   const [preselectedHiveId, setPreselectedHiveId] = useState<string | undefined>();
   const [showHiveModal, setShowHiveModal] = useState(false);
   const [editingHive, setEditingHive] = useState<Hive | undefined>();
@@ -374,6 +375,7 @@ function AppContent() {
 
   // Event Handlers
   const handleSaveEvent = async (data: {
+    id?: string;
     hiveId: string;
     date: string;
     type: EventType;
@@ -382,13 +384,24 @@ function AppContent() {
     completedTaskIds?: string[];
     newTasks?: Array<{ title: string; dueDate?: string }>;
   }) => {
-    const createdEvent = await eventRepository.create({
-      hiveId: data.hiveId,
-      date: data.date,
-      type: data.type,
-      title: data.title,
-      notes: data.notes,
-    });
+    let savedEvent: HiveEvent;
+    if (data.id) {
+      savedEvent = await eventRepository.update(data.id, {
+        hiveId: data.hiveId,
+        date: data.date,
+        type: data.type,
+        title: data.title,
+        notes: data.notes,
+      });
+    } else {
+      savedEvent = await eventRepository.create({
+        hiveId: data.hiveId,
+        date: data.date,
+        type: data.type,
+        title: data.title,
+        notes: data.notes,
+      });
+    }
 
     const targetHive = hives.find((h) => h.id === data.hiveId);
     const createdNewTaskIds: string[] = [];
@@ -418,29 +431,57 @@ function AppContent() {
     }
 
     await reloadData();
+    setEditingEvent(undefined);
 
     showSnackbar({
-      message: `Kupbesök sparat: ${data.title || "Besök"}`,
+      message: data.id ? `Kupbesök uppdaterat: ${data.title || "Besök"}` : `Kupbesök sparat: ${data.title || "Besök"}`,
       submessage: targetHive ? targetHive.name : undefined,
       type: "success",
-      actionLabel: "Ångra",
-      onAction: async () => {
-        await eventRepository.delete(createdEvent.id);
-        if (data.completedTaskIds && data.completedTaskIds.length > 0) {
-          for (const taskId of data.completedTaskIds) {
-            await taskRepository.update(taskId, {
-              status: "open",
-              completedAt: undefined,
-            });
-          }
-        }
-        for (const newTid of createdNewTaskIds) {
-          await taskRepository.delete(newTid);
-        }
-        await reloadData();
-        showSnackbar({ message: "Kupbesöket ångrades", type: "info" });
-      },
+      actionLabel: data.id ? undefined : "Ångra",
+      onAction: data.id
+        ? undefined
+        : async () => {
+            await eventRepository.delete(savedEvent.id);
+            if (data.completedTaskIds && data.completedTaskIds.length > 0) {
+              for (const taskId of data.completedTaskIds) {
+                await taskRepository.update(taskId, {
+                  status: "open",
+                  completedAt: undefined,
+                });
+              }
+            }
+            for (const newTid of createdNewTaskIds) {
+              await taskRepository.delete(newTid);
+            }
+            await reloadData();
+            showSnackbar({ message: "Kupbesöket ångrades", type: "info" });
+          },
     });
+  };
+
+  const handleDeleteEvent = async (id: string) => {
+    const existing = events.find((e) => e.id === id);
+    await eventRepository.delete(id);
+    await reloadData();
+
+    if (existing) {
+      showSnackbar({
+        message: `Kupbesök borttaget: ${existing.title || "Besök"}`,
+        type: "info",
+        actionLabel: "Ångra",
+        onAction: async () => {
+          await eventRepository.create({
+            hiveId: existing.hiveId,
+            date: existing.date,
+            type: existing.type,
+            title: existing.title,
+            notes: existing.notes,
+          });
+          await reloadData();
+          showSnackbar({ message: "Kupbesöket återställdes", type: "success" });
+        },
+      });
+    }
   };
 
   // Task Handlers
@@ -936,6 +977,7 @@ function AppContent() {
           <HarvestsView
             harvests={harvests}
             hives={hives}
+            events={events}
             onOpenCreateHarvest={() => {
               setEditingHarvest(undefined);
               setShowHarvestModal(true);
@@ -1084,6 +1126,7 @@ function AppContent() {
       <FloatingActionButton
         onLogVisit={() => {
           setPreselectedHiveId(undefined);
+          setEditingEvent(undefined);
           setShowEventModal(true);
         }}
         onSellHoney={() => setShowHoneySaleModal(true)}
@@ -1112,11 +1155,16 @@ function AppContent() {
       )}
       {showEventModal && (
         <EventFormModal
+          event={editingEvent}
           hives={hives}
           initialHiveId={preselectedHiveId}
           tasks={tasks}
-          onClose={() => setShowEventModal(false)}
+          onClose={() => {
+            setShowEventModal(false);
+            setEditingEvent(undefined);
+          }}
           onSave={handleSaveEvent}
+          onDelete={handleDeleteEvent}
         />
       )}
 
@@ -1137,6 +1185,7 @@ function AppContent() {
           onLogEvent={(hiveId) => {
             setSelectedHiveDetail(null);
             setPreselectedHiveId(hiveId);
+            setEditingEvent(undefined);
             setShowEventModal(true);
           }}
           onEditHive={(hive) => {
@@ -1144,6 +1193,12 @@ function AppContent() {
             setEditingHive(hive);
             setShowHiveModal(true);
           }}
+          onEditEvent={(eventToEdit) => {
+            setSelectedHiveDetail(null);
+            setEditingEvent(eventToEdit);
+            setShowEventModal(true);
+          }}
+          onDeleteEvent={handleDeleteEvent}
           onToggleTask={handleToggleTask}
           onOpenCreateTask={(hiveId) => {
             setTaskInitialHiveId(hiveId);
@@ -1207,6 +1262,7 @@ function AppContent() {
         <HoneyJarCostModal
           transactions={transactions}
           onClose={() => setShowHoneyJarCostModal(false)}
+          onSaveTransaction={handleSaveTransaction}
         />
       )}
 

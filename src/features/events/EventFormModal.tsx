@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Hive, EventType, Task } from "../../domain/types";
+import { Hive, HiveEvent, EventType, Task } from "../../domain/types";
 import { formatDate } from "../../domain/validation";
 import {
   X,
@@ -24,11 +24,13 @@ import { BottomSheetDragHandle } from "../../components/ui/BottomSheetDragHandle
 import { deriveEventTitle } from "../../utils/eventTitleDerivation";
 
 interface EventFormModalProps {
+  event?: HiveEvent;
   hives: Hive[];
   initialHiveId?: string;
   tasks: Task[];
   onClose: () => void;
   onSave: (data: {
+    id?: string;
     hiveId: string;
     date: string;
     type: EventType;
@@ -37,21 +39,24 @@ interface EventFormModalProps {
     completedTaskIds?: string[];
     newTasks?: Array<{ title: string; dueDate?: string }>;
   }) => Promise<void>;
+  onDelete?: (id: string) => Promise<void>;
 }
 
 export const EventFormModal: React.FC<EventFormModalProps> = ({
+  event,
   hives,
   initialHiveId,
   tasks,
   onClose,
   onSave,
+  onDelete,
 }) => {
   const [step, setStep] = useState<1 | 2 | 3>(1);
 
-  const [hiveId, setHiveId] = useState(initialHiveId || (hives[0]?.id ?? ""));
-  const [date, setDate] = useState(formatDate(new Date()));
-  const [type, setType] = useState<EventType>("inspection");
-  const [notes, setNotes] = useState("");
+  const [hiveId, setHiveId] = useState(event?.hiveId || initialHiveId || (hives[0]?.id ?? ""));
+  const [date, setDate] = useState(event?.date || formatDate(new Date()));
+  const [type, setType] = useState<EventType>(event?.type || "inspection");
+  const [notes, setNotes] = useState(event?.notes || "");
 
   // Todos to complete during this visit
   const [completedTaskIds, setCompletedTaskIds] = useState<string[]>([]);
@@ -145,6 +150,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
       const finalTitle = getDerivedTitle(cleanNotes, type);
 
       await onSave({
+        id: event?.id,
         hiveId,
         date,
         type,
@@ -166,8 +172,8 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
     { id: "inspection", label: "Besiktning", icon: Search, color: "var(--color-primary-base)" },
     { id: "feeding", label: "Foder", icon: Droplet, color: "var(--color-warning-base)" },
     { id: "treatment", label: "Behandling", icon: Shield, color: "var(--color-info-base)" },
-    { id: "equipment_change", label: "Skattlåda", icon: Layers, color: "var(--color-secondary-text)" },
-    { id: "queen_activity", label: "Drottning", icon: Crown, color: "#d97706" },
+    { id: "equipment", label: "Skattlåda", icon: Layers, color: "var(--color-secondary-text)" },
+    { id: "colony_change", label: "Drottning / Koloni", icon: Crown, color: "#d97706" },
     { id: "other", label: "Övrigt", icon: MoreHorizontal, color: "var(--color-text-muted)" },
   ];
 
@@ -182,6 +188,14 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
   ];
 
   const currentHive = hives.find((h) => h.id === hiveId);
+
+  const handleDelete = async () => {
+    if (!event || !onDelete) return;
+    if (confirm("Vill du ta bort detta kupbesök?")) {
+      await onDelete(event.id);
+      onClose();
+    }
+  };
 
   return (
     <div ref={backdropRef} className="modal-backdrop" onClick={onClose}>
@@ -202,16 +216,29 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
             </div>
             <div>
               <h2 className="modal-title" style={{ fontSize: "1.1rem", margin: 0 }}>
-                Logga kupbesök
+                {event ? "Redigera kupbesök" : "Logga kupbesök"}
               </h2>
               <span className="wizard-subtitle">
                 Steg {step} av 3: {step === 1 ? "Kupa & Typ" : step === 2 ? "Observationer" : "Att göra & Spara"}
               </span>
             </div>
           </div>
-          <button className="modal-close-btn" onClick={onClose} aria-label="Stäng">
-            <X size={20} />
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            {event && onDelete && (
+              <button
+                type="button"
+                className="btn-icon-subtle"
+                onClick={handleDelete}
+                title="Ta bort kupbesök"
+                style={{ color: "var(--color-danger)", padding: "4px" }}
+              >
+                <Trash2 size={18} />
+              </button>
+            )}
+            <button className="modal-close-btn" onClick={onClose} aria-label="Stäng">
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         {/* Step Progress Dots */}

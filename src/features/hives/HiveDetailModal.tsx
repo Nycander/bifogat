@@ -21,6 +21,8 @@ interface HiveDetailModalProps {
   onClose: () => void;
   onLogEvent: (hiveId: string) => void;
   onEditHive: (hive: Hive) => void;
+  onEditEvent?: (event: HiveEvent) => void;
+  onDeleteEvent?: (id: string) => Promise<void>;
   onToggleTask: (id: string) => Promise<void>;
   onOpenCreateTask: (hiveId: string) => void;
   onEditTask: (task: Task) => void;
@@ -34,6 +36,8 @@ export const HiveDetailModal: React.FC<HiveDetailModalProps> = ({
   onClose,
   onLogEvent,
   onEditHive,
+  onEditEvent,
+  onDeleteEvent,
   onToggleTask,
   onOpenCreateTask,
   onEditTask,
@@ -392,6 +396,29 @@ export const HiveDetailModal: React.FC<HiveDetailModalProps> = ({
                       </div>
                       {event.title && <div className="list-item-title">{event.title}</div>}
                       {event.notes && <div className="list-item-notes">{event.notes}</div>}
+                    </div>
+
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                      {onEditEvent && (
+                        <button
+                          className="btn-icon-only"
+                          onClick={() => onEditEvent(event)}
+                          title="Redigera kupbesök"
+                          style={{ background: "transparent", border: "none", cursor: "pointer" }}
+                        >
+                          <Edit2 size={15} color="var(--color-text-muted)" />
+                        </button>
+                      )}
+                      {onDeleteEvent && (
+                        <button
+                          className="btn-icon-only"
+                          onClick={() => onDeleteEvent(event.id)}
+                          title="Ta bort kupbesök"
+                          style={{ background: "transparent", border: "none", cursor: "pointer" }}
+                        >
+                          <Trash2 size={15} color="var(--color-danger)" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}

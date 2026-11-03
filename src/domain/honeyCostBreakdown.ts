@@ -309,9 +309,14 @@ export const HONEY_COST_CATEGORIES: CategorizationRule[] = [
 export function classifyExpense(tx: Transaction): string {
   const catField = (tx.category || "").trim().toLowerCase();
 
-  // 1. Exact or partial match on category field
+  // 1. Direct or partial match on category field
   if (catField) {
-    if (catField.includes("burk") || catField.includes("etikett") || catField.includes("förpackning")) {
+    const matchedRule = HONEY_COST_CATEGORIES.find(
+      (c) => c.id.toLowerCase() === catField || c.name.toLowerCase() === catField
+    );
+    if (matchedRule) return matchedRule.id;
+
+    if (catField.includes("burk") || catField.includes("etikett") || catField.includes("förpackning") || catField.includes("emballage")) {
       return "jars_packaging";
     }
     if (catField.includes("foder") || catField.includes("socker") || catField.includes("invintring")) {
@@ -320,16 +325,16 @@ export function classifyExpense(tx: Transaction): string {
     if (catField.includes("vax") || catField.includes("ram")) {
       return "wax_frames";
     }
-    if (catField.includes("hälsa") || catField.includes("behandling") || catField.includes("varroa")) {
+    if (catField.includes("hälsa") || catField.includes("behandling") || catField.includes("varroa") || catField.includes("syra")) {
       return "health_varroa";
     }
-    if (catField.includes("drottning") || catField.includes("samhälle")) {
+    if (catField.includes("drottning") || catField.includes("samhälle") || catField.includes("avläggare")) {
       return "queen_breeding";
     }
-    if (catField.includes("kupa") || catField.includes("kupor") || catField.includes("botten") || catField.includes("tak") || catField.includes("material")) {
+    if (catField.includes("kupa") || catField.includes("kupor") || catField.includes("botten") || catField.includes("tak") || catField.includes("sarg")) {
       return "hive_hardware";
     }
-    if (catField.includes("slung") || catField.includes("redskap")) {
+    if (catField.includes("slung") || catField.includes("redskap") || catField.includes("sil") || catField.includes("pust")) {
       return "extraction_tools";
     }
     if (catField.includes("kläder") || catField.includes("skydd") || catField.includes("handske")) {
@@ -340,6 +345,9 @@ export function classifyExpense(tx: Transaction): string {
     }
     if (catField.includes("bigård") || catField.includes("drivmedel") || catField.includes("transport")) {
       return "transport_yard";
+    }
+    if (catField === "övrigt" || catField === "other") {
+      return "other";
     }
   }
 

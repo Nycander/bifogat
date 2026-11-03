@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { Harvest, Hive } from "../../domain/types";
+import { Harvest, Hive, HiveEvent } from "../../domain/types";
 import {
   Plus,
   Droplet,
@@ -18,6 +18,7 @@ import {
 interface HarvestsViewProps {
   harvests: Harvest[];
   hives: Hive[];
+  events?: HiveEvent[];
   onOpenCreateHarvest: () => void;
   onEditHarvest: (harvest: Harvest) => void;
   onDeleteHarvest: (id: string) => Promise<void>;
@@ -29,6 +30,7 @@ interface HarvestsViewProps {
 export const HarvestsView: React.FC<HarvestsViewProps> = ({
   harvests,
   hives,
+  events = [],
   onOpenCreateHarvest,
   onEditHarvest,
   onDeleteHarvest,
@@ -41,6 +43,35 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
 
   const toggleExpand = (id: string) => {
     setExpandedBatchIds((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const getHivesCountForYear = (year: string) => {
+    // 1. Hives created on or before December 31 of that year
+    const existed = hives.filter((h) => {
+      const createdYear = h.createdAt ? h.createdAt.substring(0, 4) : "9999";
+      return createdYear <= year;
+    });
+
+    // 2. Unique hive IDs with events or harvests in that year
+    const activeHiveIdsInYear = new Set<string>();
+    if (events) {
+      for (const e of events) {
+        if (e.date && e.date.startsWith(year) && e.hiveId) {
+          activeHiveIdsInYear.add(e.hiveId);
+        }
+      }
+    }
+    for (const h of harvests) {
+      if (h.date && h.date.startsWith(year) && h.hiveId) {
+        activeHiveIdsInYear.add(h.hiveId);
+      }
+    }
+
+    const countFromCreated = existed.length;
+    const countFromActivity = activeHiveIdsInYear.size;
+
+    const count = Math.max(countFromCreated, countFromActivity);
+    return count > 0 ? count : 1;
   };
 
   const activeHivesCount = useMemo(() => {
@@ -170,6 +201,17 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
       }
     }
 
+    let totalYearlyAvgSum = 0;
+    let validYearsCount = 0;
+    for (const [yr, yData] of Object.entries(yearStatsMap)) {
+      const hCount = getHivesCountForYear(yr);
+      if (hCount > 0 && yData.totalGrams > 0) {
+        totalYearlyAvgSum += (yData.totalGrams / 1000) / hCount;
+        validYearsCount += 1;
+      }
+    }
+    const historicalAvgPerHive = validYearsCount > 0 ? totalYearlyAvgSum / validYearsCount : 0;
+
     return {
       years: sortedYears,
       totalHarvestKg: totalHarvestGrams / 1000,
@@ -184,9 +226,9 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
       yearStatsMap,
       bestYear,
       bestYearKg: bestYearGrams / 1000,
-      avgKgPerHive: activeHivesCount > 0 ? totalHarvestGrams / 1000 / activeHivesCount : 0,
+      avgKgPerHive: historicalAvgPerHive,
     };
-  }, [harvests, activeHivesCount]);
+  }, [harvests, hives, events]);
 
   // Filtered harvest batches
   const filteredHarvests = useMemo(() => {
@@ -322,7 +364,8 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                   const yKg = y ? y.totalGrams / 1000 : 0;
                   const pct = stats.bestYearKg > 0 ? Math.round((yKg / stats.bestYearKg) * 100) : 0;
                   const isRecord = stats.bestYear === year && yKg > 0;
-                  const avgPerHiveYear = activeHivesCount > 0 ? yKg / activeHivesCount : 0;
+                  const hivesInYear = getHivesCountForYear(year);
+                  const avgPerHiveYear = hivesInYear > 0 ? yKg / hivesInYear : yKg;
 
                   return (
                     <div
@@ -357,7 +400,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                             {yKg.toFixed(1).replace(".", ",")} kg
                           </strong>{" "}
                           <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
-                            ({y ? y.jars : 0} burkar · {avgPerHiveYear.toFixed(1).replace(".", ",")} kg/kupa)
+                            ({y ? y.jars : 0} burkar · {avgPerHiveYear.toFixed(1).replace(".", ",")} kg/kupa · {hivesInYear} {hivesInYear === 1 ? "kupa" : "kupor"})
                           </span>
                         </div>
                       </div>
