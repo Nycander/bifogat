@@ -1159,6 +1159,7 @@ function AppContent() {
           hives={hives}
           initialHiveId={preselectedHiveId}
           tasks={tasks}
+          isStacked={Boolean(selectedHiveDetail)}
           onClose={() => {
             setShowEventModal(false);
             setEditingEvent(undefined);
@@ -1171,6 +1172,7 @@ function AppContent() {
       {showHiveModal && (
         <HiveEditModal
           hive={editingHive}
+          isStacked={Boolean(selectedHiveDetail)}
           onClose={() => setShowHiveModal(false)}
           onSave={handleSaveHive}
         />
@@ -1183,18 +1185,15 @@ function AppContent() {
           tasks={tasks}
           onClose={() => setSelectedHiveDetail(null)}
           onLogEvent={(hiveId) => {
-            setSelectedHiveDetail(null);
             setPreselectedHiveId(hiveId);
             setEditingEvent(undefined);
             setShowEventModal(true);
           }}
           onEditHive={(hive) => {
-            setSelectedHiveDetail(null);
             setEditingHive(hive);
             setShowHiveModal(true);
           }}
           onEditEvent={(eventToEdit) => {
-            setSelectedHiveDetail(null);
             setEditingEvent(eventToEdit);
             setShowEventModal(true);
           }}
@@ -1219,6 +1218,7 @@ function AppContent() {
           task={editingTask}
           hives={hives}
           initialHiveId={taskInitialHiveId}
+          isStacked={Boolean(selectedHiveDetail)}
           onClose={() => {
             setShowTaskModal(false);
             setTaskInitialHiveId(undefined);

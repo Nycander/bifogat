@@ -50,7 +50,8 @@ export const BEEKEEPING_CATEGORIES = [
   "Drottningar & bisamhällen",
   "Skyddskläder & handskar",
   "Föreningsavgift & försäkring",
-  "Bigård & drivmedel",
+  "Frakt, drivmedel & transport",
+  "Utbildning",
   "Övrigt",
 ] as const;
 
@@ -273,13 +274,24 @@ export const HONEY_COST_CATEGORIES: CategorizationRule[] = [
   },
   {
     id: "transport_yard",
-    name: "Bigård & drivmedel",
+    name: "Frakt, drivmedel & transport",
     iconName: "Truck",
     color: "#713f12", // Dark molasses honey
     darkColor: "#854d0e",
     honeyShadeName: "Bladhonung",
-    description: "Kupställningar, flis, ogräsduk, stängsel, bensin/el till bigårdstransporter.",
+    description: "Frakt och leveranser från onlinebutiker, bensin/el för bigårdstransporter, kupställningar, stängsel och fraktavgifter.",
     keywords: [
+      "frakt",
+      "fraktavgift",
+      "postnord",
+      "dhl",
+      "bring",
+      "schenker",
+      "leverans",
+      "porto",
+      "logistik",
+      "bud",
+      "fraktsedel",
       "ställning",
       "kupställning",
       "ben",
@@ -294,6 +306,30 @@ export const HONEY_COST_CATEGORIES: CategorizationRule[] = [
       "markduk",
       "transport",
       "kärra",
+    ],
+  },
+  {
+    id: "education_books",
+    name: "Utbildning",
+    iconName: "GraduationCap",
+    color: "#a16207", // Deep golden amber
+    darkColor: "#ca8a04",
+    honeyShadeName: "Lönnhonung",
+    description: "Biodlarkurser, facklitteratur, böcker, konferenser, föreläsningar och utbildningsmaterial.",
+    keywords: [
+      "utbildning",
+      "kurs",
+      "kurser",
+      "bok",
+      "böcker",
+      "litteratur",
+      "kurslitteratur",
+      "seminarium",
+      "konferens",
+      "workshop",
+      "föreläsning",
+      "biodlarkurs",
+      "utbildningsmaterial",
     ],
   },
 ];
@@ -343,8 +379,24 @@ export function classifyExpense(tx: Transaction): string {
     if (catField.includes("förening") || catField.includes("sbr") || catField.includes("försäkring")) {
       return "association_license";
     }
-    if (catField.includes("bigård") || catField.includes("drivmedel") || catField.includes("transport")) {
+    if (
+      catField.includes("bigård") ||
+      catField.includes("drivmedel") ||
+      catField.includes("transport") ||
+      catField.includes("frakt") ||
+      catField.includes("logistik") ||
+      catField.includes("leverans")
+    ) {
       return "transport_yard";
+    }
+    if (
+      catField.includes("utbildning") ||
+      catField.includes("kurs") ||
+      catField.includes("bok") ||
+      catField.includes("böcker") ||
+      catField.includes("litteratur")
+    ) {
+      return "education_books";
     }
     if (catField === "övrigt" || catField === "other") {
       return "other";
@@ -432,16 +484,17 @@ export function calculateHoneyCostBreakdown(
     // Pedagogical demo proportions based on Sveriges Biodlares Riksförbund cost structure
     // Sum = 100%
     const demoPercentages: Record<string, number> = {
-      wax_frames: 18,
-      hive_hardware: 16,
+      wax_frames: 17,
+      hive_hardware: 15,
       jars_packaging: 15,
-      feed_wintering: 13,
-      extraction_tools: 11,
+      feed_wintering: 12,
+      extraction_tools: 10,
       queen_breeding: 9,
       health_varroa: 7,
       association_license: 4,
       clothing_safety: 4,
-      transport_yard: 3,
+      transport_yard: 4,
+      education_books: 3,
     };
 
     categories = HONEY_COST_CATEGORIES.map((cat) => {

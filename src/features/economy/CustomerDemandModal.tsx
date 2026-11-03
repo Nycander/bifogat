@@ -11,14 +11,12 @@ import {
   X,
   Users,
   Search,
-  Calendar,
   Info,
   ChevronRight,
   ChevronDown,
   ArrowUpDown,
-  Receipt,
-  ArrowLeft,
 } from "lucide-react";
+import { CustomerDrilldownSubModal } from "./CustomerDrilldownSubModal";
 
 interface CustomerDemandModalProps {
   transactions: Transaction[];
@@ -305,159 +303,9 @@ export const CustomerDemandModal: React.FC<CustomerDemandModalProps> = ({
             )}
           </div>
 
-          {/* Drilldown modal/card if customer selected */}
-          {selectedCustomer ? (
-            <div
-              className="card"
-              style={{
-                marginBottom: "16px",
-                padding: "16px",
-                border: "2px solid var(--color-honey-border)",
-                background: "var(--color-surface)",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm"
-                  onClick={() => setSelectedCustomerName(null)}
-                  style={{ display: "flex", alignItems: "center", gap: "6px" }}
-                >
-                  <ArrowLeft size={14} />
-                  <span>Tillbaka till kundöversikt</span>
-                </button>
-                <span
-                  style={{
-                    fontSize: "0.75rem",
-                    fontWeight: 700,
-                    padding: "3px 8px",
-                    borderRadius: "12px",
-                    background: getStatusBadgeStyle(selectedCustomer.status).bg,
-                    border: `1px solid ${getStatusBadgeStyle(selectedCustomer.status).border}`,
-                    color: getStatusBadgeStyle(selectedCustomer.status).text,
-                  }}
-                >
-                  {selectedCustomer.statusLabel}
-                </span>
-              </div>
-
-              {/* Customer Header */}
-              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "8px", marginBottom: "14px" }}>
-                <div>
-                  <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 800 }}>{selectedCustomer.name}</h3>
-                  <div style={{ fontSize: "0.8rem", color: "var(--color-text-muted)", marginTop: "2px" }}>
-                    Aktiv {selectedCustomer.activeYears.join(", ")} ({selectedCustomer.activeYearCount} säsonger)
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    background: "var(--color-honey-surface)",
-                    border: "1px solid var(--color-honey-border)",
-                    padding: "6px 12px",
-                    borderRadius: "8px",
-                    textAlign: "right",
-                  }}
-                >
-                  <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--color-honey-text)" }}>
-                    ESTIMERAT ÅRSBEHOV
-                  </div>
-                  <div style={{ fontSize: "1.3rem", fontWeight: 800, color: "var(--color-honey-text)" }}>
-                    {selectedCustomer.estimatedAnnualJars} burkar / år
-                  </div>
-                </div>
-              </div>
-
-              {/* Calculation Summary Box */}
-              <div
-                style={{
-                  background: "var(--color-surface-hover)",
-                  padding: "10px 12px",
-                  borderRadius: "8px",
-                  fontSize: "0.8rem",
-                  color: "var(--color-text-main)",
-                  marginBottom: "14px",
-                  lineHeight: "1.4",
-                }}
-              >
-                <strong>Exakt beräkning:</strong> {selectedCustomer.name} har köpt totalt <strong>{selectedCustomer.totalJars} burkar</strong> ({formatOreToSEK(selectedCustomer.totalSpentOre)}) fördelat på <strong>{selectedCustomer.orderCount} köptillfällen</strong> över <strong>{selectedCustomer.activeYearCount} aktiva år</strong>.
-                <br />
-                Snitt per säsong: {selectedCustomer.totalJars} burkar / {selectedCustomer.activeYearCount} år = <strong>{selectedCustomer.estimatedAnnualJars} burkar/år</strong>. Snitt per order: <strong>{selectedCustomer.averageJarsPerOrder} burkar</strong>.
-              </div>
-
-              {/* Year-by-year breakdown table */}
-              <div style={{ marginBottom: "14px" }}>
-                <div style={{ fontSize: "0.85rem", fontWeight: 700, marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
-                  <Calendar size={15} />
-                  <span>Historik år för år</span>
-                </div>
-                <div style={{ border: "1px solid var(--color-border)", borderRadius: "8px", overflow: "hidden" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
-                    <thead>
-                      <tr style={{ background: "var(--color-surface-hover)", borderBottom: "1px solid var(--color-border)" }}>
-                        <th style={{ padding: "6px 10px", textAlign: "left" }}>År</th>
-                        <th style={{ padding: "6px 10px", textAlign: "right" }}>Burkar</th>
-                        <th style={{ padding: "6px 10px", textAlign: "right" }}>Köptillfällen</th>
-                        <th style={{ padding: "6px 10px", textAlign: "right" }}>Summa (SEK)</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {selectedCustomer.yearlyBreakdown.map((row) => (
-                        <tr key={row.year} style={{ borderBottom: "1px solid var(--color-border)" }}>
-                          <td style={{ padding: "6px 10px", fontWeight: 600 }}>{row.year}</td>
-                          <td style={{ padding: "6px 10px", textAlign: "right", fontWeight: 700, color: "var(--color-honey-text)" }}>
-                            {row.jars} st
-                          </td>
-                          <td style={{ padding: "6px 10px", textAlign: "right", color: "var(--color-text-muted)" }}>
-                            {row.orderCount} st
-                          </td>
-                          <td style={{ padding: "6px 10px", textAlign: "right", fontWeight: 600 }}>
-                            {formatOreToSEK(row.spentOre)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Transaction list for customer */}
-              <div>
-                <div style={{ fontSize: "0.85rem", fontWeight: 700, marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
-                  <Receipt size={15} />
-                  <span>Alla transaktioner ({selectedCustomer.transactions.length})</span>
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxHeight: "220px", overflowY: "auto" }}>
-                  {selectedCustomer.transactions.map((tx) => (
-                    <div
-                      key={tx.id}
-                      style={{
-                        padding: "8px 10px",
-                        border: "1px solid var(--color-border)",
-                        borderRadius: "6px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        fontSize: "0.8rem",
-                      }}
-                    >
-                      <div>
-                        <div style={{ fontWeight: 600 }}>{tx.date}</div>
-                        <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>{tx.description}</div>
-                      </div>
-                      <div style={{ fontWeight: 700, color: "var(--color-success)" }}>
-                        +{formatOreToSEK(tx.amountOre)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <>
-              {/* Controls: Search, Filters, Sorting */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "14px" }}>
-                {/* Search Input */}
+          {/* Controls: Search, Filters, Sorting */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "14px" }}>
+            {/* Search Input */}
                 <div style={{ position: "relative" }}>
                   <Search
                     size={16}
@@ -669,8 +517,6 @@ export const CustomerDemandModal: React.FC<CustomerDemandModalProps> = ({
                   })}
                 </div>
               )}
-            </>
-          )}
         </div>
 
         {/* Modal Footer */}
@@ -680,6 +526,14 @@ export const CustomerDemandModal: React.FC<CustomerDemandModalProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Stacked Customer Drilldown Sub-Modal */}
+      {selectedCustomer && (
+        <CustomerDrilldownSubModal
+          customer={selectedCustomer}
+          onClose={() => setSelectedCustomerName(null)}
+        />
+      )}
     </div>
   );
 };

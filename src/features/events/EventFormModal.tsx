@@ -28,6 +28,7 @@ interface EventFormModalProps {
   hives: Hive[];
   initialHiveId?: string;
   tasks: Task[];
+  isStacked?: boolean;
   onClose: () => void;
   onSave: (data: {
     id?: string;
@@ -47,6 +48,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
   hives,
   initialHiveId,
   tasks,
+  isStacked,
   onClose,
   onSave,
   onDelete,
@@ -198,7 +200,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
   };
 
   return (
-    <div ref={backdropRef} className="modal-backdrop" onClick={onClose}>
+    <div ref={backdropRef} className={`modal-backdrop ${isStacked ? "modal-backdrop-stacked" : ""}`} onClick={onClose}>
       <div
         ref={contentRef}
         className="modal-content zero-scroll-modal"

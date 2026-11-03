@@ -6,11 +6,12 @@ import { BottomSheetDragHandle } from "../../components/ui/BottomSheetDragHandle
 
 interface HiveEditModalProps {
   hive?: Hive;
+  isStacked?: boolean;
   onClose: () => void;
   onSave: (data: { name: string; status: HiveStatus; notes?: string }) => Promise<void>;
 }
 
-export const HiveEditModal: React.FC<HiveEditModalProps> = ({ hive, onClose, onSave }) => {
+export const HiveEditModal: React.FC<HiveEditModalProps> = ({ hive, isStacked, onClose, onSave }) => {
   const [name, setName] = useState(hive?.name || "");
   const [status, setStatus] = useState<HiveStatus>(hive?.status || "active");
   const [notes, setNotes] = useState(hive?.notes || "");
@@ -42,7 +43,7 @@ export const HiveEditModal: React.FC<HiveEditModalProps> = ({ hive, onClose, onS
   const { contentRef, bottomSheetHandlers } = useBottomSheet({ onClose });
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className={`modal-backdrop ${isStacked ? "modal-backdrop-stacked" : ""}`} onClick={onClose}>
       <div
         ref={contentRef}
         className="modal-content"

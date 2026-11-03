@@ -62,6 +62,28 @@ test("classifyExpense accurately maps keywords to beekeeping cost categories", (
     updatedAt: "2026-07-02T10:00:00Z",
   };
   assert.equal(classifyExpense(txQueen), "queen_breeding");
+
+  const txFreight: Transaction = {
+    id: "tx-6",
+    date: "2026-04-12",
+    description: "Frakt PostNord webborder bihuvuddukar och verktyg",
+    amountOre: -14900,
+    source: "manual",
+    createdAt: "2026-04-12T10:00:00Z",
+    updatedAt: "2026-04-12T10:00:00Z",
+  };
+  assert.equal(classifyExpense(txFreight), "transport_yard");
+
+  const txEducation: Transaction = {
+    id: "tx-7",
+    date: "2026-03-05",
+    description: "Biodlarkurs fördjupning och kurslitteratur bok",
+    amountOre: -120000,
+    source: "manual",
+    createdAt: "2026-03-05T10:00:00Z",
+    updatedAt: "2026-03-05T10:00:00Z",
+  };
+  assert.equal(classifyExpense(txEducation), "education_books");
 });
 
 test("calculateHoneyCostBreakdown produces pedagogical model when no expenses recorded", () => {

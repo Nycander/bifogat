@@ -8,6 +8,7 @@ interface TaskFormModalProps {
   task?: Task;
   hives: Hive[];
   initialHiveId?: string;
+  isStacked?: boolean;
   onClose: () => void;
   onSave: (data: {
     title: string;
@@ -22,6 +23,7 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
   task,
   hives,
   initialHiveId,
+  isStacked,
   onClose,
   onSave,
 }) => {
@@ -143,7 +145,7 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
   const { contentRef, bottomSheetHandlers } = useBottomSheet({ onClose });
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className={`modal-backdrop ${isStacked ? "modal-backdrop-stacked" : ""}`} onClick={onClose}>
       <div
         ref={contentRef}
         className="modal-content"
