@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Transaction } from "../../domain/types";
 import { formatDate, parseSwedishCurrencyToOre } from "../../domain/validation";
 import { extractUniqueCustomers } from "../../domain/customers";
+import { BEEKEEPING_CATEGORIES } from "../../domain/honeyCostBreakdown";
 import { X, Check } from "lucide-react";
 import { useBottomSheet } from "../../hooks/useBottomSheet";
 import { BottomSheetDragHandle } from "../../components/ui/BottomSheetDragHandle";
@@ -202,13 +203,14 @@ export const TransactionFormModal: React.FC<TransactionFormModalProps> = ({
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
               >
-                <option value="Honungsförsäljning">Honungsförsäljning</option>
-                <option value="Utrustning & Material">Utrustning & Material</option>
-                <option value="Foder & Invintring">Foder & Invintring</option>
-                <option value="Drottningar & Samhällen">Drottningar & Samhällen</option>
-                <option value="Behandling & Hälsa">Behandling & Hälsa</option>
-                <option value="Föreningsavgift">Föreningsavgift</option>
-                <option value="Övrigt">Övrigt</option>
+                {BEEKEEPING_CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+                {category && !(BEEKEEPING_CATEGORIES as readonly string[]).includes(category) && (
+                  <option value={category}>{category}</option>
+                )}
               </select>
             </div>
           </div>

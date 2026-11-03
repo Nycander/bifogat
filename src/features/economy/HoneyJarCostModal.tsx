@@ -340,21 +340,36 @@ export const HoneyJarCostModal: React.FC<HoneyJarCostModalProps> = ({
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                       <div
                         style={{
-                          width: "12px",
-                          height: "12px",
+                          width: "14px",
+                          height: "14px",
                           borderRadius: "50%",
                           backgroundColor: selectedCategory.color,
+                          border: "1px solid rgba(0,0,0,0.1)",
                         }}
                       />
                       <strong style={{ fontSize: "0.95rem" }}>{selectedCategory.name}</strong>
                     </div>
-                    <button
-                      className="btn btn-secondary btn-sm"
-                      style={{ padding: "2px 8px", fontSize: "0.75rem" }}
-                      onClick={() => setSelectedCategoryId(null)}
-                    >
-                      Visa alla
-                    </button>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <span
+                        style={{
+                          fontSize: "0.75rem",
+                          fontWeight: 600,
+                          padding: "2px 6px",
+                          borderRadius: "4px",
+                          backgroundColor: `${selectedCategory.color}25`,
+                          color: selectedCategory.color,
+                        }}
+                      >
+                        {selectedCategory.honeyShadeName}
+                      </span>
+                      <button
+                        className="btn btn-secondary btn-sm"
+                        style={{ padding: "2px 8px", fontSize: "0.75rem" }}
+                        onClick={() => setSelectedCategoryId(null)}
+                      >
+                        Visa alla
+                      </button>
+                    </div>
                   </div>
                   <p style={{ fontSize: "0.8rem", color: "var(--color-text-secondary)", margin: "6px 0" }}>
                     {selectedCategory.description}
@@ -483,7 +498,12 @@ export const HoneyJarCostModal: React.FC<HoneyJarCostModalProps> = ({
                           <Icon size={16} />
                         </div>
                         <div>
-                          <div style={{ fontSize: "0.85rem", fontWeight: 600 }}>{cat.name}</div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>{cat.name}</span>
+                            <span style={{ fontSize: "0.7rem", color: cat.color, fontWeight: 500 }}>
+                              • {cat.honeyShadeName}
+                            </span>
+                          </div>
                           <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
                             {cat.itemCount > 0 ? `${cat.itemCount} poster bokförda` : "Uppskattad andel"}
                           </div>

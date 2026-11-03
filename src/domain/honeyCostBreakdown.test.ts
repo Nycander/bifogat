@@ -125,3 +125,19 @@ test("calculateHoneyCostBreakdown computes cost per jar and proportions from act
   assert.equal(jarCat?.totalExpenseOre, 140000);
   assert.equal(feedCat?.totalExpenseOre, 100000);
 });
+
+test("classifyExpense respects explicit category set in Google Sheets / Excel even without descriptive text", () => {
+  const tx: Transaction = {
+    id: "tx-custom",
+    date: "2026-07-10",
+    description: "Kvitto #4892 från leverantör",
+    amountOre: -45000,
+    category: "Burkar, lock & etiketter",
+    source: "import",
+    createdAt: "2026-07-10T10:00:00Z",
+    updatedAt: "2026-07-10T10:00:00Z",
+  };
+
+  assert.equal(classifyExpense(tx), "jars_packaging");
+});
+

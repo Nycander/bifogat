@@ -4,8 +4,9 @@ export interface CostCategoryDetail {
   id: string;
   name: string;
   iconName: string; // Lucide icon identifier
-  color: string;
+  color: string; // Honey shade (hex)
   darkColor: string;
+  honeyShadeName: string;
   description: string;
   totalExpenseOre: number;
   percentage: number; // 0 - 100
@@ -31,19 +32,47 @@ export interface CategorizationRule {
   id: string;
   name: string;
   iconName: string;
-  color: string;
+  color: string; // Warm honey amber / gold gradient tones
   darkColor: string;
+  honeyShadeName: string;
   description: string;
   keywords: string[];
 }
 
+/**
+ * Standard Swedish Beekeeping Transaction Categories.
+ * Can be selected directly in the UI or typed in Google Sheets.
+ */
+export const BEEKEEPING_CATEGORIES = [
+  "Honungsförsäljning",
+  "Burkar, lock & etiketter",
+  "Vinterfoder & socker",
+  "Vaxmellanväggar & ramar",
+  "Kupor, bottnar & tak",
+  "Slungning & redskap",
+  "Varroabehandling & hälsa",
+  "Drottningar & bisamhällen",
+  "Skyddskläder & handskar",
+  "Föreningsavgift & försäkring",
+  "Bigård & drivmedel",
+  "Övrigt",
+] as const;
+
+export type BeekeepingCategory = (typeof BEEKEEPING_CATEGORIES)[number];
+
+/**
+ * Pedagogical Cost Categories with distinct, natural Swedish honey shades:
+ * From dark forest/heather honeys at the base, through rich golden summer honey,
+ * to light linden, clover, and pale spring rapeseed honey.
+ */
 export const HONEY_COST_CATEGORIES: CategorizationRule[] = [
   {
     id: "jars_packaging",
     name: "Burkar, lock & etiketter",
     iconName: "Package",
-    color: "#d97706", // warm amber
-    darkColor: "#f59e0b",
+    color: "#b45309", // Warm amber honey
+    darkColor: "#d97706",
+    honeyShadeName: "Bärnstenshonung",
     description: "Glasburkar, plåtlock, sigillremsor och tryckta honungsetiketter.",
     keywords: [
       "burk",
@@ -64,8 +93,9 @@ export const HONEY_COST_CATEGORIES: CategorizationRule[] = [
     id: "feed_wintering",
     name: "Vinterfoder & socker",
     iconName: "Wheat",
-    color: "#ca8a04", // mustard amber
-    darkColor: "#eab308",
+    color: "#d97706", // Golden summer honey
+    darkColor: "#f59e0b",
+    honeyShadeName: "Sensommarhonung",
     description: "Socker, Bifor, foderdeg och foderlådor för invintring och drivfordring.",
     keywords: [
       "foder",
@@ -85,8 +115,9 @@ export const HONEY_COST_CATEGORIES: CategorizationRule[] = [
     id: "wax_frames",
     name: "Vaxmellanväggar & ramar",
     iconName: "Layers",
-    color: "#b45309", // dark bronze
-    darkColor: "#d97706",
+    color: "#92400e", // Rich chestnut/buckwheat honey
+    darkColor: "#b45309",
+    honeyShadeName: "Bokhvetehonung",
     description: "Vaxkakor, ramvirke (Svea/Farrar/LN), trådning och vaxsmältning.",
     keywords: [
       "vax",
@@ -109,8 +140,9 @@ export const HONEY_COST_CATEGORIES: CategorizationRule[] = [
     id: "health_varroa",
     name: "Varroabehandling & hälsa",
     iconName: "ShieldAlert",
-    color: "#dc2626", // red
-    darkColor: "#f87171",
+    color: "#78350f", // Deep heather / forest honey
+    darkColor: "#92400e",
+    honeyShadeName: "Ljunghonung",
     description: "Oxalsyra, myrsyra, förångare, skyddsutrustning och bisjukdomskontroller.",
     keywords: [
       "varroa",
@@ -129,10 +161,11 @@ export const HONEY_COST_CATEGORIES: CategorizationRule[] = [
   },
   {
     id: "queen_breeding",
-    name: "Drottningar & genetik",
+    name: "Drottningar & bisamhällen",
     iconName: "Crown",
-    color: "#9333ea", // royal purple
-    darkColor: "#c084fc",
+    color: "#f59e0b", // Bright warm blossom honey
+    darkColor: "#fbbf24",
+    honeyShadeName: "Blomsterhonung",
     description: "Parade drottningar, avläggare, omlarvning, kläckburar och parningskupor.",
     keywords: [
       "drottning",
@@ -155,8 +188,9 @@ export const HONEY_COST_CATEGORIES: CategorizationRule[] = [
     id: "hive_hardware",
     name: "Kupor, bottnar & tak",
     iconName: "Boxes",
-    color: "#059669", // emerald
-    darkColor: "#34d399",
+    color: "#854d0e", // Deep oak honey
+    darkColor: "#a16207",
+    honeyShadeName: "Skogshonung",
     description: "Sarger, bottnar, tak, spärrgaller, flusterminskare och färg till kuporna.",
     keywords: [
       "kupa",
@@ -179,8 +213,9 @@ export const HONEY_COST_CATEGORIES: CategorizationRule[] = [
     id: "extraction_tools",
     name: "Slungning & redskap",
     iconName: "Sparkles",
-    color: "#2563eb", // blue
-    darkColor: "#60a5fa",
+    color: "#eab308", // Golden yellow clover honey
+    darkColor: "#facc15",
+    honeyShadeName: "Klöverhonung",
     description: "Honungsslunga, avtäckningsgaffel, silar, refraktometer och rökkpust.",
     keywords: [
       "slunga",
@@ -203,8 +238,9 @@ export const HONEY_COST_CATEGORIES: CategorizationRule[] = [
     id: "clothing_safety",
     name: "Skyddskläder & handskar",
     iconName: "Shield",
-    color: "#0891b2", // cyan
-    darkColor: "#22d3ee",
+    color: "#ca8a04", // Warm goldenrod honey
+    darkColor: "#eab308",
+    honeyShadeName: "Gullrishonung",
     description: "Bihuvudduk, bidräkt, jacka, läderhandskar och tvätt.",
     keywords: [
       "jacka",
@@ -222,8 +258,9 @@ export const HONEY_COST_CATEGORIES: CategorizationRule[] = [
     id: "association_license",
     name: "Föreningsavgift & försäkring",
     iconName: "ScrollText",
-    color: "#4f46e5", // indigo
-    darkColor: "#818cf8",
+    color: "#a16207", // Deep wild meadow honey
+    darkColor: "#ca8a04",
+    honeyShadeName: "Ängshonung",
     description: "Medlemskap i Sveriges Biodlares Riksförbund (SBR), distrikt, ansvarsförsäkring.",
     keywords: [
       "förening",
@@ -240,10 +277,11 @@ export const HONEY_COST_CATEGORIES: CategorizationRule[] = [
   },
   {
     id: "transport_yard",
-    name: "Bigård, ställning & drivmedel",
+    name: "Bigård & drivmedel",
     iconName: "Truck",
-    color: "#78716c", // warm stone
-    darkColor: "#a8a29e",
+    color: "#713f12", // Dark molasses honey
+    darkColor: "#854d0e",
+    honeyShadeName: "Bladhonung",
     description: "Kupställningar, flis, ogräsduk, stängsel, bensin/el till bigårdstransporter.",
     keywords: [
       "ställning",
@@ -265,27 +303,60 @@ export const HONEY_COST_CATEGORIES: CategorizationRule[] = [
 ];
 
 /**
- * Categorize a transaction based on description, category field, and counterparty.
+ * Categorize a transaction.
+ *
+ * Evaluation priority:
+ * 1. Explicit `category` match (whether set in app or in Google Sheets / Excel).
+ * 2. Keyword scan across description & counterparty.
+ * 3. Smart fallbacks.
  */
 export function classifyExpense(tx: Transaction): string {
-  const text = `${tx.description || ""} ${tx.category || ""} ${tx.counterparty || ""}`.toLowerCase();
+  const catField = (tx.category || "").trim().toLowerCase();
+
+  // 1. Exact or partial match on category field
+  if (catField) {
+    if (catField.includes("burk") || catField.includes("etikett") || catField.includes("förpackning")) {
+      return "jars_packaging";
+    }
+    if (catField.includes("foder") || catField.includes("socker") || catField.includes("invintring")) {
+      return "feed_wintering";
+    }
+    if (catField.includes("vax") || catField.includes("ram")) {
+      return "wax_frames";
+    }
+    if (catField.includes("hälsa") || catField.includes("behandling") || catField.includes("varroa")) {
+      return "health_varroa";
+    }
+    if (catField.includes("drottning") || catField.includes("samhälle")) {
+      return "queen_breeding";
+    }
+    if (catField.includes("kupa") || catField.includes("kupor") || catField.includes("botten") || catField.includes("tak") || catField.includes("material")) {
+      return "hive_hardware";
+    }
+    if (catField.includes("slung") || catField.includes("redskap")) {
+      return "extraction_tools";
+    }
+    if (catField.includes("kläder") || catField.includes("skydd") || catField.includes("handske")) {
+      return "clothing_safety";
+    }
+    if (catField.includes("förening") || catField.includes("sbr") || catField.includes("försäkring")) {
+      return "association_license";
+    }
+    if (catField.includes("bigård") || catField.includes("drivmedel") || catField.includes("transport")) {
+      return "transport_yard";
+    }
+  }
+
+  // 2. Keyword matching across description & counterparty
+  const text = `${tx.description || ""} ${tx.counterparty || ""}`.toLowerCase();
 
   for (const cat of HONEY_COST_CATEGORIES) {
     for (const kw of cat.keywords) {
-      // Word boundary or substring matching
       if (text.includes(kw)) {
         return cat.id;
       }
     }
   }
-
-  // Fallbacks based on category field if present
-  const catField = (tx.category || "").toLowerCase();
-  if (catField.includes("foder")) return "feed_wintering";
-  if (catField.includes("utrustning") || catField.includes("material")) return "hive_hardware";
-  if (catField.includes("hälsa") || catField.includes("behandling")) return "health_varroa";
-  if (catField.includes("drottning") || catField.includes("samhälle")) return "queen_breeding";
-  if (catField.includes("förening")) return "association_license";
 
   return "other";
 }
@@ -357,32 +428,16 @@ export function calculateHoneyCostBreakdown(
   const averageSalePriceOre =
     detectedSaleCount > 0 ? Math.round(detectedSaleTotalOre / detectedSaleCount) : fallbackPriceOre;
 
-  // Use a realistic or chosen denominator for jars produced
-  // If user harvested/sold jars, use that; otherwise default to a standard hobby apiary season (e.g. 100 burkar)
   const effectiveJars =
     estimatedJarsProduced && estimatedJarsProduced > 0
       ? estimatedJarsProduced
       : Math.max(detectedSaleCount > 0 ? detectedSaleCount : 100, 30);
 
-  // If there are zero recorded expenses, provide standard realistic Swedish hobby apiary demo proportions
-  // so the jar visualization is immediately rich and educational rather than an empty jar!
   let categories: CostCategoryDetail[] = [];
   let unallocatedExpenseOre = 0;
 
   if (totalExpenseOre === 0) {
     // Pedagogical demo model based on Sveriges Biodlares Riksförbund cost calculations for hobby beekeeping
-    // Assuming a standard 95 kr / 500g honey jar:
-    // ~12 kr Burkar/etiketter (13%)
-    // ~11 kr Vinterfoder (12%)
-    // ~14 kr Ramar & vax (15%)
-    // ~8 kr Varroabekämpning (8%)
-    // ~9 kr Drottningar/genetik (9%)
-    // ~13 kr Kupor & trävaror (14%)
-    // ~10 kr Slungning & redskap (11%)
-    // ~5 kr Skyddskläder (5%)
-    // ~5 kr Föreningsavgift & försäkring (5%)
-    // ~8 kr Drivmedel & bigård (8%)
-    // Sum = ~95 kr (100%)
     const demoShares: Record<string, { pct: number; perJar: number }> = {
       jars_packaging: { pct: 14, perJar: 1300 },
       feed_wintering: { pct: 12, perJar: 1100 },
@@ -404,6 +459,7 @@ export function calculateHoneyCostBreakdown(
         iconName: cat.iconName,
         color: cat.color,
         darkColor: cat.darkColor,
+        honeyShadeName: cat.honeyShadeName,
         description: cat.description,
         totalExpenseOre: demo.perJar * effectiveJars,
         percentage: demo.pct,
@@ -428,6 +484,7 @@ export function calculateHoneyCostBreakdown(
           iconName: cat.iconName,
           color: cat.color,
           darkColor: cat.darkColor,
+          honeyShadeName: cat.honeyShadeName,
           description: cat.description,
           totalExpenseOre: data.totalOre,
           percentage: Math.round(pct * 10) / 10,
@@ -446,8 +503,9 @@ export function calculateHoneyCostBreakdown(
         id: "other",
         name: "Övriga biodlingskostnader",
         iconName: "HelpCircle",
-        color: "#6b7280",
-        darkColor: "#9ca3af",
+        color: "#5c330a", // Deep amber shade
+        darkColor: "#78350f",
+        honeyShadeName: "Blandad honung",
         description: "Blandade utlägg och kvitton som ännu inte matchats till specifik kategori.",
         totalExpenseOre: otherData.totalOre,
         percentage: Math.round(pct * 10) / 10,
