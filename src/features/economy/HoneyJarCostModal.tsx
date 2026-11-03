@@ -310,22 +310,74 @@ export const HoneyJarCostModal: React.FC<HoneyJarCostModalProps> = ({
             <div className="honey-jar-categories-container">
               {/* Active selection inspector card if tapped */}
               {selectedCategoryId === "profit" ? (
-                <div className="box-success honey-jar-detail-card">
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                    <TrendingUp size={18} color="var(--color-success-base)" />
-                    <strong style={{ fontSize: "0.95rem" }}>Biodlarens netto & arbete</strong>
+                <div
+                  className="honey-jar-detail-card"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(241, 245, 249, 0.9) 100%)",
+                    border: "1.5px solid #cbd5e1",
+                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.06)",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <div
+                        style={{
+                          width: "14px",
+                          height: "14px",
+                          borderRadius: "50%",
+                          backgroundColor: "#ffffff",
+                          border: "1.5px solid #94a3b8",
+                          boxShadow: "0 0 4px rgba(255,255,255,0.8)",
+                        }}
+                      />
+                      <strong style={{ fontSize: "0.95rem", color: "#0f172a" }}>
+                        Biodlarens netto & arbete
+                      </strong>
+                    </div>
+                    <span
+                      style={{
+                        fontSize: "0.75rem",
+                        fontWeight: 700,
+                        padding: "2px 8px",
+                        borderRadius: "4px",
+                        backgroundColor: "#ffffff",
+                        color: "#475569",
+                        border: "1px solid #cbd5e1",
+                      }}
+                    >
+                      Rimfrost / vit honung
+                    </span>
                   </div>
-                  <p style={{ fontSize: "0.8rem", color: "var(--color-text-primary)", margin: "4px 0" }}>
-                    Återstoden efter att alla fasta och rörliga utlägg är betalda. Detta ska täcka
-                    biodlarens hundratals arbetstimmar i bigården, slungrummet och marknaden.
+                  <p style={{ fontSize: "0.8rem", color: "#334155", margin: "6px 0" }}>
+                    Skiktet i burken visas som den vita rimfrostbildning som ofta uppstår när
+                    svensk honung kristalliserar naturligt mot glaset. Detta är biodlarens
+                    kvarvarande netto efter att alla faktiska utlägg har betalats.
                   </p>
-                  <div style={{ display: "flex", gap: "12px", marginTop: "6px", fontSize: "0.8rem" }}>
-                    <span>
-                      Andel: <strong>{Math.round(profitPercentage)}%</strong>
-                    </span>
-                    <span>
-                      Belopp: <strong>{Math.round(profitOre / 100)} kr/burk</strong>
-                    </span>
+                  <div className="honey-jar-detail-metrics">
+                    <div className="box-card" style={{ padding: "6px 10px", borderRadius: "6px", backgroundColor: "#ffffff" }}>
+                      <div style={{ fontSize: "0.7rem", color: "var(--color-text-muted)" }}>
+                        Per burk
+                      </div>
+                      <strong style={{ fontSize: "0.9rem", color: "#0f172a" }}>
+                        +{Math.round(profitOre / 100)} kr
+                      </strong>
+                    </div>
+                    <div className="box-card" style={{ padding: "6px 10px", borderRadius: "6px", backgroundColor: "#ffffff" }}>
+                      <div style={{ fontSize: "0.7rem", color: "var(--color-text-muted)" }}>
+                        Andel av pris
+                      </div>
+                      <strong style={{ fontSize: "0.9rem", color: "#0f172a" }}>
+                        {Math.round(profitPercentage)}%
+                      </strong>
+                    </div>
+                    <div className="box-card" style={{ padding: "6px 10px", borderRadius: "6px", backgroundColor: "#ffffff" }}>
+                      <div style={{ fontSize: "0.7rem", color: "var(--color-text-muted)" }}>
+                        Totalt netto
+                      </div>
+                      <strong style={{ fontSize: "0.9rem", color: "#0f172a" }}>
+                        {formatOreToSEK(profitOre * (breakdown.totalHarvestedJarsEstimate || 1))}
+                      </strong>
+                    </div>
                   </div>
                 </div>
               ) : selectedCategory ? (
@@ -429,11 +481,14 @@ export const HoneyJarCostModal: React.FC<HoneyJarCostModalProps> = ({
                   </span>
                 </div>
 
-                {/* Net Profit Row */}
+                {/* Net Profit Row (White Rimfrost) */}
                 {profitOre > 0 && (
                   <div
                     className={`honey-jar-cat-row ${selectedCategoryId === "profit" ? "selected" : ""}`}
                     onClick={() => setSelectedCategoryId("profit")}
+                    style={{
+                      borderLeft: "3px solid #cbd5e1",
+                    }}
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                       <div
@@ -441,18 +496,25 @@ export const HoneyJarCostModal: React.FC<HoneyJarCostModalProps> = ({
                           width: "28px",
                           height: "28px",
                           borderRadius: "6px",
-                          backgroundColor: "var(--color-success-surface)",
-                          color: "var(--color-success-base)",
+                          backgroundColor: "#f8fafc",
+                          color: "#334155",
+                          border: "1px solid #cbd5e1",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
+                          boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
                         }}
                       >
                         <TrendingUp size={16} />
                       </div>
                       <div>
-                        <div style={{ fontSize: "0.85rem", fontWeight: 700 }}>
-                          Biodlarens netto & vinst
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          <span style={{ fontSize: "0.85rem", fontWeight: 700 }}>
+                            Biodlarens netto & arbete
+                          </span>
+                          <span style={{ fontSize: "0.7rem", color: "#64748b", fontWeight: 500 }}>
+                            • Rimfrost
+                          </span>
                         </div>
                         <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
                           Arvode och ersättning för skötsel
@@ -461,7 +523,7 @@ export const HoneyJarCostModal: React.FC<HoneyJarCostModalProps> = ({
                     </div>
 
                     <div style={{ textAlign: "right" }}>
-                      <div style={{ fontSize: "0.9rem", fontWeight: 800, color: "var(--color-success-base)" }}>
+                      <div style={{ fontSize: "0.9rem", fontWeight: 800, color: "var(--color-text-primary)" }}>
                         +{Math.round(profitOre / 100)} kr
                       </div>
                       <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>

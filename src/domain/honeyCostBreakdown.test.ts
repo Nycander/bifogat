@@ -124,6 +124,24 @@ test("calculateHoneyCostBreakdown computes cost per jar and proportions from act
   assert.ok(feedCat);
   assert.equal(jarCat?.totalExpenseOre, 140000);
   assert.equal(feedCat?.totalExpenseOre, 100000);
+
+  // Verify categories are sorted descending by cost size
+  for (let i = 0; i < result.categories.length - 1; i++) {
+    assert.ok(
+      result.categories[i].costPerJarOre >= result.categories[i + 1].costPerJarOre,
+      `Category at ${i} should be >= category at ${i + 1}`,
+    );
+  }
+});
+
+test("calculateHoneyCostBreakdown demo mode sorts categories strictly descending by cost size", () => {
+  const result = calculateHoneyCostBreakdown([], 9500, 100);
+  for (let i = 0; i < result.categories.length - 1; i++) {
+    assert.ok(
+      result.categories[i].costPerJarOre >= result.categories[i + 1].costPerJarOre,
+      `Category ${result.categories[i].name} (${result.categories[i].costPerJarOre}) should be >= ${result.categories[i + 1].name} (${result.categories[i + 1].costPerJarOre})`,
+    );
+  }
 });
 
 test("classifyExpense respects explicit category set in Google Sheets / Excel even without descriptive text", () => {

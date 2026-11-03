@@ -468,6 +468,9 @@ export function calculateHoneyCostBreakdown(
         sampleItems: ["Uppskattat branschsnitt för svensk hobbybiodling"],
       };
     });
+
+    // Sort descending by cost (largest cost first)
+    categories.sort((a, b) => b.costPerJarOre - a.costPerJarOre);
   } else {
     // Real expenses recorded in the app
     const activeRules = [...HONEY_COST_CATEGORIES];
@@ -516,7 +519,7 @@ export function calculateHoneyCostBreakdown(
     }
 
     // Sort categories with highest cost first
-    categories.sort((a, b) => b.totalExpenseOre - a.totalExpenseOre);
+    categories.sort((a, b) => b.costPerJarOre - a.costPerJarOre);
   }
 
   // Cost per jar & profit margin
