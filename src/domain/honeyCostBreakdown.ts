@@ -9,8 +9,8 @@ export interface CostCategoryDetail {
   honeyShadeName: string;
   description: string;
   totalExpenseOre: number;
-  percentage: number; // 0 - 100
-  costPerJarOre: number; // öre per jar
+  percentage: number; // 0 - 100 (% of total expenses)
+  costPerJarOre: number; // Kronor/öre per jar at the selected reference price
   itemCount: number;
   sampleItems: string[];
 }
@@ -19,11 +19,7 @@ export interface HoneyCostBreakdownResult {
   totalExpenseOre: number;
   totalIncomeOre: number;
   totalSoldJars: number;
-  totalHarvestedJarsEstimate: number;
   standardJarPriceOre: number;
-  costPerJarOre: number;
-  profitPerJarOre: number;
-  profitMarginPercent: number;
   categories: CostCategoryDetail[];
   unallocatedExpenseOre: number;
 }
@@ -32,7 +28,7 @@ export interface CategorizationRule {
   id: string;
   name: string;
   iconName: string;
-  color: string; // Warm honey amber / gold gradient tones
+  color: string;
   darkColor: string;
   honeyShadeName: string;
   description: string;
@@ -41,7 +37,7 @@ export interface CategorizationRule {
 
 /**
  * Standard Swedish Beekeeping Transaction Categories.
- * Can be selected directly in the UI or typed in Google Sheets.
+ * Can be selected directly in the UI or typed in Google Sheets / Excel.
  */
 export const BEEKEEPING_CATEGORIES = [
   "Honungsförsäljning",
@@ -61,7 +57,7 @@ export const BEEKEEPING_CATEGORIES = [
 export type BeekeepingCategory = (typeof BEEKEEPING_CATEGORIES)[number];
 
 /**
- * Pedagogical Cost Categories with distinct, natural Swedish honey shades:
+ * Pedagogical Cost Categories with natural Swedish honey shades:
  * From dark forest/heather honeys at the base, through rich golden summer honey,
  * to light linden, clover, and pale spring rapeseed honey.
  */
@@ -362,21 +358,22 @@ export function classifyExpense(tx: Transaction): string {
 }
 
 /**
- * Compute the full pedagogical cost breakdown of a honey jar.
+ * Pure 100% cost-share breakdown.
  *
- * @param transactions All recorded transactions
- * @param fallbackPriceOre Default jar price in öre if no sales exist (default 95 kr = 9500 öre)
- * @param estimatedJarsProduced Optional override for total jars (defaults to sold count or 100)
+ * The honey jar represents 100% of all costs/investments (no artificial net profit).
+ * Every krona in the jar price is mapped directly to the actual categories' share of total expenses:
+ *   costPerJarOre = Math.round((categoryExpense / totalExpense) * jarPriceOre)
+ *
+ * @param transactions All recorded transactions (including equipment, hives, feed, jars etc.)
+ * @param jarPriceOre The customer retail price per jar (e.g. 95 kr = 9500 öre)
  */
 export function calculateHoneyCostBreakdown(
   transactions: Transaction[],
-  fallbackPriceOre = 9500,
-  estimatedJarsProduced?: number,
+  jarPriceOre = 9500,
 ): HoneyCostBreakdownResult {
   let totalExpenseOre = 0;
   let totalIncomeOre = 0;
   let detectedSaleCount = 0;
-  let detectedSaleTotalOre = 0;
 
   // Category accumulators
   const expenseByCategory: Record<
@@ -406,53 +403,42 @@ export function calculateHoneyCostBreakdown(
       // Income
       totalIncomeOre += amount;
 
-      // Detect honey jar sales from description pattern (e.g. "5 st burkar" or "Honungsförsäljning")
       const desc = tx.description || "";
       const match = desc.match(/(\d+)\s*(?:st|burkar?)/i);
       if (match && match[1]) {
         const jars = parseInt(match[1], 10);
         if (!isNaN(jars) && jars > 0 && jars < 1000) {
           detectedSaleCount += jars;
-          detectedSaleTotalOre += amount;
         }
       } else if (tx.category === "Honungsförsäljning") {
-        // Approximate jars assuming ~95 kr per jar if not parsed
         const estimatedJars = Math.max(1, Math.round(amount / 9500));
         detectedSaleCount += estimatedJars;
-        detectedSaleTotalOre += amount;
       }
     }
   }
-
-  // Determine baseline jar price
-  const averageSalePriceOre =
-    detectedSaleCount > 0 ? Math.round(detectedSaleTotalOre / detectedSaleCount) : fallbackPriceOre;
-
-  const effectiveJars =
-    estimatedJarsProduced && estimatedJarsProduced > 0
-      ? estimatedJarsProduced
-      : Math.max(detectedSaleCount > 0 ? detectedSaleCount : 100, 30);
 
   let categories: CostCategoryDetail[] = [];
   let unallocatedExpenseOre = 0;
 
   if (totalExpenseOre === 0) {
-    // Pedagogical demo model based on Sveriges Biodlares Riksförbund cost calculations for hobby beekeeping
-    const demoShares: Record<string, { pct: number; perJar: number }> = {
-      jars_packaging: { pct: 14, perJar: 1300 },
-      feed_wintering: { pct: 12, perJar: 1100 },
-      wax_frames: { pct: 15, perJar: 1400 },
-      health_varroa: { pct: 8, perJar: 800 },
-      queen_breeding: { pct: 10, perJar: 900 },
-      hive_hardware: { pct: 14, perJar: 1300 },
-      extraction_tools: { pct: 11, perJar: 1000 },
-      clothing_safety: { pct: 5, perJar: 500 },
-      association_license: { pct: 6, perJar: 600 },
-      transport_yard: { pct: 5, perJar: 600 },
+    // Pedagogical demo proportions based on Sveriges Biodlares Riksförbund cost structure
+    // Sum = 100%
+    const demoPercentages: Record<string, number> = {
+      wax_frames: 18,
+      hive_hardware: 16,
+      jars_packaging: 15,
+      feed_wintering: 13,
+      extraction_tools: 11,
+      queen_breeding: 9,
+      health_varroa: 7,
+      association_license: 4,
+      clothing_safety: 4,
+      transport_yard: 3,
     };
 
     categories = HONEY_COST_CATEGORIES.map((cat) => {
-      const demo = demoShares[cat.id] || { pct: 5, perJar: 500 };
+      const pct = demoPercentages[cat.id] || 5;
+      const perJarOre = Math.round((pct / 100) * jarPriceOre);
       return {
         id: cat.id,
         name: cat.name,
@@ -461,25 +447,26 @@ export function calculateHoneyCostBreakdown(
         darkColor: cat.darkColor,
         honeyShadeName: cat.honeyShadeName,
         description: cat.description,
-        totalExpenseOre: demo.perJar * effectiveJars,
-        percentage: demo.pct,
-        costPerJarOre: demo.perJar,
+        totalExpenseOre: 0,
+        percentage: pct,
+        costPerJarOre: perJarOre,
         itemCount: 0,
         sampleItems: ["Uppskattat branschsnitt för svensk hobbybiodling"],
       };
     });
 
-    // Sort descending by cost (largest cost first)
-    categories.sort((a, b) => b.costPerJarOre - a.costPerJarOre);
+    // Sort descending by size
+    categories.sort((a, b) => b.percentage - a.percentage);
   } else {
-    // Real expenses recorded in the app
+    // Pure cost breakdown from real transactions:
+    // Every category's slice of the jar is exactly proportional to its share of your total expenses
     const activeRules = [...HONEY_COST_CATEGORIES];
 
     categories = activeRules
       .map((cat) => {
         const data = expenseByCategory[cat.id] || { totalOre: 0, count: 0, samples: [] };
-        const pct = totalExpenseOre > 0 ? (data.totalOre / totalExpenseOre) * 100 : 0;
-        const perJarOre = Math.round(data.totalOre / effectiveJars);
+        const pct = (data.totalOre / totalExpenseOre) * 100;
+        const perJarOre = Math.round((data.totalOre / totalExpenseOre) * jarPriceOre);
 
         return {
           id: cat.id,
@@ -501,6 +488,7 @@ export function calculateHoneyCostBreakdown(
     const otherData = expenseByCategory["other"];
     if (otherData && otherData.totalOre > 0) {
       const pct = (otherData.totalOre / totalExpenseOre) * 100;
+      const perJarOre = Math.round((otherData.totalOre / totalExpenseOre) * jarPriceOre);
       unallocatedExpenseOre = otherData.totalOre;
       categories.push({
         id: "other",
@@ -512,37 +500,21 @@ export function calculateHoneyCostBreakdown(
         description: "Blandade utlägg och kvitton som ännu inte matchats till specifik kategori.",
         totalExpenseOre: otherData.totalOre,
         percentage: Math.round(pct * 10) / 10,
-        costPerJarOre: Math.round(otherData.totalOre / effectiveJars),
+        costPerJarOre: perJarOre,
         itemCount: otherData.count,
         sampleItems: otherData.samples,
       });
     }
 
-    // Sort categories with highest cost first
-    categories.sort((a, b) => b.costPerJarOre - a.costPerJarOre);
+    // Sort categories strictly descending by cost size
+    categories.sort((a, b) => b.totalExpenseOre - a.totalExpenseOre);
   }
-
-  // Cost per jar & profit margin
-  const costPerJarOre =
-    totalExpenseOre > 0
-      ? Math.round(totalExpenseOre / effectiveJars)
-      : categories.reduce((sum, c) => sum + c.costPerJarOre, 0);
-
-  const profitPerJarOre = Math.max(0, averageSalePriceOre - costPerJarOre);
-  const profitMarginPercent =
-    averageSalePriceOre > 0
-      ? Math.round(((averageSalePriceOre - costPerJarOre) / averageSalePriceOre) * 100)
-      : 0;
 
   return {
     totalExpenseOre,
     totalIncomeOre,
     totalSoldJars: detectedSaleCount,
-    totalHarvestedJarsEstimate: effectiveJars,
-    standardJarPriceOre: averageSalePriceOre,
-    costPerJarOre,
-    profitPerJarOre,
-    profitMarginPercent,
+    standardJarPriceOre: jarPriceOre,
     categories,
     unallocatedExpenseOre,
   };

@@ -1202,7 +1202,6 @@ function AppContent() {
       {showHoneyJarCostModal && (
         <HoneyJarCostModal
           transactions={transactions}
-          harvests={harvests}
           onClose={() => setShowHoneyJarCostModal(false)}
         />
       )}

@@ -65,7 +65,7 @@ test("classifyExpense accurately maps keywords to beekeeping cost categories", (
 });
 
 test("calculateHoneyCostBreakdown produces pedagogical model when no expenses recorded", () => {
-  const result = calculateHoneyCostBreakdown([], 9500, 100);
+  const result = calculateHoneyCostBreakdown([], 9500);
   assert.equal(result.totalExpenseOre, 0);
   assert.equal(result.categories.length, HONEY_COST_CATEGORIES.length);
   assert.equal(result.standardJarPriceOre, 9500);
@@ -83,7 +83,7 @@ test("calculateHoneyCostBreakdown computes cost per jar and proportions from act
       id: "tx-1",
       date: "2026-06-01",
       description: "100 st burkar och etiketter",
-      amountOre: -140000, // 1400 kr -> jars
+      amountOre: -140000, // 1400 kr -> jars (58.3%)
       source: "manual",
       createdAt: "2026-06-01T10:00:00Z",
       updatedAt: "2026-06-01T10:00:00Z",
@@ -92,7 +92,7 @@ test("calculateHoneyCostBreakdown computes cost per jar and proportions from act
       id: "tx-2",
       date: "2026-08-20",
       description: "Bifor vinterfoder",
-      amountOre: -100000, // 1000 kr -> feed
+      amountOre: -100000, // 1000 kr -> feed (41.7%)
       source: "manual",
       createdAt: "2026-08-20T10:00:00Z",
       updatedAt: "2026-08-20T10:00:00Z",
@@ -101,20 +101,18 @@ test("calculateHoneyCostBreakdown computes cost per jar and proportions from act
       id: "tx-3",
       date: "2026-09-01",
       description: "Sälj 10 st burkar honung",
-      amountOre: 95000, // 950 kr -> 95 kr/jar
+      amountOre: 95000,
       source: "manual",
       createdAt: "2026-09-01T10:00:00Z",
       updatedAt: "2026-09-01T10:00:00Z",
     },
   ];
 
-  const result = calculateHoneyCostBreakdown(transactions, 9500, 100);
+  const result = calculateHoneyCostBreakdown(transactions, 9500);
 
   assert.equal(result.totalExpenseOre, 240000); // 2400 kr
   assert.equal(result.totalSoldJars, 10);
   assert.equal(result.standardJarPriceOre, 9500); // 95 kr
-  assert.equal(result.costPerJarOre, 2400); // 2400 kr / 100 jars = 24 kr/jar
-  assert.equal(result.profitPerJarOre, 7100); // 95 kr - 24 kr = 71 kr
 
   // Categories present: jars and feed
   const jarCat = result.categories.find((c) => c.id === "jars_packaging");
@@ -125,21 +123,25 @@ test("calculateHoneyCostBreakdown computes cost per jar and proportions from act
   assert.equal(jarCat?.totalExpenseOre, 140000);
   assert.equal(feedCat?.totalExpenseOre, 100000);
 
+  // Proportions: jars has 14/24 of 95 kr = ~55 kr, feed has 10/24 of 95 kr = ~40 kr
+  assert.ok(jarCat!.costPerJarOre > feedCat!.costPerJarOre);
+  assert.equal(jarCat!.percentage > feedCat!.percentage, true);
+
   // Verify categories are sorted descending by cost size
   for (let i = 0; i < result.categories.length - 1; i++) {
     assert.ok(
-      result.categories[i].costPerJarOre >= result.categories[i + 1].costPerJarOre,
+      result.categories[i].totalExpenseOre >= result.categories[i + 1].totalExpenseOre,
       `Category at ${i} should be >= category at ${i + 1}`,
     );
   }
 });
 
 test("calculateHoneyCostBreakdown demo mode sorts categories strictly descending by cost size", () => {
-  const result = calculateHoneyCostBreakdown([], 9500, 100);
+  const result = calculateHoneyCostBreakdown([], 9500);
   for (let i = 0; i < result.categories.length - 1; i++) {
     assert.ok(
-      result.categories[i].costPerJarOre >= result.categories[i + 1].costPerJarOre,
-      `Category ${result.categories[i].name} (${result.categories[i].costPerJarOre}) should be >= ${result.categories[i + 1].name} (${result.categories[i + 1].costPerJarOre})`,
+      result.categories[i].percentage >= result.categories[i + 1].percentage,
+      `Category ${result.categories[i].name} should be >= ${result.categories[i + 1].name}`,
     );
   }
 });
