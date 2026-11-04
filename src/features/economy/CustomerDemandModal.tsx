@@ -5,6 +5,7 @@ import {
   calculateCustomerAnalytics,
   CustomerLoyaltyStatus,
 } from "../../domain/customerAnalytics";
+import { detectLatestJarPriceOre } from "../../domain/honeyCostBreakdown";
 import { useBottomSheet } from "../../hooks/useBottomSheet";
 import { BottomSheetDragHandle } from "../../components/ui/BottomSheetDragHandle";
 import {
@@ -32,9 +33,10 @@ export const CustomerDemandModal: React.FC<CustomerDemandModalProps> = ({
 }) => {
   const { contentRef, backdropRef, bottomSheetHandlers } = useBottomSheet({ onClose });
 
-  // Standard jar price used for estimation when count is missing in description
-  const savedPrice = typeof window !== "undefined" ? localStorage.getItem("bifogat_honey_price_per_jar") : null;
-  const standardPriceOre = (savedPrice ? parseInt(savedPrice, 10) || 95 : 95) * 100;
+  // Standard jar price auto-detected from transactions (defaults to 100 kr)
+  const standardPriceOre = useMemo(() => {
+    return detectLatestJarPriceOre(transactions, 100);
+  }, [transactions]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<FilterTab>("all");

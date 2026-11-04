@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from "react";
 import { Transaction } from "../../domain/types";
-import { calculateHoneyCostBreakdown } from "../../domain/honeyCostBreakdown";
 import { formatOreToSEK } from "../../domain/validation";
 import { useBottomSheet } from "../../hooks/useBottomSheet";
 import { BottomSheetDragHandle } from "../../components/ui/BottomSheetDragHandle";
@@ -22,8 +21,11 @@ import {
   Receipt,
   ExternalLink,
 } from "lucide-react";
-
-import { classifyExpense } from "../../domain/honeyCostBreakdown";
+import {
+  calculateHoneyCostBreakdown,
+  detectLatestJarPriceOre,
+  classifyExpense,
+} from "../../domain/honeyCostBreakdown";
 
 interface HoneyJarCostModalProps {
   transactions: Transaction[];
@@ -57,29 +59,13 @@ export const HoneyJarCostModal: React.FC<HoneyJarCostModalProps> = ({
   onClose,
   onSaveTransaction,
 }) => {
-  // Read remembered price from localStorage or 95 kr default
-  const savedPrice =
-    typeof window !== "undefined"
-      ? localStorage.getItem("bifogat_honey_price_per_jar")
-      : null;
-  const initialPriceOre = savedPrice ? (parseInt(savedPrice, 10) || 95) * 100 : 9500;
+  // Automatically detect latest jar price from transactions, falling back to 100 kr
+  const priceOre = useMemo(() => {
+    return detectLatestJarPriceOre(transactions, 100);
+  }, [transactions]);
 
-  const [priceOre, setPriceOre] = useState<number>(initialPriceOre);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [isDrilldownOpen, setIsDrilldownOpen] = useState(false);
-
-  const handlePriceChange = (newPriceKr: number) => {
-    const validKr = Math.max(10, Math.min(500, newPriceKr));
-    const newOre = validKr * 100;
-    setPriceOre(newOre);
-    if (typeof window !== "undefined") {
-      try {
-        localStorage.setItem("bifogat_honey_price_per_jar", validKr.toString());
-      } catch {
-        // ignore
-      }
-    }
-  };
 
   const breakdown = useMemo(() => {
     return calculateHoneyCostBreakdown(transactions, priceOre);
@@ -147,35 +133,13 @@ export const HoneyJarCostModal: React.FC<HoneyJarCostModalProps> = ({
           <div className="honey-jar-kpi-banner">
             <div className="honey-jar-kpi-item">
               <span className="honey-jar-kpi-label">Burkpris för kunden</span>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm btn-icon-only"
-                  style={{ width: "24px", height: "24px", padding: 0 }}
-                  onClick={() => handlePriceChange(Math.round(priceOre / 100) - 5)}
-                  title="Sänk pris med 5 kr"
-                  aria-label="Sänk pris"
-                >
-                  -
-                </button>
-                <div style={{ display: "flex", alignItems: "baseline", gap: "2px" }}>
-                  <span className="honey-jar-kpi-value">
-                    {Math.round(priceOre / 100)}
-                  </span>
-                  <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--color-text-secondary)" }}>
-                    kr
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm btn-icon-only"
-                  style={{ width: "24px", height: "24px", padding: 0 }}
-                  onClick={() => handlePriceChange(Math.round(priceOre / 100) + 5)}
-                  title="Höj pris med 5 kr"
-                  aria-label="Höj pris"
-                >
-                  +
-                </button>
+              <div style={{ display: "flex", alignItems: "baseline", gap: "2px" }}>
+                <span className="honey-jar-kpi-value">
+                  {Math.round(priceOre / 100)}
+                </span>
+                <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--color-text-secondary)" }}>
+                  kr / burk
+                </span>
               </div>
             </div>
 

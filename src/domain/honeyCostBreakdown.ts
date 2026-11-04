@@ -418,6 +418,47 @@ export function classifyExpense(tx: Transaction): string {
 }
 
 /**
+ * Detects the latest retail price per honey jar from transaction history.
+ * Looks for recent sales transactions with explicit jar counts or single-jar amounts.
+ * Defaults to 100 kr (10000 öre) if no sales transactions exist.
+ */
+export function detectLatestJarPriceOre(transactions: Transaction[], defaultKr = 100): number {
+  if (!transactions || transactions.length === 0) return defaultKr * 100;
+
+  // Filter sales sorted descending by date
+  const sales = transactions
+    .filter((tx) => (tx.amountOre && tx.amountOre > 0) || tx.category === "Honungsförsäljning")
+    .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+
+  for (const tx of sales) {
+    if (!tx.amountOre || tx.amountOre <= 0) continue;
+
+    const desc = (tx.description || "").toLowerCase();
+
+    // Look for explicit pattern like "2 st", "3 burkar", "10 st"
+    const match = desc.match(/(\d+)\s*(?:st|burkar?)/i);
+    if (match && match[1]) {
+      const count = parseInt(match[1], 10);
+      if (count > 0 && count < 500) {
+        const unitPriceOre = Math.round(tx.amountOre / count);
+        // Sanity check: between 30 kr (3000 öre) and 300 kr (30000 öre) per jar
+        if (unitPriceOre >= 3000 && unitPriceOre <= 30000) {
+          return unitPriceOre;
+        }
+      }
+    }
+
+    // Check if the sale itself is a single jar purchase between 50 kr and 200 kr
+    if (tx.amountOre >= 5000 && tx.amountOre <= 20000) {
+      return tx.amountOre;
+    }
+  }
+
+  // Fallback to default (100 kr = 10000 öre)
+  return defaultKr * 100;
+}
+
+/**
  * Pure 100% cost-share breakdown.
  *
  * The honey jar represents 100% of all costs/investments (no artificial net profit).
@@ -425,11 +466,11 @@ export function classifyExpense(tx: Transaction): string {
  *   costPerJarOre = Math.round((categoryExpense / totalExpense) * jarPriceOre)
  *
  * @param transactions All recorded transactions (including equipment, hives, feed, jars etc.)
- * @param jarPriceOre The customer retail price per jar (e.g. 95 kr = 9500 öre)
+ * @param jarPriceOre The customer retail price per jar (e.g. 100 kr = 10000 öre)
  */
 export function calculateHoneyCostBreakdown(
   transactions: Transaction[],
-  jarPriceOre = 9500,
+  jarPriceOre = 10000,
 ): HoneyCostBreakdownResult {
   let totalExpenseOre = 0;
   let totalIncomeOre = 0;
