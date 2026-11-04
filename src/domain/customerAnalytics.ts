@@ -12,7 +12,8 @@ export type CustomerLoyaltyStatus =
   | "repeater" // Minst 2 köp, men inom samma år
   | "new" // Första köpet gjordes under senaste aktiva säsongen
   | "lapsed" // Stammis (>= 2 år) som inte handlat under senaste säsongen
-  | "single"; // Endast 1 köp historiskt (före senaste säsongen)
+  | "single" // Endast 1 köp historiskt (före senaste säsongen)
+  | "channel"; // Försäljningskanal (marknad, mässa, Reko-ring, butik, återförsäljare)
 
 export interface CustomerAnalytics {
   name: string;
@@ -26,6 +27,7 @@ export interface CustomerAnalytics {
   estimatedAnnualJars: number; // Snitt per aktivt år (avrundat till 1 decimal)
   status: CustomerLoyaltyStatus;
   statusLabel: string;
+  isChannel?: boolean;
   yearlyBreakdown: CustomerYearlyStats[];
   transactions: Transaction[];
   averageJarsPerOrder: number;
@@ -36,6 +38,9 @@ export interface AggregateCustomerReport {
   regularCount: number;
   lapsedCount: number;
   newCount: number;
+  channelCount: number;
+  channelTotalJars: number;
+  channelTotalSpentOre: number;
   totalEstimatedAnnualJars: number; // Summan av alla stammisars och aktiva kunders förväntade årsbehov
   regularEstimatedAnnualJars: number; // Enbart trogna stammisars förväntade årsbehov
   totalHoneyRevenueOre: number;
@@ -44,6 +49,48 @@ export interface AggregateCustomerReport {
   allYears: string[]; // Alla år i fallande ordning t.ex. ["2026", "2025", ...]
   latestYear: string;
   customers: CustomerAnalytics[];
+}
+
+/**
+ * Helper function to detect if a counterparty name represents a sales channel
+ * (market, fair, Reko-ring, reseller, store, business) rather than a private consumer.
+ */
+export function isMarketOrChannelName(name: string): boolean {
+  if (!name || typeof name !== "string") return false;
+  const n = name.trim().toLowerCase();
+
+  const keywords = [
+    "marknad",
+    "julmarknad",
+    "höstmarknad",
+    "vårmarknad",
+    "skördefest",
+    "mässa",
+    "massa",
+    "reko",
+    "rekoring",
+    "reko-ring",
+    "butik",
+    "gårdsbutik",
+    "skafferiet",
+    "bageri",
+    "café",
+    "cafe",
+    "restaurang",
+    "delikatess",
+    "ica",
+    "coop",
+    "hemköp",
+    "återförsäljare",
+    "företag",
+    "aktiebolag",
+    " ab",
+    "ab ",
+    "handelsbolag",
+    "matsal",
+  ];
+
+  return keywords.some((kw) => n.includes(kw));
 }
 
 /**
@@ -109,6 +156,7 @@ export function isHoneySaleTransaction(tx: Transaction): boolean {
 export interface CustomerAnalyticsOptions {
   currentYear?: string;
   defaultPriceOre?: number;
+  channelOverrides?: Record<string, "consumer" | "channel">;
 }
 
 /**
@@ -166,6 +214,9 @@ export function calculateCustomerAnalytics(
   let regularCount = 0;
   let lapsedCount = 0;
   let newCount = 0;
+  let channelCount = 0;
+  let channelTotalJars = 0;
+  let channelTotalSpentOre = 0;
 
   for (const draft of customerMap.values()) {
     const txs = [...draft.transactions].sort((a, b) => b.date.localeCompare(a.date));
@@ -196,9 +247,13 @@ export function calculateCustomerAnalytics(
     const activeYearCount = activeYears.length;
 
     // Calculation: Average jars per active year
-    // Formula: totalJars / activeYearCount
     const rawAnnual = activeYearCount > 0 ? custJars / activeYearCount : custJars;
     const estimatedAnnualJars = Math.round(rawAnnual * 10) / 10;
+
+    // Determine if this counterparty is a sales channel (market, fair, reseller) vs private consumer
+    const key = draft.displayName.toLowerCase().trim();
+    const override = options.channelOverrides?.[key];
+    const isChannel = override ? override === "channel" : isMarketOrChannelName(draft.displayName);
 
     // Determine loyalty status
     const boughtInLatestYear = activeYears.includes(latestYear);
@@ -207,7 +262,13 @@ export function calculateCustomerAnalytics(
     let status: CustomerLoyaltyStatus = "single";
     let statusLabel = "Engångskund";
 
-    if (activeYearCount >= 2) {
+    if (isChannel) {
+      status = "channel";
+      statusLabel = "Försäljningskanal";
+      channelCount++;
+      channelTotalJars += custJars;
+      channelTotalSpentOre += custSpentOre;
+    } else if (activeYearCount >= 2) {
       if (boughtInLatestYear) {
         status = "regular";
         statusLabel = "Trogen stamkund";
@@ -230,7 +291,9 @@ export function calculateCustomerAnalytics(
       statusLabel = "Tidigare köpare";
     }
 
-    totalEstimatedAnnualJars += estimatedAnnualJars;
+    if (!isChannel) {
+      totalEstimatedAnnualJars += estimatedAnnualJars;
+    }
     totalHoneyRevenueOre += custSpentOre;
     totalJarsSold += custJars;
 
@@ -248,6 +311,7 @@ export function calculateCustomerAnalytics(
       estimatedAnnualJars,
       status,
       statusLabel,
+      isChannel,
       yearlyBreakdown,
       transactions: txs,
       averageJarsPerOrder: avgJarsPerOrder,
@@ -270,6 +334,9 @@ export function calculateCustomerAnalytics(
     regularCount,
     lapsedCount,
     newCount,
+    channelCount,
+    channelTotalJars,
+    channelTotalSpentOre,
     totalEstimatedAnnualJars: Math.round(totalEstimatedAnnualJars),
     regularEstimatedAnnualJars: Math.round(regularEstimatedAnnualJars),
     totalHoneyRevenueOre,
