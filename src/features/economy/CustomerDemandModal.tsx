@@ -23,7 +23,7 @@ interface CustomerDemandModalProps {
   onClose: () => void;
 }
 
-type FilterTab = "all" | "regular" | "lapsed" | "new";
+type FilterTab = "all" | "regular" | "lapsed" | "new" | "channel";
 type SortOption = "annual_demand" | "total_jars" | "total_spent" | "years" | "latest_date" | "name";
 
 export const CustomerDemandModal: React.FC<CustomerDemandModalProps> = ({
@@ -42,12 +42,36 @@ export const CustomerDemandModal: React.FC<CustomerDemandModalProps> = ({
   const [showMethodology, setShowMethodology] = useState(false);
   const [selectedCustomerName, setSelectedCustomerName] = useState<string | null>(null);
 
+  // Manual channel overrides stored in localStorage
+  const [channelOverrides, setChannelOverrides] = useState<Record<string, "consumer" | "channel">>(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      const raw = localStorage.getItem("bifogat_channel_overrides");
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  const handleToggleCustomerChannel = (customerName: string, isChannelNow: boolean) => {
+    const key = customerName.toLowerCase().trim();
+    const next: Record<string, "consumer" | "channel"> = {
+      ...channelOverrides,
+      [key]: isChannelNow ? "consumer" : "channel",
+    };
+    setChannelOverrides(next);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("bifogat_channel_overrides", JSON.stringify(next));
+    }
+  };
+
   // Calculate report across all historical transactions
   const report = useMemo(() => {
     return calculateCustomerAnalytics(transactions, {
       defaultPriceOre: standardPriceOre,
+      channelOverrides,
     });
-  }, [transactions, standardPriceOre]);
+  }, [transactions, standardPriceOre, channelOverrides]);
 
   // Selected customer for drilldown
   const selectedCustomer = useMemo(() => {
@@ -66,6 +90,8 @@ export const CustomerDemandModal: React.FC<CustomerDemandModalProps> = ({
       list = list.filter((c) => c.status === "lapsed");
     } else if (activeFilter === "new") {
       list = list.filter((c) => c.status === "new");
+    } else if (activeFilter === "channel") {
+      list = list.filter((c) => c.status === "channel" || c.isChannel);
     }
 
     // Search query
@@ -123,6 +149,12 @@ export const CustomerDemandModal: React.FC<CustomerDemandModalProps> = ({
           bg: "rgba(16, 185, 129, 0.08)",
           border: "rgba(16, 185, 129, 0.25)",
           text: "var(--color-success, #059669)",
+        };
+      case "channel":
+        return {
+          bg: "rgba(124, 58, 237, 0.08)",
+          border: "rgba(124, 58, 237, 0.25)",
+          text: "#7c3aed",
         };
       default:
         return {
@@ -226,6 +258,20 @@ export const CustomerDemandModal: React.FC<CustomerDemandModalProps> = ({
               </div>
             </div>
 
+            {report.channelCount > 0 && (
+              <div className="card" style={{ padding: "10px 12px", marginBottom: 0 }}>
+                <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#7c3aed" }}>
+                  FÖRSÄLJNINGSKANALER
+                </div>
+                <div style={{ fontSize: "1.45rem", fontWeight: 800, color: "var(--color-text-main)", marginTop: "2px" }}>
+                  {report.channelCount} st
+                </div>
+                <div style={{ fontSize: "0.7rem", color: "var(--color-text-muted)" }}>
+                  {report.channelTotalJars} burkar ({formatOreToSEK(report.channelTotalSpentOre)})
+                </div>
+              </div>
+            )}
+
             <div className="card" style={{ padding: "10px 12px", marginBottom: 0 }}>
               <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-text-muted)" }}>
                 TOTAL KUNDBAS
@@ -296,8 +342,11 @@ export const CustomerDemandModal: React.FC<CustomerDemandModalProps> = ({
                 <p style={{ margin: "0 0 6px 0" }}>
                   <strong>4. Vilande stamkund:</strong> Kund med flerårig stamkundshistorik som <em>inte</em> köpt under den senaste säsongen. Dessa är bigårdens mest värdefulla kontaktlista inför årets slungning!
                 </p>
-                <p style={{ margin: 0 }}>
+                <p style={{ margin: "0 0 6px 0" }}>
                   <strong>5. Bigårdens stamkundsbehov:</strong> Summan av alla aktiva stammisars årsbehov ({report.regularEstimatedAnnualJars} burkar). Detta är minimimängden burkar du bör hålla reserverad innan överskott säljs till nya köpare.
+                </p>
+                <p style={{ margin: 0 }}>
+                  <strong>6. Försäljningskanaler:</strong> Marknader, mässor, Reko-ringar, butiker och återförsäljare identifieras automatiskt och separeras från privata stamkunder så att deras storköp inte snedvrider den privata konsumentefterfrågan.
                 </p>
               </div>
             )}
@@ -320,7 +369,7 @@ export const CustomerDemandModal: React.FC<CustomerDemandModalProps> = ({
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="Sök stamkund..."
+                    placeholder="Sök kund eller kanal..."
                     style={{ paddingLeft: "34px", fontSize: "0.85rem" }}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -363,6 +412,7 @@ export const CustomerDemandModal: React.FC<CustomerDemandModalProps> = ({
                       { id: "regular" as const, label: `Stammisar (${report.regularCount})` },
                       { id: "lapsed" as const, label: `Vilande (${report.lapsedCount})` },
                       { id: "new" as const, label: `Nya (${report.newCount})` },
+                      { id: "channel" as const, label: `Kanaler (${report.channelCount})` },
                     ].map((tab) => {
                       const isSelected = activeFilter === tab.id;
                       return (
@@ -532,6 +582,7 @@ export const CustomerDemandModal: React.FC<CustomerDemandModalProps> = ({
         <CustomerDrilldownSubModal
           customer={selectedCustomer}
           onClose={() => setSelectedCustomerName(null)}
+          onToggleChannelOverride={handleToggleCustomerChannel}
         />
       )}
     </div>

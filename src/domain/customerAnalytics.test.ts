@@ -4,8 +4,17 @@ import {
   extractJarCountFromTransaction,
   isHoneySaleTransaction,
   calculateCustomerAnalytics,
+  isMarketOrChannelName,
 } from "./customerAnalytics";
 import { Transaction } from "./types";
+
+test("isMarketOrChannelName identifies markets, fairs, flea markets and associations", () => {
+  assert.equal(isMarketOrChannelName("Bällsta Villaägareförening Backluckeloppis"), true);
+  assert.equal(isMarketOrChannelName("Reko-ring Lund"), true);
+  assert.equal(isMarketOrChannelName("Julmarknad Stortorget"), true);
+  assert.equal(isMarketOrChannelName("Gårdsbutiken i Skåne"), true);
+  assert.equal(isMarketOrChannelName("Anna Svensson"), false);
+});
 
 test("extractJarCountFromTransaction extracts jars from various description styles", () => {
   // Pattern 1: standard with "burkar"

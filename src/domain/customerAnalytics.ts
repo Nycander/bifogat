@@ -88,6 +88,20 @@ export function isMarketOrChannelName(name: string): boolean {
     "ab ",
     "handelsbolag",
     "matsal",
+    "loppis",
+    "bakluckeloppis",
+    "backluckeloppis",
+    "förening",
+    "forening",
+    "villaägareförening",
+    "samfällighet",
+    "basar",
+    "torg",
+    "festival",
+    "event",
+    "försäljning",
+    "forsaljning",
+    "knalle",
   ];
 
   return keywords.some((kw) => n.includes(kw));

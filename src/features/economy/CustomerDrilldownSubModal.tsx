@@ -8,11 +8,13 @@ import { ArrowLeft, X, Calendar, Receipt } from "lucide-react";
 interface CustomerDrilldownSubModalProps {
   customer: CustomerAnalytics;
   onClose: () => void;
+  onToggleChannelOverride?: (name: string, isChannelNow: boolean) => void;
 }
 
 export const CustomerDrilldownSubModal: React.FC<CustomerDrilldownSubModalProps> = ({
   customer,
   onClose,
+  onToggleChannelOverride,
 }) => {
   const { contentRef, backdropRef, bottomSheetHandlers } = useBottomSheet({ onClose });
 
@@ -36,6 +38,12 @@ export const CustomerDrilldownSubModal: React.FC<CustomerDrilldownSubModalProps>
           border: "rgba(59, 130, 246, 0.3)",
           text: "#1d4ed8",
         };
+      case "channel":
+        return {
+          bg: "rgba(124, 58, 237, 0.12)",
+          border: "rgba(124, 58, 237, 0.3)",
+          text: "#7c3aed",
+        };
       default:
         return {
           bg: "var(--color-surface-hover)",
@@ -46,6 +54,7 @@ export const CustomerDrilldownSubModal: React.FC<CustomerDrilldownSubModalProps>
   };
 
   const badge = getStatusBadgeStyle(customer.status);
+  const isChannelNow = customer.status === "channel" || Boolean(customer.isChannel);
 
   return (
     <div
@@ -76,7 +85,7 @@ export const CustomerDrilldownSubModal: React.FC<CustomerDrilldownSubModalProps>
               <ArrowLeft size={18} />
             </button>
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
                 <h2 className="modal-title" style={{ fontSize: "1.15rem", fontWeight: 800, margin: 0 }}>
                   {customer.name}
                 </h2>
@@ -93,6 +102,18 @@ export const CustomerDrilldownSubModal: React.FC<CustomerDrilldownSubModalProps>
                 >
                   {customer.statusLabel}
                 </span>
+
+                {onToggleChannelOverride && (
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    style={{ fontSize: "0.65rem", padding: "2px 6px", height: "auto" }}
+                    onClick={() => onToggleChannelOverride(customer.name, isChannelNow)}
+                    title={isChannelNow ? "Växla till privatkund" : "Växla till försäljningskanal"}
+                  >
+                    {isChannelNow ? "Gör till Privatkund" : "Gör till Kanal"}
+                  </button>
+                )}
               </div>
               <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", marginTop: "2px" }}>
                 Aktiv {customer.activeYears.join(", ")} ({customer.activeYearCount} säsonger)
