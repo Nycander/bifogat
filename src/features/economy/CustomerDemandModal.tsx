@@ -136,33 +136,33 @@ export const CustomerDemandModal: React.FC<CustomerDemandModalProps> = ({
     switch (status) {
       case "regular":
         return {
-          bg: "var(--color-honey-surface, #fffbeb)",
-          border: "var(--color-honey-border, #fde68a)",
-          text: "var(--color-honey-text, #92400e)",
-        };
-      case "lapsed":
-        return {
-          bg: "rgba(239, 68, 68, 0.08)",
-          border: "rgba(239, 68, 68, 0.25)",
-          text: "var(--color-danger, #dc2626)",
+          bg: "var(--color-success-surface)",
+          border: "var(--color-success-border)",
+          text: "var(--color-success-text)",
         };
       case "new":
         return {
-          bg: "rgba(16, 185, 129, 0.08)",
-          border: "rgba(16, 185, 129, 0.25)",
-          text: "var(--color-success, #059669)",
+          bg: "var(--color-info-surface)",
+          border: "var(--color-info-border)",
+          text: "var(--color-info-text)",
+        };
+      case "lapsed":
+        return {
+          bg: "var(--color-warning-surface)",
+          border: "var(--color-warning-border)",
+          text: "var(--color-warning-text)",
         };
       case "channel":
         return {
-          bg: "rgba(124, 58, 237, 0.08)",
-          border: "rgba(124, 58, 237, 0.25)",
-          text: "#7c3aed",
+          bg: "var(--color-channel-surface)",
+          border: "var(--color-channel-border)",
+          text: "var(--color-channel-text)",
         };
       default:
         return {
-          bg: "var(--color-surface-hover, #f3f4f6)",
-          border: "var(--color-border, #e5e7eb)",
-          text: "var(--color-text-muted, #6b7280)",
+          bg: "var(--color-surface-hover)",
+          border: "var(--color-border)",
+          text: "var(--color-text-muted)",
         };
     }
   };
@@ -236,8 +236,16 @@ export const CustomerDemandModal: React.FC<CustomerDemandModalProps> = ({
               </div>
             </div>
 
-            <div className="card" style={{ padding: "10px 12px", marginBottom: 0 }}>
-              <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-text-brand)" }}>
+            <div
+              className="card"
+              style={{
+                padding: "10px 12px",
+                marginBottom: 0,
+                background: "var(--color-success-surface)",
+                borderColor: "var(--color-success-border)",
+              }}
+            >
+              <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-success-text)" }}>
                 TROGNA STAMMISAR
               </div>
               <div style={{ fontSize: "1.45rem", fontWeight: 800, color: "var(--color-text-main)", marginTop: "2px" }}>
@@ -248,11 +256,19 @@ export const CustomerDemandModal: React.FC<CustomerDemandModalProps> = ({
               </div>
             </div>
 
-            <div className="card" style={{ padding: "10px 12px", marginBottom: 0 }}>
-              <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-danger)" }}>
+            <div
+              className="card"
+              style={{
+                padding: "10px 12px",
+                marginBottom: 0,
+                background: "var(--color-warning-surface)",
+                borderColor: "var(--color-warning-border)",
+              }}
+            >
+              <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-warning-text)" }}>
                 VILANDE STAMMISAR
               </div>
-              <div style={{ fontSize: "1.45rem", fontWeight: 800, color: "var(--color-danger)", marginTop: "2px" }}>
+              <div style={{ fontSize: "1.45rem", fontWeight: 800, color: "var(--color-warning-text)", marginTop: "2px" }}>
                 {report.lapsedCount} st
               </div>
               <div style={{ fontSize: "0.7rem", color: "var(--color-text-muted)" }}>
@@ -261,8 +277,16 @@ export const CustomerDemandModal: React.FC<CustomerDemandModalProps> = ({
             </div>
 
             {report.channelCount > 0 && (
-              <div className="card" style={{ padding: "10px 12px", marginBottom: 0 }}>
-                <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#7c3aed" }}>
+              <div
+                className="card"
+                style={{
+                  padding: "10px 12px",
+                  marginBottom: 0,
+                  background: "var(--color-channel-surface)",
+                  borderColor: "var(--color-channel-border)",
+                }}
+              >
+                <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-channel-text)" }}>
                   FÖRSÄLJNINGSKANALER
                 </div>
                 <div style={{ fontSize: "1.45rem", fontWeight: 800, color: "var(--color-text-main)", marginTop: "2px" }}>

@@ -73,6 +73,12 @@
   --color-info-border: #bae6fd;
   --color-info-text: #075985;
 
+  /* Channel / Violet: sales channels, markets, fairs, stores */
+  --color-channel-base: #8b5cf6;
+  --color-channel-surface: #f5f3ff;
+  --color-channel-border: #ddd6fe;
+  --color-channel-text: #6d28d9;
+
   color-scheme: light;
 
   /* Honey / Harvest / Amber: yields, jars, honey transactions */
@@ -1487,6 +1493,12 @@ input[type="checkbox"]:checked::after {
   --color-info-border: #16405a;
   --color-info-text: #7dd3fc;
 
+  /* Channel / Violet */
+  --color-channel-base: #c084fc;
+  --color-channel-surface: #251838;
+  --color-channel-border: #4c2275;
+  --color-channel-text: #e9d5ff;
+
   /* Honey / Amber */
   --color-honey-base: #fbbf24;
   --color-honey-surface: #261a0b;
@@ -1884,6 +1896,15 @@ input[type="checkbox"]:checked::after {
   background: var(--color-honey-gradient) !important;
   border-color: var(--color-honey-border) !important;
   color: var(--color-honey-text) !important;
+}
+
+[data-theme="dark"] [style*="background: #f5f3ff"],
+[data-theme="dark"] [style*="background:#f5f3ff"],
+[data-theme="dark"] [style*="rgba(124, 58, 237"],
+[data-theme="dark"] [style*="rgba(124,58,237"] {
+  background-color: var(--color-channel-surface) !important;
+  color: var(--color-channel-text) !important;
+  border-color: var(--color-channel-border) !important;
 }
 
 /* ==========================================================================

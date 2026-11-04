@@ -22,27 +22,27 @@ export const CustomerDrilldownSubModal: React.FC<CustomerDrilldownSubModalProps>
     switch (status) {
       case "regular":
         return {
-          bg: "rgba(34, 197, 94, 0.12)",
-          border: "rgba(34, 197, 94, 0.3)",
-          text: "var(--color-success, #15803d)",
-        };
-      case "lapsed":
-        return {
-          bg: "rgba(234, 179, 8, 0.12)",
-          border: "rgba(234, 179, 8, 0.3)",
-          text: "#b45309",
+          bg: "var(--color-success-surface)",
+          border: "var(--color-success-border)",
+          text: "var(--color-success-text)",
         };
       case "new":
         return {
-          bg: "rgba(59, 130, 246, 0.12)",
-          border: "rgba(59, 130, 246, 0.3)",
-          text: "#1d4ed8",
+          bg: "var(--color-info-surface)",
+          border: "var(--color-info-border)",
+          text: "var(--color-info-text)",
+        };
+      case "lapsed":
+        return {
+          bg: "var(--color-warning-surface)",
+          border: "var(--color-warning-border)",
+          text: "var(--color-warning-text)",
         };
       case "channel":
         return {
-          bg: "rgba(124, 58, 237, 0.12)",
-          border: "rgba(124, 58, 237, 0.3)",
-          text: "#7c3aed",
+          bg: "var(--color-channel-surface)",
+          border: "var(--color-channel-border)",
+          text: "var(--color-channel-text)",
         };
       default:
         return {
