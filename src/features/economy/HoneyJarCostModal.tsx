@@ -129,48 +129,6 @@ export const HoneyJarCostModal: React.FC<HoneyJarCostModalProps> = ({
 
         {/* Scrollable Container with Two-Column Desktop / Stacked Mobile Layout */}
         <div className="modal-scroll-body honey-jar-modal-body">
-          {/* Top Quick Bar: Jar Price & Total Expenses KPI */}
-          <div className="honey-jar-kpi-banner">
-            <div className="honey-jar-kpi-item">
-              <span className="honey-jar-kpi-label">Burkpris för kunden</span>
-              <div style={{ display: "flex", alignItems: "baseline", gap: "2px" }}>
-                <span className="honey-jar-kpi-value">
-                  {Math.round(priceOre / 100)}
-                </span>
-                <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--color-text-secondary)" }}>
-                  kr / burk
-                </span>
-              </div>
-            </div>
-
-            <div className="honey-jar-kpi-divider" />
-
-            <div className="honey-jar-kpi-item">
-              <span className="honey-jar-kpi-label">Bigårdens alla utlägg</span>
-              <div style={{ display: "flex", alignItems: "baseline", gap: "4px" }}>
-                <span className="honey-jar-kpi-value">
-                  {breakdown.totalExpenseOre > 0
-                    ? formatOreToSEK(breakdown.totalExpenseOre)
-                    : "100% utgifter"}
-                </span>
-              </div>
-            </div>
-
-            <div className="honey-jar-kpi-divider" />
-
-            <div className="honey-jar-kpi-item">
-              <span className="honey-jar-kpi-label">Kategorier</span>
-              <div style={{ display: "flex", alignItems: "baseline", gap: "4px" }}>
-                <span className="honey-jar-kpi-value">
-                  {breakdown.categories.length}
-                </span>
-                <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--color-text-secondary)" }}>
-                  st
-                </span>
-              </div>
-            </div>
-          </div>
-
           {/* Interactive Visual Jar & Breakdown List */}
           <div className="honey-jar-grid">
             {/* LEFT / TOP: The Visual Realistic Honey Jar Filled 100% by Cost Categories */}
