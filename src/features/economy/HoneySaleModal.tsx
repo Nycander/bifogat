@@ -17,6 +17,7 @@ import {
   Smartphone,
   ArrowRight,
   ArrowLeft,
+  Check,
 } from "lucide-react";
 
 interface HoneySaleModalProps {
@@ -289,7 +290,7 @@ export const HoneySaleModal: React.FC<HoneySaleModalProps> = ({
           <div className="wizard-step-content">
             <div className="wizard-context-banner" style={{ marginBottom: "6px" }}>
               <span className="wizard-context-pill">{jarCount} st ({jarSizeGrams}g)</span>
-              <span className="wizard-context-pill font-bold" style={{ color: "#d97706" }}>{totalSek.toFixed(0)} kr</span>
+              <span className="wizard-context-pill font-bold" style={{ color: "var(--color-honey-base)" }}>{totalSek.toFixed(0)} kr</span>
             </div>
 
             {/* Payment Method 4-Grid */}
@@ -297,9 +298,9 @@ export const HoneySaleModal: React.FC<HoneySaleModalProps> = ({
               <label className="form-label" style={{ fontSize: "0.8rem", marginBottom: "3px" }}>Hur betalar kunden? *</label>
               <div className="payment-method-grid">
                 {[
-                  { id: "Swish" as const, label: "Swish", icon: Smartphone, color: "#16a34a" },
-                  { id: "Kontant" as const, label: "Kontant", icon: Banknote, color: "#0284c7" },
-                  { id: "Faktura" as const, label: "Faktura", icon: FileText, color: "#d97706" },
+                  { id: "Swish" as const, label: "Swish", icon: Smartphone, color: "var(--color-success-base)" },
+                  { id: "Kontant" as const, label: "Kontant", icon: Banknote, color: "var(--color-info-base)" },
+                  { id: "Faktura" as const, label: "Faktura", icon: FileText, color: "var(--color-warning-base)" },
                   { id: "Övrigt" as const, label: "Annat", icon: CreditCard, color: "var(--color-text-muted)" },
                 ].map((m) => {
                   const Icon = m.icon;
@@ -311,7 +312,7 @@ export const HoneySaleModal: React.FC<HoneySaleModalProps> = ({
                       className={`payment-method-card ${isSelected ? "selected" : ""}`}
                       onClick={() => setPaymentMethod(m.id)}
                     >
-                      <Icon size={15} color={isSelected ? "var(--color-primary-text, #fff)" : m.color} />
+                      <Icon size={15} color={isSelected ? "var(--color-primary-text)" : m.color} />
                       <span>{m.label}</span>
                     </button>
                   );

@@ -435,9 +435,9 @@ export const NavBar: React.FC<NavBarProps> = ({
                     width: "9px",
                     height: "9px",
                     borderRadius: "50%",
-                    backgroundColor: "var(--color-danger-base, #ef4444)",
-                    border: "2px solid var(--color-surface, #ffffff)",
-                    boxShadow: "0 0 0 1px rgba(239, 68, 68, 0.4)",
+                    backgroundColor: "var(--color-danger-base)",
+                    border: "2px solid var(--color-surface)",
+                    boxShadow: "0 0 0 1px var(--color-danger-base)",
                   }}
                 />
               )}

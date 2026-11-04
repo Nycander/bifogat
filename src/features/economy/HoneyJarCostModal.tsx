@@ -207,7 +207,7 @@ export const HoneyJarCostModal: React.FC<HoneyJarCostModalProps> = ({
                           height: "14px",
                           borderRadius: "50%",
                           backgroundColor: selectedCategory.color,
-                          border: "1px solid rgba(0,0,0,0.1)",
+                          border: "1px solid var(--color-border-subtle)",
                         }}
                       />
                       <strong style={{ fontSize: "0.95rem" }}>{selectedCategory.name}</strong>

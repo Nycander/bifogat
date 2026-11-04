@@ -175,7 +175,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
     { id: "feeding", label: "Foder", icon: Droplet, color: "var(--color-warning-base)" },
     { id: "treatment", label: "Behandling", icon: Shield, color: "var(--color-info-base)" },
     { id: "equipment", label: "Skattlåda", icon: Layers, color: "var(--color-secondary-text)" },
-    { id: "colony_change", label: "Drottning / Koloni", icon: Crown, color: "#d97706" },
+    { id: "colony_change", label: "Drottning / Koloni", icon: Crown, color: "var(--color-warning-base)" },
     { id: "other", label: "Övrigt", icon: MoreHorizontal, color: "var(--color-text-muted)" },
   ];
 
@@ -327,7 +327,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
                       className={`action-type-card ${isSelected ? "selected" : ""}`}
                       onClick={() => setType(et.id)}
                     >
-                      <Icon size={18} color={isSelected ? "var(--color-primary-text, #fff)" : et.color} />
+                      <Icon size={18} color={isSelected ? "var(--color-primary-text)" : et.color} />
                       <span>{et.label}</span>
                     </button>
                   );

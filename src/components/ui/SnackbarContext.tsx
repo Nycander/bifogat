@@ -117,13 +117,13 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             <div className="snackbar-content">
               <div className="snackbar-icon" aria-hidden="true">
                 {current.type === "error" ? (
-                  <AlertCircle size={20} color="#f87171" />
+                  <AlertCircle size={20} color="var(--color-danger-base)" />
                 ) : current.type === "warning" ? (
-                  <AlertCircle size={20} color="#fbbf24" />
+                  <AlertCircle size={20} color="var(--color-warning-base)" />
                 ) : current.type === "info" ? (
-                  <Info size={20} color="#60a5fa" />
+                  <Info size={20} color="var(--color-info-base)" />
                 ) : (
-                  <CheckCircle2 size={20} color="#4ade80" />
+                  <CheckCircle2 size={20} color="var(--color-success-base)" />
                 )}
               </div>
 

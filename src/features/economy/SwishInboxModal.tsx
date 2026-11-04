@@ -367,7 +367,7 @@ Karin Blom 130 kr
         {/* Modal Header */}
         <div className="modal-header wizard-header" style={{ marginBottom: "8px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-            <div className="wizard-icon-badge" style={{ backgroundColor: "#0284c7", color: "#fff" }}>
+            <div className="wizard-icon-badge" style={{ backgroundColor: "var(--color-info-base)", color: "var(--color-primary-text)" }}>
               <ScanText size={18} />
             </div>
             <div>
@@ -403,8 +403,8 @@ Karin Blom 130 kr
                   width: "48px",
                   height: "48px",
                   borderRadius: "50%",
-                  backgroundColor: "rgba(2, 132, 199, 0.12)",
-                  color: "#0284c7",
+                  backgroundColor: "var(--color-info-surface)",
+                  color: "var(--color-info-base)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -444,7 +444,7 @@ Karin Blom 130 kr
                       style={{
                         height: "100%",
                         width: `${Math.round(ocrProgress * 100)}%`,
-                        backgroundColor: "#0284c7",
+                        backgroundColor: "var(--color-info-base)",
                         transition: "width 0.2s ease",
                       }}
                     />
@@ -482,7 +482,7 @@ Karin Blom 130 kr
                     onClick={handleLoadSampleFixture}
                     style={{ marginTop: "4px" }}
                   >
-                    <Sparkles size={14} color="#d97706" />
+                    <Sparkles size={14} color="var(--color-warning-base)" />
                     <span>Testa med exempeldata</span>
                   </button>
                 </div>
@@ -585,8 +585,8 @@ Karin Blom 130 kr
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  backgroundColor: "rgba(2, 132, 199, 0.1)",
-                  border: "1px solid rgba(2, 132, 199, 0.25)",
+                  backgroundColor: "var(--color-info-surface)",
+                  border: "1px solid var(--color-info-border)",
                   color: "var(--color-text-main)",
                   padding: "6px 10px",
                   borderRadius: "8px",
@@ -633,7 +633,7 @@ Karin Blom 130 kr
                     style={{
                       padding: "10px 12px",
                       borderRadius: "14px",
-                      border: row.needsCheck ? "1px solid #f59e0b" : "1px solid var(--color-border-default)",
+                      border: row.needsCheck ? "1px solid var(--color-warning-base)" : "1px solid var(--color-border-default)",
                       backgroundColor: "var(--color-surface)",
                     }}
                   >
@@ -659,7 +659,7 @@ Karin Blom 130 kr
                             Kolla
                           </span>
                         )}
-                        <span style={{ fontSize: "1rem", fontWeight: 800, color: "#16a34a" }}>
+                        <span style={{ fontSize: "1rem", fontWeight: 800, color: "var(--color-success-base)" }}>
                           {sek.toFixed(0)} kr
                         </span>
                       </div>
@@ -829,15 +829,15 @@ Karin Blom 130 kr
                   style={{
                     padding: "8px 12px",
                     borderRadius: "12px",
-                    backgroundColor: "rgba(22, 163, 74, 0.08)",
-                    border: "1px solid rgba(22, 163, 74, 0.25)",
+                    backgroundColor: "var(--color-success-surface)",
+                    border: "1px solid var(--color-success-border)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <Check size={15} color="#16a34a" />
+                    <Check size={15} color="var(--color-success-base)" />
                     <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>
                       Bokförd: {row.chosenCustomer} ({row.amountOre / 100} kr)
                     </span>
@@ -863,7 +863,7 @@ Karin Blom 130 kr
                     fontSize: "0.9rem",
                   }}
                 >
-                  <Check size={28} color="#16a34a" style={{ margin: "0 auto 8px auto" }} />
+                  <Check size={28} color="var(--color-success-base)" style={{ margin: "0 auto 8px auto" }} />
                   <div>Alla nya Swish-rader är hanterade!</div>
                 </div>
               )}
@@ -884,8 +884,8 @@ Karin Blom 130 kr
                     alignItems: "center",
                     justifyContent: "space-between",
                     padding: "8px 12px",
-                    backgroundColor: "rgba(245, 158, 11, 0.08)",
-                    border: "1px solid rgba(245, 158, 11, 0.2)",
+                    backgroundColor: "var(--color-warning-surface)",
+                    border: "1px solid var(--color-warning-border)",
                     borderRadius: "10px",
                     cursor: "pointer",
                     fontSize: "0.85rem",

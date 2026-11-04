@@ -62,11 +62,11 @@ export const CategoryDrilldownModal: React.FC<CategoryDrilldownModalProps> = ({
                 height: "28px",
                 borderRadius: "50%",
                 backgroundColor: category.color,
-                border: "1px solid rgba(0,0,0,0.15)",
+                border: "1px solid var(--color-border-subtle)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: "#fff",
+                color: "var(--color-primary-text)",
                 flexShrink: 0,
               }}
             >
@@ -169,7 +169,7 @@ export const CategoryDrilldownModal: React.FC<CategoryDrilldownModalProps> = ({
                       borderRadius: "10px",
                       backgroundColor: "var(--color-surface)",
                       border: "1px solid var(--color-border-subtle)",
-                      boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
+                      boxShadow: "var(--shadow-card)",
                     }}
                   >
                     <div style={{ flex: 1, minWidth: 0 }}>
