@@ -49,6 +49,39 @@ export function useBottomSheet({ onClose, options }: UseBottomSheetProps) {
     };
   }, []);
 
+  // 2. Intercept Android Back Button & Swipe Gesture to close modal instead of exiting PWA
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.history) return;
+
+    const stateId = "bifogat-modal-" + Date.now() + "-" + Math.random().toString(36).substring(2, 7);
+    let isPoppedByBackButton = false;
+
+    try {
+      window.history.pushState({ modalStateId: stateId }, "");
+    } catch {
+      // ignore history errors
+    }
+
+    const handlePopState = () => {
+      isPoppedByBackButton = true;
+      onCloseRef.current();
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+
+      if (!isPoppedByBackButton && window.history.state?.modalStateId === stateId) {
+        try {
+          window.history.back();
+        } catch {
+          // ignore history errors
+        }
+      }
+    };
+  }, []);
+
   // 2. Gesture tracking and continuous frame-by-frame physics
   useEffect(() => {
     const el = contentRef.current;
