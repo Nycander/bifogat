@@ -7,3 +7,8 @@ coverage/
 .env*
 firebase-applet-config.json
 .aistudio/
+
+# Exports/artifacts that may contain real user data
+.aistudio/
+firebase-applet-config.json
+public/assets/aistudio/

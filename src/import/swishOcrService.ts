@@ -149,38 +149,107 @@ export async function loadImageToCanvas(file: File | Blob): Promise<HTMLCanvasEl
 }
 
 /**
+ * Throws DOMException AbortError if the provided signal is aborted.
+ */
+export function checkAbortSignal(signal?: AbortSignal): void {
+  if (signal?.aborted) {
+    throw new DOMException("Avbruten", "AbortError");
+  }
+}
+
+/**
  * Runs OCR on a Swish screenshot with Swedish language model.
  * Dynamically imports tesseract.js to avoid bloating main bundle.
+ * Supports AbortSignal for immediate cancellation and clean worker termination.
  */
 export async function recognizeSwishScreenshot(
   file: File | Blob,
   onProgress?: (progress: number, status: string) => void,
+  signal?: AbortSignal,
 ): Promise<string> {
+  checkAbortSignal(signal);
+
   onProgress?.(0.05, "Förbereder bild...");
   const rawCanvas = await loadImageToCanvas(file);
+  checkAbortSignal(signal);
 
   onProgress?.(0.15, "Optimerar kontrast och beskärning...");
   const preprocessedCanvas = preprocessSwishCanvas(rawCanvas);
+  checkAbortSignal(signal);
 
   onProgress?.(0.25, "Laddar textigenkänning (svenska)...");
-  // Lazy import of tesseract.js
-  const { createWorker } = await import("tesseract.js");
 
-  const worker = await createWorker("swe", 1, {
-    logger: (m) => {
-      if (m.status === "recognizing text") {
-        const ocrProgress = 0.3 + (m.progress || 0) * 0.65;
-        onProgress?.(ocrProgress, "Läser av Swish-rader...");
-      } else if (m.status) {
-        onProgress?.(0.25, `Initierar (${m.status})...`);
+  let createWorkerFn: typeof import("tesseract.js").createWorker;
+  try {
+    const tesseractModule = await import("tesseract.js");
+    createWorkerFn = tesseractModule.createWorker;
+  } catch (err: any) {
+    checkAbortSignal(signal);
+    throw new Error("Appen behöver uppdateras, ladda om sidan.");
+  }
+
+  checkAbortSignal(signal);
+
+  // Self-hosted path configuration using BASE_URL
+  const baseUrl = typeof window !== "undefined" && import.meta.env?.BASE_URL ? import.meta.env.BASE_URL : "/";
+  const normalizedBase = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
+  const tesseractLocalPath = `${normalizedBase}tesseract/`;
+
+  let worker: any = null;
+
+  try {
+    worker = await createWorkerFn("swe", 1, {
+      workerPath: `${tesseractLocalPath}worker.min.js`,
+      corePath: tesseractLocalPath,
+      langPath: tesseractLocalPath,
+      logger: (m) => {
+        if (signal?.aborted) return;
+        if (m.status === "recognizing text") {
+          const ocrProgress = 0.3 + (m.progress || 0) * 0.65;
+          onProgress?.(ocrProgress, "Läser av Swish-rader...");
+        } else if (m.status) {
+          onProgress?.(0.25, `Initierar (${m.status})...`);
+        }
+      },
+    });
+
+    checkAbortSignal(signal);
+
+    onProgress?.(0.3, "Analyserar skärmdump...");
+
+    const recognizePromise = worker.recognize(preprocessedCanvas);
+    let onAbortHandler: (() => void) | null = null;
+
+    const abortPromise = new Promise<never>((_, reject) => {
+      if (signal?.aborted) {
+        reject(new DOMException("Avbruten", "AbortError"));
+        return;
       }
-    },
-  });
+      onAbortHandler = () => {
+        if (worker) {
+          worker.terminate().catch(() => {});
+          worker = null;
+        }
+        reject(new DOMException("Avbruten", "AbortError"));
+      };
+      signal?.addEventListener("abort", onAbortHandler);
+    });
 
-  onProgress?.(0.3, "Analyserar skärmdump...");
-  const result = await worker.recognize(preprocessedCanvas);
-  await worker.terminate();
-
-  onProgress?.(1.0, "Klar!");
-  return result.data.text || "";
+    try {
+      const result = await Promise.race([recognizePromise, abortPromise]);
+      checkAbortSignal(signal);
+      onProgress?.(1.0, "Klar!");
+      return result.data.text || "";
+    } finally {
+      if (signal && onAbortHandler) {
+        signal.removeEventListener("abort", onAbortHandler);
+      }
+    }
+  } finally {
+    if (worker) {
+      await worker.terminate().catch(() => {});
+      worker = null;
+    }
+  }
 }
+

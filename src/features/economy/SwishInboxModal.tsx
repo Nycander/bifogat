@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Transaction } from "../../domain/types";
 import {
   extractUniqueCustomers,
@@ -82,6 +82,17 @@ export const SwishInboxModal: React.FC<SwishInboxModalProps> = ({
   const [ocrStatusText, setOcrStatusText] = useState("");
   const [ocrError, setOcrError] = useState<string | null>(null);
 
+  // Refs for cancellation and resetting input
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Abort ongoing OCR execution on component unmount
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
+
   // Rows state
   const [draftRows, setDraftRows] = useState<DraftRowState[]>([]);
   const [showPossibleBooked, setShowPossibleBooked] = useState(false);
@@ -108,6 +119,21 @@ export const SwishInboxModal: React.FC<SwishInboxModalProps> = ({
       } catch {
         // ignore storage errors
       }
+    }
+  };
+
+  /**
+   * Immediately cancels ongoing OCR operation and resets UI state.
+   */
+  const handleCancelOcr = () => {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+    setIsProcessing(false);
+    setOcrProgress(0);
+    setOcrStatusText("");
+    setOcrError(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
@@ -163,31 +189,55 @@ export const SwishInboxModal: React.FC<SwishInboxModalProps> = ({
   };
 
   /**
-   * Runs OCR on user-selected file.
+   * Runs OCR on user-selected file with cancellation support.
    */
   const handleFileUpload = async (file: File) => {
+    // Check offline status first before starting initial download
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      setOcrError("Internetanslutning saknas. OCR behöver nätverksanslutning vid första användningen.");
+      setIsProcessing(false);
+      return;
+    }
+
     try {
+      abortControllerRef.current?.abort();
+      abortControllerRef.current = new AbortController();
+
       setIsProcessing(true);
       setOcrError(null);
       setOcrProgress(0.05);
       setOcrStatusText("Startar bildanalys...");
 
-      const recognizedText = await recognizeSwishScreenshot(file, (p, s) => {
-        setOcrProgress(p);
-        setOcrStatusText(s);
-      });
+      const recognizedText = await recognizeSwishScreenshot(
+        file,
+        (p, s) => {
+          setOcrProgress(p);
+          setOcrStatusText(s);
+        },
+        abortControllerRef.current.signal,
+      );
 
       const parsed = parseSwishHistoryText(recognizedText, new Date());
       if (parsed.length === 0) {
         setOcrError("Kunde inte identifiera några Swish-rader i bilden. Kontrollera att bilden visar Swish-historik.");
         setIsProcessing(false);
+        if (fileInputRef.current) fileInputRef.current.value = "";
         return;
       }
 
       initializeDrafts(parsed);
       setIsProcessing(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (err: any) {
-      setOcrError(err.message || "Kunde inte läsa skärmdumpen");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      if (err?.name === "AbortError" || err?.message === "Avbruten") {
+        // User deliberately cancelled OCR — revert silently with zero error
+        setIsProcessing(false);
+        setOcrProgress(0);
+        setOcrStatusText("");
+        return;
+      }
+      setOcrError(err?.message || "Kunde inte läsa skärmdumpen");
       setIsProcessing(false);
     }
   };
@@ -455,7 +505,7 @@ Karin Blom 130 kr
                   <button
                     type="button"
                     className="btn btn-secondary btn-sm"
-                    onClick={() => setIsProcessing(false)}
+                    onClick={handleCancelOcr}
                   >
                     Avbryt
                   </button>
@@ -466,6 +516,7 @@ Karin Blom 130 kr
                     <Upload size={16} />
                     <span>Välj skärmdump</span>
                     <input
+                      ref={fileInputRef}
                       type="file"
                       accept="image/*"
                       style={{ display: "none" }}
