@@ -58,6 +58,7 @@ import { ConflictModal } from "./features/settings/ConflictModal";
 import { OutboxPreviewModal } from "./features/settings/OutboxPreviewModal";
 import { CsvImportModal } from "./features/settings/CsvImportModal";
 import { NotesImportModal } from "./features/settings/NotesImportModal";
+import { ScenarioManagerModal } from "./features/settings/ScenarioManagerModal";
 import { ParsedNotesResult } from "./import/notesParser";
 import { useSwipeNavigation } from "./hooks/useSwipeNavigation";
 import { SnackbarProvider, useSnackbar } from "./components/ui/SnackbarContext";
@@ -180,6 +181,7 @@ function AppContent() {
   const [showOutboxPreviewModal, setShowOutboxPreviewModal] = useState(false);
   const [showCsvImportModal, setShowCsvImportModal] = useState(false);
   const [showNotesImportModal, setShowNotesImportModal] = useState(false);
+  const [showScenarioModal, setShowScenarioModal] = useState(false);
 
   // Check if any modal is currently visible to prevent swipe gestures while interacting with dialogs
   const isAnyModalOpen = Boolean(
@@ -197,7 +199,8 @@ function AppContent() {
       showConflictModal ||
       showOutboxPreviewModal ||
       showCsvImportModal ||
-      showNotesImportModal,
+      showNotesImportModal ||
+      showScenarioModal,
   );
 
   const swipeHandlers = useSwipeNavigation({
@@ -1042,6 +1045,7 @@ function AppContent() {
             onToggleManualConfirmation={handleToggleManualConfirmation}
             onOpenCsvImport={() => setShowCsvImportModal(true)}
             onOpenNotesImport={() => setShowNotesImportModal(true)}
+            onOpenScenarioManager={() => setShowScenarioModal(true)}
             onExportBackup={handleExportBackup}
             onRestoreBackup={handleRestoreBackup}
             onClearLocalData={handleClearLocalData}
@@ -1325,6 +1329,13 @@ function AppContent() {
           onClose={() => setShowNotesImportModal(false)}
           onConfirmImport={handleConfirmNotesImport}
           onExportBackup={handleExportBackup}
+        />
+      )}
+
+      {showScenarioModal && (
+        <ScenarioManagerModal
+          onClose={() => setShowScenarioModal(false)}
+          onScenarioRestored={() => reloadData()}
         />
       )}
     </div>

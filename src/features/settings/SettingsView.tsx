@@ -14,6 +14,7 @@ import {
   ExternalLink,
   ShieldCheck,
   Key,
+  Share2,
 } from "lucide-react";
 
 interface SettingsViewProps {
@@ -32,6 +33,7 @@ interface SettingsViewProps {
   onToggleManualConfirmation: (enabled: boolean) => Promise<void>;
   onOpenCsvImport: () => void;
   onOpenNotesImport: () => void;
+  onOpenScenarioManager?: () => void;
   onExportBackup: () => void;
   onRestoreBackup: (file: File) => Promise<void>;
   onClearLocalData: () => Promise<void>;
@@ -53,6 +55,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onToggleManualConfirmation,
   onOpenCsvImport,
   onOpenNotesImport,
+  onOpenScenarioManager,
   onExportBackup,
   onClearLocalData,
 }) => {
@@ -639,6 +642,32 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       </div>
 
 
+
+      {/* 5.5 Sharing & Diagnostics */}
+      {onOpenScenarioManager && (
+        <div className="card">
+          <div className="card-header">
+            <h3 className="card-title">
+              <Share2 size={18} color="var(--color-primary)" />
+              <span>Dela scenarion & diagnostik</span>
+            </h3>
+          </div>
+          <p
+            style={{
+              fontSize: "0.875rem",
+              color: "var(--color-text-muted)",
+              marginBottom: "0.75rem",
+            }}
+          >
+            Dela din testdata eller ett buggscenario med AI Studio via en kopierbar Markdown-rapport
+            eller en scenariofil, eller simulera ett sparat scenario i förhandsgranskningen.
+          </p>
+          <button className="btn btn-secondary" onClick={onOpenScenarioManager} style={{ width: "100%" }}>
+            <Share2 size={16} />
+            <span>Öppna scenarie- & diagnostikverktyg</span>
+          </button>
+        </div>
+      )}
 
       {/* 6. System Info & Local Storage Management */}
       <div className="card">

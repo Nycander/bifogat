@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { Transaction } from "../../domain/types";
 import { formatOreToSEK } from "../../domain/validation";
+import { AnnualSummaryModal } from "./AnnualSummaryModal";
 import {
   Plus,
   Wallet,
@@ -9,11 +10,11 @@ import {
   ArrowDownLeft,
   Trash2,
   Edit2,
-  AlertCircle,
   ScanText,
   Droplet,
   ChevronRight,
   Users,
+  BarChart2,
 } from "lucide-react";
 
 interface EconomyViewProps {
@@ -30,7 +31,6 @@ interface EconomyViewProps {
 
 export const EconomyView: React.FC<EconomyViewProps> = ({
   transactions,
-  importedHistoricalBalanceOre,
   onOpenCreateTransaction,
   onOpenSwishInbox,
   onOpenHoneyJarCost,
@@ -38,6 +38,7 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
   onEditTransaction,
   onDeleteTransaction,
 }) => {
+  const [showAnnualSummaryModal, setShowAnnualSummaryModal] = useState(false);
   const totalBalanceOre = transactions.reduce((sum, t) => sum + (t.amountOre || 0), 0);
 
   // Group by year
@@ -143,86 +144,70 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
               {formatOreToSEK(totalBalanceOre)}
             </div>
           </div>
-          {importedHistoricalBalanceOre !== undefined && (
-            <div
-              style={{
-                fontSize: "0.85rem",
-                color: "var(--color-text-muted)",
-                background: "var(--color-surface-bg)",
-                padding: "0.5rem 0.75rem",
-                borderRadius: "8px",
-                border: "1px solid var(--color-border)",
-              }}
-            >
-              <div>Historiskt kalkylarksaldo:</div>
-              <strong style={{ color: "var(--color-text-main)" }}>
-                {formatOreToSEK(importedHistoricalBalanceOre)}
-              </strong>
-              {importedHistoricalBalanceOre !== totalBalanceOre && (
-                <div
-                  style={{
-                    fontSize: "0.75rem",
-                    color: "var(--color-warning)",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.2rem",
-                    marginTop: "0.2rem",
-                  }}
-                >
-                  <AlertCircle size={12} />
-                  Diff: {formatOreToSEK(totalBalanceOre - importedHistoricalBalanceOre)}
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Annual Summary */}
-      {years.length > 0 && (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
-            gap: "0.75rem",
-            marginBottom: "1.25rem",
-          }}
-        >
-          {years.map((yr) => {
-            const data = summaryByYear[yr];
-            return (
-              <div key={yr} className="card" style={{ padding: "0.85rem", marginBottom: 0 }}>
-                <div
-                  style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--color-text-brand)" }}
-                >
-                  {yr}
-                </div>
-                <div style={{ fontSize: "0.8rem", color: "var(--color-success-base)", marginTop: "0.3rem" }}>
-                  In: +{formatOreToSEK(data.incomeOre)}
-                </div>
-                <div style={{ fontSize: "0.8rem", color: "var(--color-danger-base)" }}>
-                  Ut: -{formatOreToSEK(data.expenseOre)}
-                </div>
-                <div
-                  style={{
-                    fontSize: "0.95rem",
-                    fontWeight: 700,
-                    color: data.netOre >= 0 ? "var(--color-success-base)" : "var(--color-danger-base)",
-                    marginTop: "0.2rem",
-                    borderTop: "1px solid var(--color-border)",
-                    paddingTop: "0.2rem",
-                  }}
-                >
-                  Netto: {formatOreToSEK(data.netOre)}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
       {/* Pedagogical & Analytics Action Cards */}
       <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginBottom: "1.25rem" }}>
+        {years.length > 0 && (
+          <div
+            className="card"
+            style={{
+              cursor: "pointer",
+              marginBottom: 0,
+              padding: "12px 14px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "12px",
+              background: "var(--color-surface)",
+              border: "1px solid var(--color-honey-border)",
+              borderRadius: "var(--radius-lg)",
+              transition: "all 0.15s ease",
+            }}
+            onClick={() => setShowAnnualSummaryModal(true)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setShowAnnualSummaryModal(true);
+              }
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <div
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "12px",
+                  background: "var(--color-honey-surface)",
+                  border: "1px solid var(--color-honey-border)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "var(--color-honey-text)",
+                  flexShrink: 0,
+                }}
+              >
+                <BarChart2 size={20} />
+              </div>
+              <div>
+                <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--color-text-primary)" }}>
+                  Årsöversikt ({years.length} {years.length === 1 ? "år" : "bokförda år"})
+                </div>
+                <div style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
+                  {years[0]}: Netto {formatOreToSEK(summaryByYear[years[0]].netOre)} • Klicka för alla år
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "var(--color-honey-text)", flexShrink: 0 }}>
+              <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>Visa per år</span>
+              <ChevronRight size={18} />
+            </div>
+          </div>
+        )}
         {onOpenCustomerDemand && (
           <div
             className="card"
@@ -483,6 +468,14 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
             );
           })}
         </div>
+      )}
+
+      {/* Annual Summary Bottom Sheet Modal */}
+      {showAnnualSummaryModal && (
+        <AnnualSummaryModal
+          transactions={transactions}
+          onClose={() => setShowAnnualSummaryModal(false)}
+        />
       )}
     </div>
   );
