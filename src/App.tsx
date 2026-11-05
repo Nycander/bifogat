@@ -35,6 +35,7 @@ import { HoneySaleModal } from "./features/economy/HoneySaleModal";
 import { SwishInboxModal } from "./features/economy/SwishInboxModal";
 import { HoneyJarCostModal } from "./features/economy/HoneyJarCostModal";
 import { CustomerDemandModal } from "./features/economy/CustomerDemandModal";
+import { AnnualSummaryModal } from "./features/economy/AnnualSummaryModal";
 import { useOnlineStatus } from "./pwa/useOnlineStatus";
 import { PWAInstallButton } from "./pwa/PWAInstallButton";
 import { OfflineIndicator } from "./pwa/OfflineIndicator";
@@ -182,6 +183,7 @@ function AppContent() {
   const [showCsvImportModal, setShowCsvImportModal] = useState(false);
   const [showNotesImportModal, setShowNotesImportModal] = useState(false);
   const [showScenarioModal, setShowScenarioModal] = useState(false);
+  const [showAnnualSummaryModal, setShowAnnualSummaryModal] = useState(false);
 
   // Check if any modal is currently visible to prevent swipe gestures while interacting with dialogs
   const isAnyModalOpen = Boolean(
@@ -200,7 +202,8 @@ function AppContent() {
       showOutboxPreviewModal ||
       showCsvImportModal ||
       showNotesImportModal ||
-      showScenarioModal,
+      showScenarioModal ||
+      showAnnualSummaryModal,
   );
 
   const swipeHandlers = useSwipeNavigation({
@@ -1020,6 +1023,7 @@ function AppContent() {
             onOpenSwishInbox={() => setShowSwishInboxModal(true)}
             onOpenHoneyJarCost={() => setShowHoneyJarCostModal(true)}
             onOpenCustomerDemand={() => setShowCustomerDemandModal(true)}
+            onOpenAnnualSummary={() => setShowAnnualSummaryModal(true)}
             onEditTransaction={(tx) => {
               setEditingTx(tx);
               setShowTxModal(true);
@@ -1336,6 +1340,13 @@ function AppContent() {
         <ScenarioManagerModal
           onClose={() => setShowScenarioModal(false)}
           onScenarioRestored={() => reloadData()}
+        />
+      )}
+
+      {showAnnualSummaryModal && (
+        <AnnualSummaryModal
+          transactions={transactions}
+          onClose={() => setShowAnnualSummaryModal(false)}
         />
       )}
     </div>

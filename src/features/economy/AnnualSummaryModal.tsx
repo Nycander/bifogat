@@ -23,7 +23,7 @@ export const AnnualSummaryModal: React.FC<AnnualSummaryModalProps> = ({
   > = {};
 
   for (const t of transactions) {
-    const yr = t.date.substring(0, 4) || "Okänt år";
+    const yr = t.date && t.date.length >= 4 ? t.date.substring(0, 4) : "Okänt år";
     if (!summaryByYear[yr]) {
       summaryByYear[yr] = { incomeOre: 0, expenseOre: 0, netOre: 0, count: 0 };
     }

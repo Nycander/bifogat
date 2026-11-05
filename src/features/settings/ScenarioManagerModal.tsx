@@ -6,6 +6,7 @@ import {
   ScenarioBundle,
 } from "../../domain/scenarioBundle";
 import { useBottomSheet } from "../../hooks/useBottomSheet";
+import { useSnackbar } from "../../components/ui/SnackbarContext";
 import { BottomSheetDragHandle } from "../../components/ui/BottomSheetDragHandle";
 import {
   X,
@@ -21,15 +22,16 @@ import {
 
 export interface ScenarioManagerModalProps {
   onClose: () => void;
-  onReloadData: () => Promise<void>;
-  showSnackbar: (options: { message: string; type?: "success" | "info" | "warning" | "error" }) => string;
+  onScenarioRestored?: () => Promise<void> | void;
+  onReloadData?: () => Promise<void> | void;
 }
 
 export const ScenarioManagerModal: React.FC<ScenarioManagerModalProps> = ({
   onClose,
+  onScenarioRestored,
   onReloadData,
-  showSnackbar,
 }) => {
+  const { showSnackbar } = useSnackbar();
   const { contentRef, backdropRef, bottomSheetHandlers } = useBottomSheet({ onClose });
 
   const [scramblePii, setScramblePii] = useState(true);
@@ -103,7 +105,11 @@ export const ScenarioManagerModal: React.FC<ScenarioManagerModalProps> = ({
       }
 
       await loadScenarioBundle(parsed);
-      await onReloadData();
+      if (onScenarioRestored) {
+        await onScenarioRestored();
+      } else if (onReloadData) {
+        await onReloadData();
+      }
 
       showSnackbar({
         message: "Scenariopaket inläst! Apptillståndet är nu simulerat.",

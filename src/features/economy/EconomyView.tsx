@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import { Transaction } from "../../domain/types";
 import { formatOreToSEK } from "../../domain/validation";
-import { AnnualSummaryModal } from "./AnnualSummaryModal";
 import {
   Plus,
   Wallet,
@@ -25,6 +24,7 @@ interface EconomyViewProps {
   onOpenSwishInbox?: () => void;
   onOpenHoneyJarCost?: () => void;
   onOpenCustomerDemand?: () => void;
+  onOpenAnnualSummary?: () => void;
   onEditTransaction: (tx: Transaction) => void;
   onDeleteTransaction: (id: string) => Promise<void>;
 }
@@ -35,10 +35,10 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
   onOpenSwishInbox,
   onOpenHoneyJarCost,
   onOpenCustomerDemand,
+  onOpenAnnualSummary,
   onEditTransaction,
   onDeleteTransaction,
 }) => {
-  const [showAnnualSummaryModal, setShowAnnualSummaryModal] = useState(false);
   const totalBalanceOre = transactions.reduce((sum, t) => sum + (t.amountOre || 0), 0);
 
   // Group by year
@@ -165,13 +165,13 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
               borderRadius: "var(--radius-lg)",
               transition: "all 0.15s ease",
             }}
-            onClick={() => setShowAnnualSummaryModal(true)}
+            onClick={onOpenAnnualSummary}
             role="button"
             tabIndex={0}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
-                setShowAnnualSummaryModal(true);
+                onOpenAnnualSummary?.();
               }
             }}
           >
@@ -468,14 +468,6 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
             );
           })}
         </div>
-      )}
-
-      {/* Annual Summary Bottom Sheet Modal */}
-      {showAnnualSummaryModal && (
-        <AnnualSummaryModal
-          transactions={transactions}
-          onClose={() => setShowAnnualSummaryModal(false)}
-        />
       )}
     </div>
   );
