@@ -1,6 +1,6 @@
 import React from "react";
 import { SyncEngineStatus } from "../sync/syncEngine";
-import { RefreshCw, CloudOff, AlertCircle, AlertTriangle } from "lucide-react";
+import { RefreshCw, CloudOff, AlertCircle, AlertTriangle, Key } from "lucide-react";
 
 interface SyncStatusBarProps {
   status: SyncEngineStatus;
@@ -8,6 +8,7 @@ interface SyncStatusBarProps {
   onSyncNow: () => void;
   onOpenConflicts: () => void;
   onOpenOutboxPreview: () => void;
+  onSignIn?: () => void;
 }
 
 export const SyncStatusBar: React.FC<SyncStatusBarProps> = ({
@@ -16,8 +17,29 @@ export const SyncStatusBar: React.FC<SyncStatusBarProps> = ({
   onSyncNow,
   onOpenConflicts,
   onOpenOutboxPreview,
+  onSignIn,
 }) => {
   const { state, lastSyncTime, pendingCount, conflictCount, lastError } = status;
+
+  if (state === "needs_auth") {
+    return (
+      <button
+        onClick={onSignIn || onSyncNow}
+        className="sync-badge"
+        style={{
+          backgroundColor: "var(--color-warning-surface)",
+          color: "var(--color-warning-text)",
+          borderColor: "var(--color-warning-border)",
+          cursor: "pointer",
+          fontWeight: 700,
+        }}
+        title="Google OAuth-token har gått ut (gäller 1 timme per session). Klicka för att förnya med 1 klick utan att förlora någon data."
+      >
+        <Key size={13} />
+        <span>Förnya behörighet</span>
+      </button>
+    );
+  }
 
   if (conflictCount > 0) {
     return (

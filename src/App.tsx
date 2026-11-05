@@ -1082,6 +1082,7 @@ function AppContent() {
             onSyncNow={handleSyncNow}
             onOpenConflicts={() => setShowConflictModal(true)}
             onOpenOutboxPreview={() => setShowOutboxPreviewModal(true)}
+            onSignIn={handleSignIn}
           />
         </div>
       </header>

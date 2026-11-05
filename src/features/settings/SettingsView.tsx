@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { AppMeta, OutboxOp, SyncConflict } from "../../domain/types";
 import { SyncEngineStatus } from "../../sync/syncEngine";
+import { getTokenDetails } from "../../auth/googleAuth";
 import {
   Cloud,
   FileSpreadsheet,
@@ -12,6 +13,7 @@ import {
   Trash2,
   ExternalLink,
   ShieldCheck,
+  Key,
 } from "lucide-react";
 
 interface SettingsViewProps {
@@ -139,31 +141,62 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </button>
             </div>
 
-            {syncStatus.state === "needs_auth" && (
-              <div
-                className="box-warning"
-                style={{
-                  marginTop: "0.75rem",
-                  padding: "0.65rem 0.85rem",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: "0.5rem",
-                  flexWrap: "wrap",
-                }}
-              >
-                <div style={{ fontSize: "0.85rem", color: "var(--color-warning-text)" }}>
-                  Google-behörigheten har gått ut och behöver förnyas för kalkylarkssynk.
-                </div>
-                <button
-                  className="btn btn-primary btn-sm"
-                  onClick={onSignIn}
-                  style={{ whiteSpace: "nowrap" }}
+            {/* Token Status & Lifetime Banner */}
+            {(() => {
+              const tokenInfo = getTokenDetails();
+              const needsAuth = syncStatus.state === "needs_auth" || !tokenInfo.isFresh;
+              return (
+                <div
+                  className="ui-card-subtle"
+                  style={{
+                    marginTop: "0.75rem",
+                    padding: "0.75rem",
+                    borderRadius: "12px",
+                    border: needsAuth
+                      ? "1px solid var(--color-warning-border)"
+                      : "1px solid var(--color-border-subtle)",
+                    backgroundColor: needsAuth
+                      ? "var(--color-warning-surface)"
+                      : "var(--color-surface-subtle)",
+                  }}
                 >
-                  Förnya behörighet
-                </button>
-              </div>
-            )}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <Key size={14} color="var(--color-text-brand)" />
+                      <strong style={{ fontSize: "0.85rem", color: "var(--color-text-main)" }}>Google OAuth-token</strong>
+                    </div>
+                    {!needsAuth ? (
+                      <span className="badge badge-active" style={{ fontSize: "0.75rem" }}>
+                        Aktiv ({tokenInfo.remainingMinutes} min kvar)
+                      </span>
+                    ) : (
+                      <span className="badge" style={{ backgroundColor: "var(--color-warning-surface)", color: "var(--color-warning-text)", border: "1px solid var(--color-warning-border)", fontSize: "0.75rem" }}>
+                        Behöver förnyas
+                      </span>
+                    )}
+                  </div>
+
+                  <p style={{ margin: "4px 0 8px 0", fontSize: "0.8rem", color: "var(--color-text-secondary)", lineHeight: "1.4" }}>
+                    Googles säkerhetspolicy kräver att kalkylarkstokens förnyas efter 60 minuter. All din data sparas alltid 100% tryggt lokalt i webbläsaren.
+                  </p>
+
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "6px" }}>
+                    {tokenInfo.createdAt && (
+                      <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
+                        Inloggad kl {tokenInfo.createdAt} (gäller till {tokenInfo.expiresAt})
+                      </span>
+                    )}
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={onSignIn}
+                      style={{ whiteSpace: "nowrap", marginLeft: "auto" }}
+                    >
+                      Förnya behörighet (1 klick)
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         ) : (
           <div>

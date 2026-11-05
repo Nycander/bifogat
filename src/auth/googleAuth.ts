@@ -76,15 +76,47 @@ export const getSavedUser = (): SavedUser | null => {
 };
 
 /**
- * Check if the stored OAuth token is valid (retained up to 24 hours unless Google API returns 401)
+ * Check if the stored OAuth token is valid.
+ * Google OAuth 2.0 access tokens expire after 60 minutes (3600 seconds) by Google policy.
+ * We check against a 50-minute threshold so tokens can be renewed BEFORE hitting 401 API errors.
  */
 export const isTokenFresh = (): boolean => {
   if (typeof window === "undefined") return false;
   const timeStr = localStorage.getItem(STORAGE_KEY_TOKEN_TIME);
   if (!timeStr) return false;
   const elapsed = Date.now() - parseInt(timeStr, 10);
-  // OAuth access tokens are retained for extended session duration (up to 24h) or until invalidated by 401 response
-  return elapsed < 24 * 60 * 60 * 1000;
+  return elapsed < 50 * 60 * 1000;
+};
+
+/**
+ * Get human-readable token status and estimated expiry details
+ */
+export const getTokenDetails = (): {
+  createdAt: string | null;
+  expiresAt: string | null;
+  remainingMinutes: number;
+  isFresh: boolean;
+} => {
+  if (typeof window === "undefined") {
+    return { createdAt: null, expiresAt: null, remainingMinutes: 0, isFresh: false };
+  }
+  const timeStr = localStorage.getItem(STORAGE_KEY_TOKEN_TIME);
+  if (!timeStr) {
+    return { createdAt: null, expiresAt: null, remainingMinutes: 0, isFresh: false };
+  }
+  const createdMs = parseInt(timeStr, 10);
+  const elapsedMs = Date.now() - createdMs;
+  const remainingMs = Math.max(0, 60 * 60 * 1000 - elapsedMs);
+  const remainingMinutes = Math.floor(remainingMs / (60 * 1000));
+  const isFresh = elapsedMs < 50 * 60 * 1000;
+
+  const createdDate = new Date(createdMs);
+  const expiresDate = new Date(createdMs + 60 * 60 * 1000);
+
+  const createdAt = createdDate.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" });
+  const expiresAt = expiresDate.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" });
+
+  return { createdAt, expiresAt, remainingMinutes, isFresh };
 };
 
 export const clearAccessToken = (): void => {
