@@ -287,8 +287,17 @@ function AppContent() {
       setSyncStatus(status);
     });
 
+    // Auto-trigger sync when returning to app foreground on Android/mobile
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && navigator.onLine) {
+        syncEngine.triggerSync().then(() => reloadData()).catch(() => {});
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     return () => {
       unsubscribeSync();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [reloadData]);
 
