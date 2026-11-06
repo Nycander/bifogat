@@ -87,9 +87,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   return (
     <div>
       <div style={{ marginBottom: "1.25rem" }}>
-        <h1>Inställningar & synkronisering</h1>
+        <h1>Inställningar</h1>
         <p style={{ fontSize: "0.875rem", color: "var(--color-text-muted)" }}>
-          Koppla ditt Google-konto, välj kalkylark och hantera säkerhetskopior
+          Google-konto, synkronisering och säkerhetskopior
         </p>
       </div>
 
@@ -98,7 +98,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         <div className="card-header">
           <h3 className="card-title">
             <Cloud size={18} color="var(--color-primary)" />
-            <span>Google-konto & molnkoppling</span>
+            <span>Google-konto</span>
           </h3>
         </div>
 
@@ -244,7 +244,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         <div className="card-header">
           <h3 className="card-title">
             <FileSpreadsheet size={18} color="var(--color-primary)" />
-            <span>Google Kalkylark (Databas)</span>
+            <span>Google Kalkylark</span>
           </h3>
         </div>
 
@@ -575,7 +575,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         <div className="card-header">
           <h3 className="card-title">
             <Upload size={18} color="var(--color-primary)" />
-            <span>Migrering & import</span>
+            <span>Import</span>
           </h3>
         </div>
         <p
@@ -591,11 +591,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
           <button className="btn btn-secondary" onClick={onOpenCsvImport}>
             <FileSpreadsheet size={16} />
-            <span>Importera ekonomi (CSV)</span>
+            <span>Importera CSV</span>
           </button>
           <button className="btn btn-secondary" onClick={onOpenNotesImport}>
             <Upload size={16} />
-            <span>Importera anteckningar (Text)</span>
+            <span>Importera anteckningar</span>
           </button>
         </div>
       </div>
@@ -605,7 +605,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         <div className="card-header">
           <h3 className="card-title">
             <Download size={18} color="var(--color-primary)" />
-            <span>Säkerhetskopia & export</span>
+            <span>Säkerhetskopia</span>
           </h3>
         </div>
         <p
@@ -621,11 +621,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
           <button className="btn btn-secondary" onClick={onExportBackup}>
             <Download size={16} />
-            <span>Ladda ner säkerhetskopia (JSON)</span>
+            <span>Exportera backup</span>
           </button>
           <label className="btn btn-primary" style={{ cursor: "pointer", marginBottom: 0 }}>
             <Upload size={16} />
-            <span>Återställ från fil</span>
+            <span>Återställ backup</span>
             <input
               type="file"
               accept=".json"
@@ -650,7 +650,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <div className="card-header">
             <h3 className="card-title">
               <Share2 size={18} color="var(--color-primary)" />
-              <span>Dela scenarion & diagnostik</span>
+              <span>Diagnostik</span>
             </h3>
           </div>
           <p
@@ -665,7 +665,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </p>
           <button className="btn btn-secondary" onClick={onOpenScenarioManager} style={{ width: "100%" }}>
             <Share2 size={16} />
-            <span>Öppna scenarie- & diagnostikverktyg</span>
+            <span>Diagnostikverktyg</span>
           </button>
         </div>
       )}
@@ -675,7 +675,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         <div className="card-header">
           <h3 className="card-title">
             <Database size={18} color="var(--color-text-muted)" />
-            <span>Applikationsinfo & lokal lagring</span>
+            <span>Systeminfo</span>
           </h3>
         </div>
         <div

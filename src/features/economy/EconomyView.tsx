@@ -4,14 +4,12 @@ import { formatOreToSEK } from "../../domain/validation";
 import {
   Plus,
   Wallet,
-  Calendar,
   ArrowUpRight,
   ArrowDownLeft,
   Trash2,
   Edit2,
   ScanText,
   Droplet,
-  ChevronRight,
   Users,
   BarChart2,
 } from "lucide-react";
@@ -82,9 +80,9 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
       {/* Header */}
       <div className="view-header">
         <div className="view-header-title">
-          <h1>Ekonomi & kassa</h1>
+          <h1>Ekonomi</h1>
           <p className="view-header-subtitle">
-            Följ honungsförsäljning, materialinköp och ditt saldo
+            Intäkter, utgifter och saldo
           </p>
         </div>
         <div className="view-header-actions">
@@ -102,6 +100,166 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
             <span>Ny transaktion</span>
           </button>
         </div>
+      </div>
+
+      {/* Analytics & Tools Hub Ribbon */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap: "0.5rem",
+          marginBottom: "0.85rem",
+        }}
+      >
+        {years.length > 0 && (
+          <div
+            style={{
+              cursor: "pointer",
+              padding: "0.65rem 0.4rem",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              background: "var(--color-surface)",
+              border: "1px solid var(--color-border-default)",
+              borderRadius: "var(--radius-lg)",
+              transition: "all 0.15s ease",
+            }}
+            onClick={onOpenAnnualSummary}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onOpenAnnualSummary?.();
+              }
+            }}
+          >
+            <div
+              style={{
+                width: "28px",
+                height: "28px",
+                borderRadius: "8px",
+                background: "var(--color-primary-surface)",
+                border: "1px solid var(--color-primary-border)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--color-primary-base)",
+                marginBottom: "0.25rem",
+              }}
+            >
+              <BarChart2 size={16} />
+            </div>
+            <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--color-text-primary)", lineHeight: 1.2 }}>
+              Årsöversikt
+            </div>
+            <div style={{ fontSize: "0.675rem", color: "var(--color-text-muted)", marginTop: "2px", whiteSpace: "nowrap" }}>
+              {years[0]}: {formatOreToSEK(summaryByYear[years[0]].netOre)}
+            </div>
+          </div>
+        )}
+
+        {onOpenCustomerDemand && (
+          <div
+            style={{
+              cursor: "pointer",
+              padding: "0.65rem 0.4rem",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              background: "var(--color-surface)",
+              border: "1px solid var(--color-border-default)",
+              borderRadius: "var(--radius-lg)",
+              transition: "all 0.15s ease",
+            }}
+            onClick={onOpenCustomerDemand}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onOpenCustomerDemand();
+              }
+            }}
+          >
+            <div
+              style={{
+                width: "28px",
+                height: "28px",
+                borderRadius: "8px",
+                background: "var(--color-primary-surface)",
+                border: "1px solid var(--color-primary-border)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--color-primary-base)",
+                marginBottom: "0.25rem",
+              }}
+            >
+              <Users size={16} />
+            </div>
+            <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--color-text-primary)", lineHeight: 1.2 }}>
+              Stamkunder
+            </div>
+            <div style={{ fontSize: "0.675rem", color: "var(--color-text-muted)", marginTop: "2px", whiteSpace: "nowrap" }}>
+              Analys & behov
+            </div>
+          </div>
+        )}
+
+        {onOpenHoneyJarCost && (
+          <div
+            style={{
+              cursor: "pointer",
+              padding: "0.65rem 0.4rem",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              background: "var(--color-surface)",
+              border: "1px solid var(--color-border-default)",
+              borderRadius: "var(--radius-lg)",
+              transition: "all 0.15s ease",
+            }}
+            onClick={onOpenHoneyJarCost}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onOpenHoneyJarCost();
+              }
+            }}
+          >
+            <div
+              style={{
+                width: "28px",
+                height: "28px",
+                borderRadius: "8px",
+                background: "var(--color-primary-surface)",
+                border: "1px solid var(--color-primary-border)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--color-primary-base)",
+                marginBottom: "0.25rem",
+              }}
+            >
+              <Droplet size={16} />
+            </div>
+            <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--color-text-primary)", lineHeight: 1.2 }}>
+              Burkkostnad
+            </div>
+            <div style={{ fontSize: "0.675rem", color: "var(--color-text-muted)", marginTop: "2px", whiteSpace: "nowrap" }}>
+              Kalkylator
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Main Balance Banner */}
@@ -132,7 +290,7 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
                 letterSpacing: "0.05em",
               }}
             >
-              BERÄKNAT TOTALSALDO
+              TOTALSALDO
             </div>
             <div
               style={{
@@ -147,199 +305,17 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
         </div>
       </div>
 
-      {/* Pedagogical & Analytics Action Cards */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginBottom: "1.25rem" }}>
-        {years.length > 0 && (
-          <div
-            className="card"
-            style={{
-              cursor: "pointer",
-              marginBottom: 0,
-              padding: "12px 14px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: "12px",
-              background: "var(--color-surface)",
-              border: "1px solid var(--color-honey-border)",
-              borderRadius: "var(--radius-lg)",
-              transition: "all 0.15s ease",
-            }}
-            onClick={onOpenAnnualSummary}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                onOpenAnnualSummary?.();
-              }
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <div
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "12px",
-                  background: "var(--color-honey-surface)",
-                  border: "1px solid var(--color-honey-border)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "var(--color-honey-text)",
-                  flexShrink: 0,
-                }}
-              >
-                <BarChart2 size={20} />
-              </div>
-              <div>
-                <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--color-text-primary)" }}>
-                  Årsöversikt ({years.length} {years.length === 1 ? "år" : "bokförda år"})
-                </div>
-                <div style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
-                  {years[0]}: Netto {formatOreToSEK(summaryByYear[years[0]].netOre)} • Klicka för alla år
-                </div>
-              </div>
-            </div>
-
-            <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "var(--color-honey-text)", flexShrink: 0 }}>
-              <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>Visa per år</span>
-              <ChevronRight size={18} />
-            </div>
-          </div>
-        )}
-        {onOpenCustomerDemand && (
-          <div
-            className="card"
-            style={{
-              cursor: "pointer",
-              marginBottom: 0,
-              padding: "12px 14px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: "12px",
-              background: "var(--color-surface)",
-              border: "1px solid var(--color-honey-border)",
-              borderRadius: "var(--radius-lg)",
-              transition: "all 0.15s ease",
-            }}
-            onClick={onOpenCustomerDemand}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                onOpenCustomerDemand();
-              }
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <div
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "12px",
-                  background: "var(--color-honey-surface)",
-                  border: "1px solid var(--color-honey-border)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "var(--color-honey-text)",
-                  flexShrink: 0,
-                }}
-              >
-                <Users size={20} />
-              </div>
-              <div>
-                <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--color-text-primary)" }}>
-                  Stamkunder & årsbehov
-                </div>
-                <div style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
-                  Kundhistorik över 5 år, återköpsmönster och estimerad efterfrågan
-                </div>
-              </div>
-            </div>
-
-            <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "var(--color-honey-text)", flexShrink: 0 }}>
-              <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>Öppna analys</span>
-              <ChevronRight size={18} />
-            </div>
-          </div>
-        )}
-
-        {onOpenHoneyJarCost && (
-          <div
-            className="card"
-            style={{
-              cursor: "pointer",
-              marginBottom: 0,
-              padding: "12px 14px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: "12px",
-              background: "var(--color-surface)",
-              border: "1px solid var(--color-honey-border)",
-              borderRadius: "var(--radius-lg)",
-              transition: "all 0.15s ease",
-            }}
-            onClick={onOpenHoneyJarCost}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                onOpenHoneyJarCost();
-              }
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <div
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "12px",
-                  background: "var(--color-honey-surface)",
-                  border: "1px solid var(--color-honey-border)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "var(--color-honey-text)",
-                  flexShrink: 0,
-                }}
-              >
-                <Droplet size={22} />
-              </div>
-              <div>
-                <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--color-text-primary)" }}>
-                  Vad kostar en burk honung?
-                </div>
-                <div style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
-                  Pedagogisk kostnadsuppdelning och visualisering för kunden
-                </div>
-              </div>
-            </div>
-
-            <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "var(--color-honey-text)", flexShrink: 0 }}>
-              <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>Öppna burken</span>
-              <ChevronRight size={18} />
-            </div>
-          </div>
-        )}
-      </div>
-
       {/* Transactions List */}
       {transactions.length === 0 ? (
         <div className="card empty-state">
           <Wallet size={40} className="empty-state-icon" />
-          <h3 className="empty-state-title">Inga transaktioner registrerade ännu</h3>
+          <h3 className="empty-state-title">Inga transaktioner</h3>
           <p className="empty-state-desc">
-            Bokför intäkter från honungsförsäljning eller utlägg för ramar, foder och utrustning.
+            Bokför intäkter eller utlägg för din bigård.
           </p>
           <button className="btn btn-primary" onClick={onOpenCreateTransaction}>
             <Plus size={16} />
-            <span>Lägg till första transaktionen</span>
+            <span>Ny transaktion</span>
           </button>
         </div>
       ) : (
@@ -349,119 +325,132 @@ export const EconomyView: React.FC<EconomyViewProps> = ({
             const runningBal = runningBalanceMap.get(tx.id);
 
             return (
-              <div key={tx.id} className="list-item">
-                <div style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
+              <div
+                key={tx.id}
+                className="list-item"
+                style={{
+                  padding: "0.45rem 0.65rem",
+                  gap: "0.55rem",
+                  alignItems: "center",
+                }}
+              >
+                <div
+                  style={{
+                    width: "28px",
+                    height: "28px",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: isIncome
+                      ? "var(--color-success-bg)"
+                      : "var(--color-danger-bg)",
+                    color: isIncome ? "var(--color-success)" : "var(--color-danger)",
+                    flexShrink: 0,
+                  }}
+                >
+                  {isIncome ? <ArrowDownLeft size={15} /> : <ArrowUpRight size={15} />}
+                </div>
+
+                <div className="list-item-main" style={{ minWidth: 0, flex: 1 }}>
                   <div
                     style={{
-                      width: "36px",
-                      height: "36px",
-                      borderRadius: "50%",
                       display: "flex",
                       alignItems: "center",
-                      justifyContent: "center",
-                      backgroundColor: isIncome
-                        ? "var(--color-success-bg)"
-                        : "var(--color-danger-bg)",
-                      color: isIncome ? "var(--color-success)" : "var(--color-danger)",
-                      flexShrink: 0,
+                      justifyContent: "space-between",
+                      gap: "0.5rem",
                     }}
                   >
-                    {isIncome ? <ArrowDownLeft size={18} /> : <ArrowUpRight size={18} />}
+                    <span
+                      style={{
+                        fontSize: "0.875rem",
+                        fontWeight: 700,
+                        color: "var(--color-text-main)",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {tx.description}
+                      {tx.counterparty && (
+                        <span style={{ fontWeight: 400, color: "var(--color-text-muted)", marginLeft: "0.35rem" }}>
+                          · {tx.counterparty}
+                        </span>
+                      )}
+                    </span>
+
+                    <span
+                      style={{
+                        fontSize: "0.95rem",
+                        fontWeight: 800,
+                        color: isIncome ? "var(--color-success)" : "var(--color-danger)",
+                        whiteSpace: "nowrap",
+                        flexShrink: 0,
+                      }}
+                    >
+                      {isIncome ? "+" : ""}
+                      {formatOreToSEK(tx.amountOre)}
+                    </span>
                   </div>
 
-                  <div className="list-item-main">
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      fontSize: "0.75rem",
+                      color: "var(--color-text-muted)",
+                      marginTop: "0.1rem",
+                      gap: "0.4rem",
+                    }}
+                  >
                     <div
                       style={{
                         display: "flex",
                         alignItems: "center",
-                        gap: "0.5rem",
-                        flexWrap: "wrap",
+                        gap: "0.4rem",
+                        overflow: "hidden",
+                        whiteSpace: "nowrap",
+                        textOverflow: "ellipsis",
                       }}
                     >
-                      <span
-                        style={{
-                          fontSize: "0.8rem",
-                          color: "var(--color-text-muted)",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.25rem",
-                        }}
-                      >
-                        <Calendar size={12} />
-                        {tx.date}
-                      </span>
-                      {tx.counterparty && (
-                        <span
-                          style={{
-                            fontSize: "0.8rem",
-                            fontWeight: 600,
-                            color: "var(--color-text-main)",
-                          }}
-                        >
-                          • {tx.counterparty}
-                        </span>
-                      )}
+                      <span>{tx.date}</span>
                       {tx.category && (
-                        <span className="badge badge-inactive" style={{ fontSize: "0.7rem" }}>
+                        <span className="badge badge-inactive" style={{ fontSize: "0.65rem", padding: "1px 5px" }}>
                           {tx.category}
                         </span>
                       )}
+                      {runningBal !== undefined && (
+                        <span style={{ color: "var(--color-text-light)" }}>
+                          · Saldo: {formatOreToSEK(runningBal)}
+                        </span>
+                      )}
                     </div>
 
-                    <div className="list-item-title" style={{ marginTop: "0.15rem" }}>
-                      {tx.description}
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.2rem", flexShrink: 0 }}>
+                      <button
+                        className="btn btn-secondary btn-sm btn-icon-only"
+                        onClick={() => onEditTransaction(tx)}
+                        title="Redigera"
+                        aria-label="Redigera transaktion"
+                        style={{ padding: "0.15rem 0.35rem", height: "24px", width: "24px" }}
+                      >
+                        <Edit2 size={12} />
+                      </button>
+                      <button
+                        className="btn btn-secondary btn-sm btn-icon-only"
+                        onClick={() => {
+                          if (window.confirm(`Vill du ta bort transaktionen "${tx.description}"?`)) {
+                            onDeleteTransaction(tx.id);
+                          }
+                        }}
+                        title="Ta bort"
+                        aria-label="Ta bort transaktion"
+                        style={{ padding: "0.15rem 0.35rem", height: "24px", width: "24px" }}
+                      >
+                        <Trash2 size={12} />
+                      </button>
                     </div>
-
-                    {runningBal !== undefined && (
-                      <div style={{ fontSize: "0.75rem", color: "var(--color-text-light)" }}>
-                        Löpande saldo: {formatOreToSEK(runningBal)}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    textAlign: "right",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "flex-end",
-                    gap: "0.25rem",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: "1.05rem",
-                      fontWeight: 800,
-                      color: isIncome ? "var(--color-success)" : "var(--color-danger)",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {isIncome ? "+" : ""}
-                    {formatOreToSEK(tx.amountOre)}
-                  </div>
-
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                    <button
-                      className="btn btn-secondary btn-sm btn-icon-only"
-                      onClick={() => onEditTransaction(tx)}
-                      title="Redigera transaktion"
-                      aria-label="Redigera transaktion"
-                    >
-                      <Edit2 size={13} />
-                    </button>
-                    <button
-                      className="btn btn-secondary btn-sm btn-icon-only"
-                      onClick={() => {
-                        if (window.confirm(`Vill du ta bort transaktionen "${tx.description}"?`)) {
-                          onDeleteTransaction(tx.id);
-                        }
-                      }}
-                      title="Ta bort transaktion"
-                      aria-label="Ta bort transaktion"
-                    >
-                      <Trash2 size={13} />
-                    </button>
                   </div>
                 </div>
               </div>

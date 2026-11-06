@@ -92,8 +92,6 @@ export const HivesView: React.FC<HivesViewProps> = ({
     return dateStr < today;
   };
 
-  const totalOpenTasks = tasks.filter((t) => t.status === "open").length;
-
   // Filtered tasks for tasks tab
   const displayedTasks = tasks
     .filter((t) => t.status === taskStatusFilter)
@@ -108,7 +106,7 @@ export const HivesView: React.FC<HivesViewProps> = ({
       {/* Top Header */}
       <div className="view-header">
         <div className="view-header-title">
-          <h1>Bikupor & bisamhällen</h1>
+          <h1>Bikupor</h1>
           <p className="view-header-subtitle">
             Översikt över dina kupor, planerade insatser och utförda inspektioner
           </p>
@@ -136,14 +134,14 @@ export const HivesView: React.FC<HivesViewProps> = ({
           onClick={() => setSubTab("hives")}
         >
           <Layers size={16} style={{ display: "inline", marginRight: "5px" }} />
-          Kupor ({hives.length})
+          Kupor
         </button>
         <button
           className={`tab-btn ${subTab === "tasks" ? "active" : ""}`}
           onClick={() => setSubTab("tasks")}
         >
           <CheckSquare size={16} style={{ display: "inline", marginRight: "5px" }} />
-          Planerade uppgifter ({totalOpenTasks})
+          Planerade uppgifter
         </button>
       </div>
 
@@ -155,19 +153,19 @@ export const HivesView: React.FC<HivesViewProps> = ({
               className={`tab-btn ${hiveFilter === "active" ? "active" : ""}`}
               onClick={() => setHiveFilter("active")}
             >
-              Aktiva ({hives.filter((h) => h.status === "active").length})
+              Aktiva
             </button>
             <button
               className={`tab-btn ${hiveFilter === "all" ? "active" : ""}`}
               onClick={() => setHiveFilter("all")}
             >
-              Alla ({hives.length})
+              Alla
             </button>
             <button
               className={`tab-btn ${hiveFilter === "inactive" ? "active" : ""}`}
               onClick={() => setHiveFilter("inactive")}
             >
-              Inaktiva ({hives.filter((h) => h.status !== "active").length})
+              Inaktiva
             </button>
           </div>
 

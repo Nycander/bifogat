@@ -241,7 +241,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
       {/* Header */}
       <div className="view-header">
         <div className="view-header-title">
-          <h1>Honungsskörd & produktion</h1>
+          <h1>Skörd</h1>
           <p className="view-header-subtitle">
             Registrera slungningar, följ dragperioder och hantera burktappning
           </p>
@@ -253,12 +253,12 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
               onClick={() => onOpenJarFilling()}
             >
               <PackageCheck size={16} />
-              <span>Tappa burkar (500g)</span>
+              <span>Tappa burkar</span>
             </button>
           )}
           <button className="btn btn-primary btn-sm" onClick={onOpenCreateHarvest}>
             <Plus size={16} />
-            <span>Ny skördedag (Batch)</span>
+            <span>Ny skörd</span>
           </button>
         </div>
       </div>
@@ -272,7 +272,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
         >
           <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
             <Droplet size={15} />
-            <span>Skördepartier & burkar ({harvests.length})</span>
+            <span>Partier</span>
           </span>
         </button>
         <button
@@ -282,7 +282,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
         >
           <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
             <BarChart2 size={15} />
-            <span>Skördestatistik & historik</span>
+            <span>Statistik</span>
           </span>
         </button>
       </div>
@@ -295,27 +295,27 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
           {/* Quick Metrics Grid */}
           <div className="stats-grid">
             <div className="stat-card">
-              <span className="stat-label">Total skörd (all-time)</span>
+              <span className="stat-label">Totalskörd</span>
               <span className="stat-value" style={{ color: "var(--color-accent-dark)" }}>
                 {stats.totalHarvestKg.toFixed(1).replace(".", ",")} kg
               </span>
               <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
-                {stats.totalJarsCount} st burkar ({stats.count500gJars} st 500g)
+                {stats.totalJarsCount} burkar · {stats.count500gJars} st 500g
               </span>
             </div>
 
             <div className="stat-card">
-              <span className="stat-label">Snitt per bisamhälle</span>
+              <span className="stat-label">Snitt / kupa</span>
               <span className="stat-value" style={{ color: "var(--color-primary-base)" }}>
                 {stats.avgKgPerHive > 0 ? `${stats.avgKgPerHive.toFixed(1).replace(".", ",")} kg` : "—"}
               </span>
               <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
-                Baserat på {activeHivesCount} aktiva kupor i bigården
+                {activeHivesCount} aktiva kupor
               </span>
             </div>
 
             <div className="stat-card">
-              <span className="stat-label">Nyslungad honung</span>
+              <span className="stat-label">Nyslungad</span>
               <span className="stat-value" style={{ color: "var(--color-honey-base)" }}>
                 {stats.nyslungadKg.toFixed(1).replace(".", ",")} kg
               </span>
@@ -325,7 +325,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
             </div>
 
             <div className="stat-card">
-              <span className="stat-label">Rörd honung</span>
+              <span className="stat-label">Rörd</span>
               <span className="stat-value" style={{ color: "var(--color-success-text)" }}>
                 {stats.rordKg.toFixed(1).replace(".", ",")} kg
               </span>
@@ -340,22 +340,18 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
             <div className="card-header">
               <h3 className="card-title">
                 <TrendingUp size={18} color="var(--color-primary-base)" />
-                <span>Bigårdens skörd över tid (Årsjämförelse)</span>
+                <span>Historik</span>
               </h3>
               {stats.bestYear && (
                 <span className="badge badge-success" style={{ fontSize: "0.75rem" }}>
-                  <Crown size={13} style={{ display: "inline", verticalAlign: "middle", marginRight: "3px" }} /> Rekordår: {stats.bestYear} ({stats.bestYearKg.toFixed(1).replace(".", ",")} kg)
+                  <Crown size={13} style={{ display: "inline", verticalAlign: "middle", marginRight: "3px" }} /> Rekord {stats.bestYear}: {stats.bestYearKg.toFixed(1).replace(".", ",")} kg
                 </span>
               )}
             </div>
 
-            <p style={{ fontSize: "0.825rem", color: "var(--color-text-muted)", marginBottom: "1rem" }}>
-              Total skördemängd och genomsnittlig avkastning per bisamhälle för hela bigården.
-            </p>
-
             {stats.years.length === 0 ? (
               <div style={{ textAlign: "center", padding: "2rem", color: "var(--color-text-muted)" }}>
-                Inga skördar registrerade än. Klicka på "Ny skördedag" för att lägga till din första skörd.
+                Inga skördar registrerade än.
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
@@ -381,34 +377,38 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                         style={{
                           display: "flex",
                           justifyContent: "space-between",
-                          alignItems: "center",
-                          marginBottom: "0.4rem",
+                          alignItems: "flex-start",
+                          marginBottom: "0.35rem",
+                          gap: "0.5rem",
                         }}
                       >
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                          <span style={{ fontWeight: 800, fontSize: "1.05rem", color: "var(--color-text-primary)" }}>
-                            Säsong {year}
-                          </span>
-                          {isRecord && (
-                            <span className="badge badge-warning" style={{ fontSize: "0.7rem", padding: "1px 6px" }}>
-                              Bästa år
+                        <div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                            <span style={{ fontWeight: 800, fontSize: "1.05rem", color: "var(--color-text-primary)" }}>
+                              Säsong {year}
                             </span>
-                          )}
+                            {isRecord && (
+                              <span className="badge badge-warning" style={{ fontSize: "0.7rem", padding: "1px 6px" }}>
+                                Bästa
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ fontSize: "0.8rem", color: "var(--color-text-muted)", marginTop: "2px" }}>
+                            {y ? y.jars : 0} burkar · {avgPerHiveYear.toFixed(1).replace(".", ",")} kg/kupa · {hivesInYear} {hivesInYear === 1 ? "kupa" : "kupor"}
+                          </div>
                         </div>
-                        <div style={{ textAlign: "right" }}>
-                          <strong style={{ fontSize: "1.1rem", color: "var(--color-accent-dark)" }}>
+
+                        <div style={{ textAlign: "right", flexShrink: 0 }}>
+                          <strong style={{ fontSize: "1.15rem", color: "var(--color-accent-dark)" }}>
                             {yKg.toFixed(1).replace(".", ",")} kg
-                          </strong>{" "}
-                          <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
-                            ({y ? y.jars : 0} burkar · {avgPerHiveYear.toFixed(1).replace(".", ",")} kg/kupa · {hivesInYear} {hivesInYear === 1 ? "kupa" : "kupor"})
-                          </span>
+                          </strong>
                         </div>
                       </div>
 
                       {/* Visual Progress Bar */}
                       <div
                         style={{
-                          height: "9px",
+                          height: "8px",
                           width: "100%",
                           background: "var(--color-border-default)",
                           borderRadius: "4px",
@@ -431,7 +431,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                       {y?.batches && y.batches.length > 0 && (
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", marginTop: "0.4rem" }}>
                           <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-text-secondary)" }}>
-                            Slungningar under {year}:
+                            Slungningar:
                           </div>
                           <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                             {y.batches.map((b) => (
@@ -452,7 +452,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                                 <strong>{(b.grams / 1000).toFixed(1).replace(".", ",")} kg</strong>
                                 {b.dragPeriod && (
                                   <span style={{ color: "var(--color-text-muted)", fontSize: "0.7rem" }}>
-                                    ({b.dragPeriod})
+                                    • {b.dragPeriod}
                                   </span>
                                 )}
                               </div>
@@ -468,21 +468,17 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
           </div>
 
           {/* 2. Honungstyp & Standardförpackning (500g) */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1rem" }}>
             {/* Nyslungad vs Rörd honung */}
             <div className="card">
               <div className="card-header">
                 <h3 className="card-title">
                   <Droplet size={18} color="var(--color-honey-base)" />
-                  <span>Nyslungad vs Rörd honung</span>
+                  <span>Honungstyp</span>
                 </h3>
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
-                <p style={{ fontSize: "0.825rem", color: "var(--color-text-muted)" }}>
-                  Fördelning mellan flytande nyslungad (tappad inom 30 dagar) och rörd/ympad mognad honung.
-                </p>
-
                 {/* Split bar */}
                 <div
                   style={{
@@ -508,7 +504,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                       width: `${stats.totalJarredKg > 0 ? (stats.rordKg / stats.totalJarredKg) * 100 : 100}%`,
                       background: "var(--color-primary-base)",
                     }}
-                    title="Rörd honung"
+                    title="Rörd"
                   />
                 </div>
 
@@ -528,7 +524,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                       {stats.nyslungadKg.toFixed(1).replace(".", ",")} kg
                     </div>
                     <div style={{ fontSize: "0.75rem", color: "var(--color-honey-text)", opacity: 0.85 }}>
-                      {stats.nyslungadJars} st burkar
+                      {stats.nyslungadJars} burkar
                     </div>
                   </div>
 
@@ -541,13 +537,13 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                     }}
                   >
                     <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-success-text)" }}>
-                      Rörd honung
+                      Rörd
                     </div>
                     <div style={{ fontSize: "1.15rem", fontWeight: 800, color: "var(--color-success-text)" }}>
                       {stats.rordKg.toFixed(1).replace(".", ",")} kg
                     </div>
                     <div style={{ fontSize: "0.75rem", color: "var(--color-success-text)", opacity: 0.85 }}>
-                      {stats.rordJars} st burkar
+                      {stats.rordJars} burkar
                     </div>
                   </div>
                 </div>
@@ -559,15 +555,11 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
               <div className="card-header">
                 <h3 className="card-title">
                   <PackageCheck size={18} color="var(--color-primary-base)" />
-                  <span>Burkstorlekar & Lager</span>
+                  <span>Burkstorlekar</span>
                 </h3>
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                <p style={{ fontSize: "0.825rem", color: "var(--color-text-muted)" }}>
-                  500g är standardburken i svensk biodling.
-                </p>
-
                 <div
                   style={{
                     padding: "0.75rem",
@@ -580,9 +572,9 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                   }}
                 >
                   <div>
-                    <div style={{ fontWeight: 700, fontSize: "0.95rem" }}>500 g standardburk</div>
+                    <div style={{ fontWeight: 700, fontSize: "0.95rem" }}>500 g</div>
                     <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
-                      {stats.totalJarsCount > 0 ? Math.round((stats.count500gJars / stats.totalJarsCount) * 100) : 100}% av all upptappning
+                      {stats.totalJarsCount > 0 ? Math.round((stats.count500gJars / stats.totalJarsCount) * 100) : 100}% av skörden
                     </div>
                   </div>
                   <div style={{ textAlign: "right" }}>
@@ -608,7 +600,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                       color: "var(--color-text-secondary)",
                     }}
                   >
-                    <span>Övriga burkstorlekar:</span>
+                    <span>Övriga:</span>
                     <strong>{stats.otherJarsCount} st</strong>
                   </div>
                 )}
@@ -625,14 +617,26 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
         <div>
           {/* Year Filter Pill Bar */}
           {stats.years.length > 1 && (
-            <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem", flexWrap: "wrap", alignItems: "center" }}>
-              <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>Visa år:</span>
+            <div
+              style={{
+                display: "flex",
+                gap: "0.5rem",
+                marginBottom: "1rem",
+                alignItems: "center",
+                overflowX: "auto",
+                whiteSpace: "nowrap",
+                paddingBottom: "4px",
+                WebkitOverflowScrolling: "touch",
+              }}
+            >
+              <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted)", flexShrink: 0 }}>Visa år:</span>
               <button
                 type="button"
                 className={`btn btn-sm ${selectedYearFilter === "all" ? "btn-primary" : "btn-secondary"}`}
                 onClick={() => setSelectedYearFilter("all")}
+                style={{ flexShrink: 0 }}
               >
-                Alla år ({harvests.length})
+                Alla år
               </button>
               {stats.years.map((yr) => (
                 <button
@@ -640,6 +644,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                   type="button"
                   className={`btn btn-sm ${selectedYearFilter === yr ? "btn-primary" : "btn-secondary"}`}
                   onClick={() => setSelectedYearFilter(yr)}
+                  style={{ flexShrink: 0 }}
                 >
                   {yr}
                 </button>
@@ -657,14 +662,13 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
               }}
             >
               <Droplet size={40} style={{ margin: "0 auto 1rem", opacity: 0.4 }} />
-              <h3 style={{ marginBottom: "0.5rem" }}>Inga skördepartier registrerade än</h3>
+              <h3 style={{ marginBottom: "0.5rem" }}>Inga skördepartier</h3>
               <p style={{ fontSize: "0.875rem", maxWidth: "420px", margin: "0 auto 1.5rem" }}>
-                Registrera din första slungningsdag. Dragperiod beräknas automatiskt och du kan tappa på
-                500g-burk direkt eller löpande.
+                Registrera din första slungningsdag.
               </p>
               <button className="btn btn-primary" onClick={onOpenCreateHarvest}>
                 <Plus size={16} />
-                <span>Registrera första skördedagen</span>
+                <span>Ny skörd</span>
               </button>
             </div>
           ) : (
@@ -741,7 +745,6 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                           >
                             {harvest.batchName || `Skörd ${harvest.date}`}
                           </h3>
-                          <span className="badge badge-event-harvest">Hela bigården</span>
                           {harvest.waterContentPercent !== undefined && (
                             <span
                               style={{
@@ -791,8 +794,8 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                           }}
                         >
                           <span>
-                            <Calendar size={13} style={{ display: "inline", verticalAlign: "middle" }} />{" "}
-                            Slungad: {harvest.date}
+                            <Calendar size={13} style={{ display: "inline", verticalAlign: "middle", marginRight: "3px" }} />
+                            {harvest.date}
                           </span>
                           {dragPeriodDisplay && (
                             <span
@@ -805,7 +808,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                                 fontWeight: 500,
                               }}
                             >
-                              <Sparkles size={12} style={{ display: "inline", verticalAlign: "middle", marginRight: "3px" }} /> Dragperiod: {dragPeriodDisplay}
+                              <Sparkles size={12} style={{ display: "inline", verticalAlign: "middle", marginRight: "3px" }} /> {dragPeriodDisplay}
                             </span>
                           )}
                         </div>
@@ -819,7 +822,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                           style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}
                         >
                           <PackageCheck size={15} />
-                          <span>Tappa burkar</span>
+                          <span>Tappa</span>
                         </button>
                         <button
                           className="btn btn-secondary btn-sm"
@@ -849,7 +852,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                       className="box-inset"
                       style={{
                         display: "grid",
-                        gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
+                        gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))",
                         gap: "0.6rem",
                         padding: "0.75rem",
                         marginBottom: "0.75rem",
@@ -859,7 +862,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                         <>
                           <div>
                             <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
-                              Slungat estimat
+                              Slungat
                             </div>
                             <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--color-text-primary)" }}>
                               {totalExtractedKg.toFixed(1).replace(".", ",")} kg
@@ -868,19 +871,19 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
 
                           <div>
                             <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
-                              Tappat på burk
+                              Burkat
                             </div>
                             <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--color-success-text)" }}>
-                              {jarredKg.toFixed(1).replace(".", ",")} kg{" "}
-                              <span style={{ fontSize: "0.8rem", fontWeight: 500, color: "var(--color-text-secondary)" }}>
-                                ({totalJars} st, {jars500g} st 500g)
-                              </span>
+                              {jarredKg.toFixed(1).replace(".", ",")} kg
+                            </div>
+                            <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
+                              {totalJars} st ({jars500g} st 500g)
                             </div>
                           </div>
 
                           <div>
                             <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
-                              Kvar i kärl
+                              Kvar
                             </div>
                             <div
                               style={{
@@ -897,13 +900,13 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                         <>
                           <div>
                             <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
-                              Upptappad skörd
+                              Burkat
                             </div>
                             <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--color-success-text)" }}>
-                              {jarredKg.toFixed(1).replace(".", ",")} kg{" "}
-                              <span style={{ fontSize: "0.8rem", fontWeight: 500, color: "var(--color-text-secondary)" }}>
-                                ({totalJars} burkar, varav {jars500g} st 500g)
-                              </span>
+                              {jarredKg.toFixed(1).replace(".", ",")} kg
+                            </div>
+                            <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
+                              {totalJars} st ({jars500g} st 500g)
                             </div>
                           </div>
 
@@ -911,8 +914,8 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                             <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
                               Status
                             </div>
-                            <div style={{ fontSize: "0.95rem", fontWeight: 600, color: "var(--color-primary-base)" }}>
-                              Löpande tappning från kärl
+                            <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--color-primary-base)" }}>
+                              Löpande tappning
                             </div>
                           </div>
 
@@ -933,7 +936,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                                   {rordBatchJars} rörd
                                 </span>
                               )}
-                              {totalJars === 0 && "Inga burkar tappade än"}
+                              {totalJars === 0 && "Ej tappad"}
                             </div>
                           </div>
                         </>
@@ -958,7 +961,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                             style={{ fontSize: "0.75rem", padding: "2px 8px" }}
                           >
                             <Sparkles size={12} style={{ display: "inline", verticalAlign: "middle", marginRight: "2px" }} />
-                            Rörd honung: {rordBatchJars} st
+                            Rörd: {rordBatchJars} st
                           </span>
                         )}
                       </div>
@@ -999,7 +1002,7 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                         >
                           {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
                           <span>
-                            {isExpanded ? "Dölj" : "Visa"} burktappningar ({harvest.fillings.length} st)
+                            {isExpanded ? "Dölj" : "Visa"} tappningar ({harvest.fillings.length})
                           </span>
                         </button>
 
@@ -1043,9 +1046,10 @@ export const HarvestsView: React.FC<HarvestsViewProps> = ({
                                     </span>
                                     <span
                                       className={`badge ${isNyslungad ? "badge-warning" : "badge-success"}`}
-                                      style={{ fontSize: "0.7rem", padding: "1px 6px" }}
+                                      style={{ fontSize: "0.7rem", padding: "1px 6px", display: "inline-flex", alignItems: "center", gap: "3px" }}
                                     >
-                                      {isNyslungad ? "🍯 Nyslungad" : "🥄 Rörd"}
+                                      {isNyslungad ? <Droplet size={11} /> : <Sparkles size={11} />}
+                                      {isNyslungad ? "Nyslungad" : "Rörd"}
                                     </span>
                                     {filling.notes && (
                                       <span style={{ color: "var(--color-text-muted)", fontStyle: "italic" }}>

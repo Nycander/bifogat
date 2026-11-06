@@ -59,10 +59,10 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
       {/* Welcome Banner */}
       <div style={{ marginBottom: "1.25rem" }}>
         <h1 style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <span>Välkommen till Bifogat</span>
+          <span>Översikt</span>
         </h1>
         <p style={{ fontSize: "0.875rem", color: "var(--color-text-muted)" }}>
-          Din digitala kupjournal och loggbok – fungerar direkt i bigården även utan täckning.
+          Digital kupjournal för din bigård.
         </p>
       </div>
 
@@ -144,14 +144,14 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         <div className="card-header">
           <h2 className="card-title">
             <CheckSquare size={18} color="var(--color-primary)" />
-            <span>Planerade uppgifter</span>
+            <span>Uppgifter</span>
           </h2>
           <button
             className="btn btn-secondary btn-sm"
             onClick={() => onNavigateToTab("hives", "tasks")}
             style={{ fontSize: "0.8rem" }}
           >
-            <span>Visa alla ({tasks.filter((t) => t.status === "open").length})</span>
+            <span>Visa alla</span>
             <ArrowRight size={13} />
           </button>
         </div>
@@ -212,7 +212,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         <div className="card-header">
           <h2 className="card-title">
             <ClipboardList size={18} color="var(--color-primary)" />
-            <span>Senaste händelser & inspektioner</span>
+            <span>Senaste händelser</span>
           </h2>
           <button
             className="btn btn-secondary btn-sm"

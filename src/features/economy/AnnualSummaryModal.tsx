@@ -66,10 +66,10 @@ export const AnnualSummaryModal: React.FC<AnnualSummaryModalProps> = ({
             </div>
             <div>
               <h2 className="modal-title" style={{ fontSize: "1.1rem", margin: 0 }}>
-                Årsöversikt & resultat
+                Årsöversikt
               </h2>
               <span className="wizard-subtitle">
-                {years.length > 0 ? `${years.length} bokförda år (${years[years.length - 1]}–${years[0]})` : "Inga transaktioner"}
+                {years.length > 0 ? `${years[years.length - 1]}–${years[0]}` : "Inga transaktioner"}
               </span>
             </div>
           </div>
@@ -102,7 +102,7 @@ export const AnnualSummaryModal: React.FC<AnnualSummaryModalProps> = ({
               >
                 <div className="box-card" style={{ padding: "8px 12px", borderRadius: "10px" }}>
                   <div style={{ fontSize: "0.7rem", color: "var(--color-text-muted)", fontWeight: 600 }}>
-                    Totalt netto ({years.length} år)
+                    Totalt netto
                   </div>
                   <strong style={{ fontSize: "1rem", color: totalNetOre >= 0 ? "var(--color-success-base)" : "var(--color-danger-base)" }}>
                     {formatOreToSEK(totalNetOre)}
@@ -115,7 +115,7 @@ export const AnnualSummaryModal: React.FC<AnnualSummaryModalProps> = ({
                       Bästa intäktsår
                     </div>
                     <strong style={{ fontSize: "1rem", color: "var(--color-text-primary)" }}>
-                      {bestYear} ({formatOreToSEK(summaryByYear[bestYear].incomeOre)})
+                      {bestYear}
                     </strong>
                   </div>
                 )}

@@ -58,13 +58,13 @@ export const TasksView: React.FC<TasksViewProps> = ({
           className={`tab-btn ${filter === "open" ? "active" : ""}`}
           onClick={() => setFilter("open")}
         >
-          Att göra ({openTasks.length})
+          Att göra
         </button>
         <button
           className={`tab-btn ${filter === "completed" ? "active" : ""}`}
           onClick={() => setFilter("completed")}
         >
-          Avklarade ({completedTasks.length})
+          Avklarade
         </button>
       </div>
 

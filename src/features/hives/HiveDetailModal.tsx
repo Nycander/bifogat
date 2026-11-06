@@ -150,15 +150,15 @@ export const HiveDetailModal: React.FC<HiveDetailModalProps> = ({
               onClick={() => setActiveTab("tasks")}
             >
               <CheckSquare size={15} style={{ display: "inline", marginRight: "4px" }} />
-            Att göra ({openTasks.length})
-          </button>
-          <button
-            className={`tab-btn ${activeTab === "events" ? "active" : ""}`}
-            onClick={() => setActiveTab("events")}
-          >
-            <ClipboardList size={15} style={{ display: "inline", marginRight: "4px" }} />
-            Besök & historik ({hiveEvents.length})
-          </button>
+              Att göra
+            </button>
+            <button
+              className={`tab-btn ${activeTab === "events" ? "active" : ""}`}
+              onClick={() => setActiveTab("events")}
+            >
+              <ClipboardList size={15} style={{ display: "inline", marginRight: "4px" }} />
+              Besök & historik
+            </button>
         </div>
 
         {/* Tab: Tasks / Att göra */}
