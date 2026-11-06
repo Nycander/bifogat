@@ -77,7 +77,20 @@ export default defineConfig(() => {
           clientsClaim: true,
           skipWaiting: true,
           globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
+          // Tesseract OCR assets are multi-MB and only needed on demand; cache them at runtime.
+          globIgnores: ["**/tesseract/**"],
           runtimeCaching: [
+            {
+              urlPattern: /\/tesseract\/.*/,
+              handler: "CacheFirst",
+              options: {
+                cacheName: "tesseract-local-assets",
+                expiration: {
+                  maxEntries: 30,
+                  maxAgeSeconds: 60 * 60 * 24 * 365,
+                },
+              },
+            },
             {
               urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/npm\/tesseract\.js.*$/,
               handler: "CacheFirst",
