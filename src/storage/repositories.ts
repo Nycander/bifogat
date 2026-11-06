@@ -23,7 +23,7 @@ import {
 } from "./db";
 
 // Helper to create an outbox operation
-function createOutboxOp(
+export function createOutboxOp(
   entity: EntityType,
   operation: "create" | "update" | "delete",
   recordId: string,
@@ -38,6 +38,17 @@ function createOutboxOp(
     timestamp: new Date().toISOString(),
     retryCount: 0,
   };
+}
+
+/**
+ * Snapshot written to the sheet when a record is deleted. The row is kept with
+ * `deletedAt` set (a tombstone) so other devices learn about the deletion.
+ */
+async function tombstonePayload(storeName: StoreName, id: string): Promise<any | undefined> {
+  const existing = await getFromStore<any>(storeName, id);
+  if (!existing) return undefined;
+  const now = new Date().toISOString();
+  return { ...existing, updatedAt: now, deletedAt: now };
 }
 
 /* ==========================================================================
@@ -85,7 +96,7 @@ export const hiveRepository = {
   },
 
   async delete(id: string): Promise<void> {
-    const op = createOutboxOp("hive", "delete", id);
+    const op = createOutboxOp("hive", "delete", id, await tombstonePayload("hives", id));
     await deleteEntityWithOutbox("hives", id, op);
   },
 };
@@ -143,7 +154,7 @@ export const eventRepository = {
   },
 
   async delete(id: string): Promise<void> {
-    const op = createOutboxOp("event", "delete", id);
+    const op = createOutboxOp("event", "delete", id, await tombstonePayload("events", id));
     await deleteEntityWithOutbox("events", id, op);
   },
 };
@@ -218,7 +229,7 @@ export const taskRepository = {
   },
 
   async delete(id: string): Promise<void> {
-    const op = createOutboxOp("task", "delete", id);
+    const op = createOutboxOp("task", "delete", id, await tombstonePayload("tasks", id));
     await deleteEntityWithOutbox("tasks", id, op);
   },
 };
@@ -264,7 +275,7 @@ export const harvestRepository = {
   },
 
   async delete(id: string): Promise<void> {
-    const op = createOutboxOp("harvest", "delete", id);
+    const op = createOutboxOp("harvest", "delete", id, await tombstonePayload("harvests", id));
     await deleteEntityWithOutbox("harvests", id, op);
   },
 
@@ -394,7 +405,7 @@ export const transactionRepository = {
   },
 
   async delete(id: string): Promise<void> {
-    const op = createOutboxOp("transaction", "delete", id);
+    const op = createOutboxOp("transaction", "delete", id, await tombstonePayload("transactions", id));
     await deleteEntityWithOutbox("transactions", id, op);
   },
 

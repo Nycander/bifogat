@@ -57,6 +57,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onOpenNotesImport,
   onOpenScenarioManager,
   onExportBackup,
+  onRestoreBackup,
   onClearLocalData,
 }) => {
   const [spreadsheetInput, setSpreadsheetInput] = useState(meta.spreadsheetId || "");

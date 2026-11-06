@@ -1,5 +1,5 @@
 {
-  "ignorePatterns": ["dev-dist/**", "dist/**", ".playwright-cli/**", "node_modules/**"],
+  "ignorePatterns": ["dev-dist/**", "dist/**", ".playwright-cli/**", "node_modules/**", "public/**"],
   "rules": {
     "no-unused-vars": "error",
     "no-unused-expressions": "error",

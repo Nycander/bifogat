@@ -86,7 +86,7 @@ export async function runDataMigrations(force = false): Promise<MigrationStatus>
   try {
     const outboxOps = await getAllFromStore<OutboxOp>("outbox");
     for (const op of outboxOps) {
-      if (op.entityType === "event" && op.payload) {
+      if (op.entity === "event" && op.payload) {
         const p = op.payload as Partial<HiveEvent>;
         const merged = mergeEventDescription(p.title, p.notes);
         if (p.title !== merged || p.notes !== merged) {

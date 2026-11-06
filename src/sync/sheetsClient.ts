@@ -7,9 +7,23 @@ export const SHEET_TABS = {
   APP_META: "AppMeta",
 } as const;
 
+/**
+ * Column order matters: rows are written positionally. New columns must only be
+ * appended at the end; ensureSchema upgrades existing header rows in place.
+ */
 export const SCHEMAS = {
-  [SHEET_TABS.HIVES]: ["id", "name", "status", "notes", "createdAt", "updatedAt"],
-  [SHEET_TABS.EVENTS]: ["id", "hiveId", "date", "type", "title", "notes", "createdAt", "updatedAt"],
+  [SHEET_TABS.HIVES]: ["id", "name", "status", "notes", "createdAt", "updatedAt", "deletedAt"],
+  [SHEET_TABS.EVENTS]: [
+    "id",
+    "hiveId",
+    "date",
+    "type",
+    "title",
+    "notes",
+    "createdAt",
+    "updatedAt",
+    "deletedAt",
+  ],
   [SHEET_TABS.TASKS]: [
     "id",
     "title",
@@ -20,6 +34,7 @@ export const SCHEMAS = {
     "createdAt",
     "updatedAt",
     "completedAt",
+    "deletedAt",
   ],
   [SHEET_TABS.HARVESTS]: [
     "id",
@@ -31,6 +46,12 @@ export const SCHEMAS = {
     "notes",
     "createdAt",
     "updatedAt",
+    "batchName",
+    "collectedDates",
+    "dragPeriod",
+    "waterContentPercent",
+    "fillings",
+    "deletedAt",
   ],
   [SHEET_TABS.TRANSACTIONS]: [
     "id",
@@ -44,9 +65,21 @@ export const SCHEMAS = {
     "externalReference",
     "createdAt",
     "updatedAt",
+    "deletedAt",
   ],
   [SHEET_TABS.APP_META]: ["key", "value", "updatedAt"],
 };
+
+/**
+ * True when the sheet's header row is empty, or is an older version of the
+ * schema (a strict prefix of it) that should be extended with the new columns.
+ * A header row that diverges from the schema is left alone.
+ */
+export function headersNeedWrite(existing: string[], expected: readonly string[]): boolean {
+  if (existing.length === 0) return true;
+  if (existing.length >= expected.length) return false;
+  return existing.every((h, i) => h === expected[i]);
+}
 
 const BASE_URL = "https://sheets.googleapis.com/v4/spreadsheets";
 
@@ -138,16 +171,15 @@ export const sheetsClient = {
       });
     }
 
-    // Ensure header rows exist for each tab
+    // Ensure header rows exist (and are up to date) for each tab
     for (const [tabTitle, headers] of Object.entries(SCHEMAS)) {
       const range = encodeURIComponent(`${tabTitle}!A1:Z1`);
       const data = await sheetsFetch(accessToken, `/${spreadsheetId}/values/${range}`);
-      const rows = data.values || [];
-      if (rows.length === 0 || rows[0].length === 0) {
-        // Write header
+      const existing: string[] = data.values?.[0] || [];
+      if (headersNeedWrite(existing, headers)) {
         await sheetsFetch(
           accessToken,
-          `/${spreadsheetId}/values/${encodeURIComponent(`${tabTitle}!A1`)}?valueInputOption=USER_ENTERED`,
+          `/${spreadsheetId}/values/${encodeURIComponent(`${tabTitle}!A1`)}?valueInputOption=RAW`,
           {
             method: "PUT",
             body: JSON.stringify({ values: [headers] }),
@@ -259,7 +291,7 @@ export const sheetsClient = {
     await sheetsFetch(accessToken, `/${spreadsheetId}/values:batchUpdate`, {
       method: "POST",
       body: JSON.stringify({
-        valueInputOption: "USER_ENTERED",
+        valueInputOption: "RAW",
         data,
       }),
     });
@@ -295,114 +327,11 @@ export const sheetsClient = {
     const range = encodeURIComponent(`${tabTitle}!A:Z`);
     await sheetsFetch(
       accessToken,
-      `/${spreadsheetId}/values/${range}:append?valueInputOption=USER_ENTERED`,
+      `/${spreadsheetId}/values/${range}:append?valueInputOption=RAW`,
       {
         method: "POST",
         body: JSON.stringify({ values: rowsValues }),
       },
     );
-  },
-
-  /**
-   * Append a row to a tab
-   */
-  async appendRow(
-    accessToken: string,
-    spreadsheetId: string,
-    tabTitle: string,
-    rowValues: any[],
-  ): Promise<void> {
-    const range = encodeURIComponent(`${tabTitle}!A:Z`);
-    await sheetsFetch(
-      accessToken,
-      `/${spreadsheetId}/values/${range}:append?valueInputOption=USER_ENTERED`,
-      {
-        method: "POST",
-        body: JSON.stringify({ values: [rowValues] }),
-      },
-    );
-  },
-
-  /**
-   * Update an existing row identified by its ID in column A
-   */
-  async updateRowById(
-    accessToken: string,
-    spreadsheetId: string,
-    tabTitle: string,
-    id: string,
-    rowValues: any[],
-    knownColA?: string[],
-  ): Promise<boolean> {
-    let rowIndex = -1;
-    if (knownColA) {
-      rowIndex = knownColA.indexOf(id);
-      if (rowIndex !== -1) {
-        rowIndex += 1; // 1-indexed for Sheets
-      }
-    }
-
-    if (rowIndex === -1) {
-      // 1. Fetch column A if not provided
-      const colARange = encodeURIComponent(`${tabTitle}!A:A`);
-      const colAData = await sheetsFetch(accessToken, `/${spreadsheetId}/values/${colARange}`);
-      const rows = colAData.values || [];
-      for (let i = 0; i < rows.length; i++) {
-        if (rows[i] && rows[i][0] === id) {
-          rowIndex = i + 1; // 1-indexed for Sheets
-          break;
-        }
-      }
-    }
-
-    if (rowIndex === -1) {
-      // Row not found, append instead
-      await this.appendRow(accessToken, spreadsheetId, tabTitle, rowValues);
-      if (knownColA) knownColA.push(id);
-      return true;
-    }
-
-    // 2. Overwrite that specific row
-    const targetRange = encodeURIComponent(`${tabTitle}!A${rowIndex}:Z${rowIndex}`);
-    await sheetsFetch(
-      accessToken,
-      `/${spreadsheetId}/values/${targetRange}?valueInputOption=USER_ENTERED`,
-      {
-        method: "PUT",
-        body: JSON.stringify({ values: [rowValues] }),
-      },
-    );
-    return true;
-  },
-
-  /**
-   * Delete a row by ID in column A
-   */
-  async deleteRowById(
-    accessToken: string,
-    spreadsheetId: string,
-    tabTitle: string,
-    id: string,
-  ): Promise<boolean> {
-    // In Sheets, clearing or blanking out the row content
-    const colARange = encodeURIComponent(`${tabTitle}!A:A`);
-    const colAData = await sheetsFetch(accessToken, `/${spreadsheetId}/values/${colARange}`);
-    const rows = colAData.values || [];
-    let rowIndex = -1;
-    for (let i = 0; i < rows.length; i++) {
-      if (rows[i] && rows[i][0] === id) {
-        rowIndex = i + 1;
-        break;
-      }
-    }
-
-    if (rowIndex === -1) return false;
-
-    const targetRange = encodeURIComponent(`${tabTitle}!A${rowIndex}:Z${rowIndex}`);
-    await sheetsFetch(accessToken, `/${spreadsheetId}/values/${targetRange}:clear`, {
-      method: "POST",
-      body: JSON.stringify({}),
-    });
-    return true;
   },
 };

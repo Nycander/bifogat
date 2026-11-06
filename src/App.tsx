@@ -21,7 +21,8 @@ import {
   outboxRepository,
   conflictRepository,
 } from "./storage/repositories";
-import { exportAllData, restoreAllData, clearStore } from "./storage/db";
+import { exportAllData, clearStore } from "./storage/db";
+import { restoreBackup } from "./storage/backup";
 import { syncEngine, SyncEngineStatus } from "./sync/syncEngine";
 import { sheetsClient } from "./sync/sheetsClient";
 import {
@@ -915,12 +916,13 @@ function AppContent() {
     try {
       const text = await file.text();
       const data = JSON.parse(text);
-      if (!data || typeof data !== "object") {
-        throw new Error("Ogiltig säkerhetskopia (ej giltigt JSON-format)");
-      }
-      await restoreAllData(data);
+      const { accepted, rejected } = await restoreBackup(data);
       await reloadData();
-      alert("Säkerhetskopian har återställts framgångsrikt!");
+      alert(
+        rejected > 0
+          ? `Säkerhetskopian har återställts (${accepted} poster). ${rejected} ogiltiga poster hoppades över.`
+          : `Säkerhetskopian har återställts (${accepted} poster)!`,
+      );
     } catch (err: any) {
       alert(`Kunde inte återställa säkerhetskopia: ${err.message}`);
     }

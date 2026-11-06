@@ -27,5 +27,5 @@ test("deriveEventTitle truncates very long single line with ellipsis", () => {
 
 test("deriveEventTitle uses only the first line if notes contains multiple lines", () => {
   const notes = "Satte på skattlåda 2\n- 10 nya ramar med vax\n- Yngelrummet såg fint ut";
-  assert.equal(deriveEventTitle(notes, "equipment_change"), "Satte på skattlåda 2");
+  assert.equal(deriveEventTitle(notes, "equipment"), "Satte på skattlåda 2");
 });
