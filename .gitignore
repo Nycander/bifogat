@@ -12,3 +12,5 @@ firebase-applet-config.json
 .aistudio/
 firebase-applet-config.json
 public/assets/aistudio/
+bun.lock
+bun.lockb
