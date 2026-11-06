@@ -4,10 +4,11 @@ export const DEFAULT_EVENT_LABELS: Record<EventType, string> = {
   inspection: "Kupbesiktning & tillsyn",
   feeding: "Fodring & foderkontroll",
   treatment: "Varroabehandling",
-  equipment_change: "Utrustningsbyte / skattlådor",
-  queen_activity: "Drottningtillsyn & yngelkontroll",
+  equipment: "Utrustningsbyte / skattlådor",
+  colony_change: "Drottningtillsyn & yngelkontroll",
   harvest: "Skördeuttag",
   other: "Skötsel & tillsyn",
+  unknown: "Skötsel & tillsyn",
 };
 
 /**

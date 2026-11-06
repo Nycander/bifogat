@@ -159,6 +159,7 @@ export async function bulkPutInStore<T>(storeName: StoreName, items: T[]): Promi
     }
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error ?? new Error("IndexedDB-transaktionen avbröts"));
   });
 }
 
@@ -196,6 +197,7 @@ export async function saveEntityWithOutbox<T>(
 
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error ?? new Error("IndexedDB-transaktionen avbröts"));
   });
 }
 
@@ -218,6 +220,7 @@ export async function deleteEntityWithOutbox(
 
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error ?? new Error("IndexedDB-transaktionen avbröts"));
   });
 }
 
@@ -270,23 +273,4 @@ export async function exportAllData(): Promise<{
     outbox,
     meta,
   };
-}
-
-/**
- * Restore from full backup
- */
-export async function restoreAllData(data: {
-  hives?: Hive[];
-  events?: HiveEvent[];
-  tasks?: Task[];
-  harvests?: Harvest[];
-  transactions?: Transaction[];
-  meta?: AppMeta[];
-}): Promise<void> {
-  if (data.hives) await bulkPutInStore("hives", data.hives);
-  if (data.events) await bulkPutInStore("events", data.events);
-  if (data.tasks) await bulkPutInStore("tasks", data.tasks);
-  if (data.harvests) await bulkPutInStore("harvests", data.harvests);
-  if (data.transactions) await bulkPutInStore("transactions", data.transactions);
-  if (data.meta) await bulkPutInStore("meta", data.meta);
 }

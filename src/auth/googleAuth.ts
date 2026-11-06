@@ -27,9 +27,28 @@ const STORAGE_KEY_TOKEN = "bifogat_g_token";
 const STORAGE_KEY_TOKEN_TIME = "bifogat_g_token_time";
 const STORAGE_KEY_USER = "bifogat_g_user";
 
-// Load token from localStorage initially so sessions survive page refreshes
-let cachedAccessToken: string | null =
-  typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY_TOKEN) : null;
+// The OAuth access token (Drive/Sheets scopes) is kept in sessionStorage rather than
+// localStorage: it survives reloads of the open app but is not left behind on disk, which
+// limits what an XSS or a shared device can read. It expires after an hour regardless.
+const tokenStore = (): Storage | null => {
+  try {
+    return typeof window !== "undefined" ? window.sessionStorage : null;
+  } catch {
+    return null;
+  }
+};
+
+// Drop any token an older version left in localStorage.
+try {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem(STORAGE_KEY_TOKEN);
+    localStorage.removeItem(STORAGE_KEY_TOKEN_TIME);
+  }
+} catch {
+  // storage unavailable
+}
+
+let cachedAccessToken: string | null = tokenStore()?.getItem(STORAGE_KEY_TOKEN) ?? null;
 
 try {
   if (firebaseConfig.apiKey && firebaseConfig.apiKey.trim() !== "") {
@@ -49,9 +68,8 @@ try {
 const provider = new GoogleAuthProvider();
 provider.addScope("https://www.googleapis.com/auth/spreadsheets");
 provider.addScope("https://www.googleapis.com/auth/drive.file");
-provider.setCustomParameters({
-  access_type: "offline",
-});
+// Note: the Firebase popup flow only yields a short-lived access token (no refresh token),
+// so the token cannot be renewed silently; the sync engine surfaces `needs_auth` instead.
 
 let isSigningIn = false;
 
@@ -81,8 +99,7 @@ export const getSavedUser = (): SavedUser | null => {
  * We check against a 50-minute threshold so tokens can be renewed BEFORE hitting 401 API errors.
  */
 export const isTokenFresh = (): boolean => {
-  if (typeof window === "undefined") return false;
-  const timeStr = localStorage.getItem(STORAGE_KEY_TOKEN_TIME);
+  const timeStr = tokenStore()?.getItem(STORAGE_KEY_TOKEN_TIME);
   if (!timeStr) return false;
   const elapsed = Date.now() - parseInt(timeStr, 10);
   return elapsed < 50 * 60 * 1000;
@@ -97,10 +114,7 @@ export const getTokenDetails = (): {
   remainingMinutes: number;
   isFresh: boolean;
 } => {
-  if (typeof window === "undefined") {
-    return { createdAt: null, expiresAt: null, remainingMinutes: 0, isFresh: false };
-  }
-  const timeStr = localStorage.getItem(STORAGE_KEY_TOKEN_TIME);
+  const timeStr = tokenStore()?.getItem(STORAGE_KEY_TOKEN_TIME);
   if (!timeStr) {
     return { createdAt: null, expiresAt: null, remainingMinutes: 0, isFresh: false };
   }
@@ -121,10 +135,9 @@ export const getTokenDetails = (): {
 
 export const clearAccessToken = (): void => {
   cachedAccessToken = null;
-  if (typeof window !== "undefined") {
-    localStorage.removeItem(STORAGE_KEY_TOKEN);
-    localStorage.removeItem(STORAGE_KEY_TOKEN_TIME);
-  }
+  const store = tokenStore();
+  store?.removeItem(STORAGE_KEY_TOKEN);
+  store?.removeItem(STORAGE_KEY_TOKEN_TIME);
 };
 
 export const initAuth = (
@@ -133,7 +146,7 @@ export const initAuth = (
 ) => {
   // 1. Instant hydration from localStorage so UI does not flicker or reset
   const savedUser = getSavedUser();
-  const savedToken = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY_TOKEN) : null;
+  const savedToken = isTokenFresh() ? tokenStore()?.getItem(STORAGE_KEY_TOKEN) : null;
   if (savedUser && onAuthSuccess) {
     onAuthSuccess(savedUser, savedToken || "");
   }
@@ -147,7 +160,7 @@ export const initAuth = (
   return onAuthStateChanged(auth, async (user: User | null) => {
     if (user) {
       // Re-read token from storage or memory
-      const token = cachedAccessToken || localStorage.getItem(STORAGE_KEY_TOKEN) || "";
+      const token = isTokenFresh() ? cachedAccessToken || tokenStore()?.getItem(STORAGE_KEY_TOKEN) || "" : "";
       const userData: SavedUser = {
         uid: user.uid,
         displayName: user.displayName,
@@ -185,8 +198,8 @@ export const signInWithGoogle = async (): Promise<{
     }
 
     cachedAccessToken = credential.accessToken;
-    localStorage.setItem(STORAGE_KEY_TOKEN, credential.accessToken);
-    localStorage.setItem(STORAGE_KEY_TOKEN_TIME, Date.now().toString());
+    tokenStore()?.setItem(STORAGE_KEY_TOKEN, credential.accessToken);
+    tokenStore()?.setItem(STORAGE_KEY_TOKEN_TIME, Date.now().toString());
 
     const userData: SavedUser = {
       uid: result.user.uid,
@@ -210,12 +223,10 @@ export const getAccessToken = async (): Promise<string | null> => {
     return cachedAccessToken;
   }
 
-  if (typeof window !== "undefined") {
-    const stored = localStorage.getItem(STORAGE_KEY_TOKEN);
-    if (stored && isTokenFresh()) {
-      cachedAccessToken = stored;
-      return cachedAccessToken;
-    }
+  const stored = tokenStore()?.getItem(STORAGE_KEY_TOKEN);
+  if (stored && isTokenFresh()) {
+    cachedAccessToken = stored;
+    return cachedAccessToken;
   }
 
   // Token is missing or expired beyond maximum retention window

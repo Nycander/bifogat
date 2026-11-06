@@ -24,7 +24,7 @@ test("scrambleScenarioData scrambles counterparties and transaction descriptions
     version: "1.0",
     exportedAt: new Date().toISOString(),
     isAnonymized: false,
-    meta: { id: "meta", createdAt: "", updatedAt: "" },
+    meta: { key: "config", schemaVersion: 1 },
     hives: [],
     events: [
       {
@@ -77,7 +77,7 @@ test("generateMarkdownDiagnosticReport formats clean markdown report", () => {
     version: "1.0",
     exportedAt: "2026-05-10T12:00:00Z",
     isAnonymized: true,
-    meta: { id: "meta", createdAt: "", updatedAt: "" },
+    meta: { key: "config", schemaVersion: 1 },
     hives: [{ id: "h1", name: "Kupa 1", status: "active", createdAt: "", updatedAt: "" }],
     events: [],
     tasks: [],

@@ -183,7 +183,7 @@ export async function recognizeSwishScreenshot(
   try {
     const tesseractModule = await import("tesseract.js");
     createWorkerFn = tesseractModule.createWorker;
-  } catch (err: any) {
+  } catch {
     checkAbortSignal(signal);
     throw new Error("Appen behöver uppdateras, ladda om sidan.");
   }

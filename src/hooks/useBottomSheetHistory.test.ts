@@ -41,11 +41,12 @@ test("useBottomSheet history handler pushes history state and closes modal on po
   });
 
   assert.equal(mockWindow.history.state?.modalStateId, stateId);
-  assert.notEqual(popstateHandler, null);
+  assert.notEqual(popstateHandler as unknown, null);
 
   // Simulate Android hardware back button / gesture -> triggers popstate
-  if (popstateHandler) {
-    popstateHandler({});
+  const handler = popstateHandler as ((e: any) => void) | null;
+  if (handler) {
+    handler({});
   }
 
   assert.equal(modalClosed, true);
